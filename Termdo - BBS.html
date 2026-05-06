@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ledgeon — budget</title>
+<title>termdo · BBS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1700,43 +1703,378 @@
   .income-summary .value.income { color: var(--income); }
 
   input[type=file].hidden { position: absolute; width: 0; height: 0; opacity: 0; pointer-events: none; }
+
+  /* ════════════════════════════════════════════════════════════════
+     BBS / ANSI-ART OVERLAY — applied via body.bbs
+     pure old-school dial-up BBS aesthetic with VT323 + box-drawing chrome
+     ════════════════════════════════════════════════════════════════ */
+  :root {
+    --bbs-bg:       #000020;
+    --bbs-bg2:      #0a0a3a;
+    --bbs-bg3:      #14144a;
+    --b-blue:       #0000aa;
+    --b-blue-l:     #5555ff;
+    --b-cyan:       #00aaaa;
+    --b-cyan-l:     #55ffff;
+    --b-mag:        #aa00aa;
+    --b-mag-l:      #ff55ff;
+    --b-grn:        #00aa00;
+    --b-grn-l:      #55ff55;
+    --b-yel:        #aaaa00;
+    --b-yel-l:      #ffff55;
+    --b-red:        #aa0000;
+    --b-red-l:      #ff5555;
+    --gry:          #aaaaaa;
+    --gry-d:        #686888;
+    --wht:          #ffffff;
+  }
+
+  body.bbs {
+    background: var(--bbs-bg) !important;
+    color: var(--gry) !important;
+    font-family: 'VT323', 'Courier New', monospace !important;
+    font-size: 22px;
+    line-height: 1.0;
+    padding: 18px 24px 60px;
+    position: relative;
+    min-height: 100vh;
+  }
+  /* CRT scanlines */
+  body.bbs::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9;
+    background-image: repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 3px);
+  }
+  /* CRT vignette */
+  body.bbs::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 8;
+    box-shadow: inset 0 0 200px rgba(0,0,0,0.7);
+  }
+
+  /* hide original chrome */
+  body.bbs .topbar { display: none !important; }
+  body.bbs main { max-width: none; padding: 0; margin: 0; }
+
+  body.bbs pre {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.0;
+    letter-spacing: 0;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+    color: var(--gry);
+  }
+
+  /* ANSI color helpers — must use !important to override base CSS */
+  body.bbs .blu  { color: var(--b-blue-l) !important; }
+  body.bbs .cyn  { color: var(--b-cyan-l) !important; }
+  body.bbs .mag  { color: var(--b-mag-l)  !important; }
+  body.bbs .grn  { color: var(--b-grn-l)  !important; }
+  body.bbs .yel  { color: var(--b-yel-l)  !important; }
+  body.bbs .red  { color: var(--b-red-l)  !important; }
+  body.bbs .wht  { color: var(--wht) !important; font-weight: bold; }
+  body.bbs .dim  { color: var(--gry) !important; }
+  body.bbs .vdim { color: var(--gry-d) !important; }
+
+  /* Dark ANSI variants (the original 8 colors, not bright) */
+  body.bbs .blu-d { color: var(--b-blue) !important; }
+  body.bbs .cyn-d { color: var(--b-cyan) !important; }
+  body.bbs .mag-d { color: var(--b-mag) !important; }
+  body.bbs .grn-d { color: var(--b-grn) !important; }
+  body.bbs .yel-d { color: var(--b-yel) !important; }
+  body.bbs .red-d { color: var(--b-red) !important; }
+
+  /* Background blocks */
+  body.bbs .b-blu { background: var(--b-blue);  color: var(--wht) !important; }
+  body.bbs .b-cyn { background: var(--b-cyan);  color: #000 !important; }
+  body.bbs .b-mag { background: var(--b-mag);   color: var(--wht) !important; }
+  body.bbs .b-red { background: var(--b-red);   color: var(--wht) !important; }
+  body.bbs .b-yel { background: var(--b-yel);   color: #000 !important; }
+  body.bbs .b-grn { background: var(--b-grn);   color: #000 !important; }
+  body.bbs .b-blu-l { background: var(--b-blue-l); color: #000 !important; }
+  body.bbs .b-grn-l { background: var(--b-grn-l);  color: #000 !important; }
+  body.bbs .b-yel-l { background: var(--b-yel-l);  color: #000 !important; }
+  body.bbs .b-cyn-l { background: var(--b-cyan-l); color: #000 !important; }
+  body.bbs .b-mag-l { background: var(--b-mag-l);  color: var(--wht) !important; }
+  body.bbs .b-red-l { background: var(--b-red-l);  color: var(--wht) !important; }
+
+  body.bbs .blink { animation: bbs-blink 0.8s steps(2) infinite; }
+  @keyframes bbs-blink { 50% { opacity: 0; } }
+
+  /* button-as-text: every interactive line is a transparent button preserving in-pre layout */
+  body.bbs .key-btn {
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1.0;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    white-space: pre;
+    vertical-align: baseline;
+    letter-spacing: 0;
+  }
+  body.bbs .key-btn:hover .b-mag { background: var(--b-mag-l); }
+  body.bbs .key-btn:hover .b-cyn { background: var(--b-cyan-l); }
+  body.bbs .key-btn:hover .cyn   { color: var(--wht) !important; }
+  body.bbs .key-btn:focus { outline: none; }
+  body.bbs .key-btn:focus .cyn { color: var(--wht) !important; text-shadow: 0 0 6px var(--b-cyan-l); }
+
+  body.bbs .row-line { cursor: pointer; display: inline-block; }
+  body.bbs .row-line:hover { background: rgba(85,85,255,0.25); }
+  body.bbs .row-line:hover .dim { color: var(--gry) !important; }
+
+  /* small inline action buttons embedded in row text */
+  body.bbs .row-act {
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0 1px;
+    line-height: 1.0;
+  }
+  body.bbs .row-act:hover { background: rgba(255,255,85,0.25); }
+
+  /* ════════════════════════════════════════════════════════════════
+     BBS modal restyling (overlay onto existing modal markup)
+     ════════════════════════════════════════════════════════════════ */
+  body.bbs .modal {
+    backdrop-filter: none !important;
+    background: rgba(0,0,32,0.9) !important;
+  }
+  body.bbs .modal-backdrop { background: transparent !important; }
+  body.bbs .modal-card {
+    background: var(--bbs-bg) !important;
+    border: 2px solid var(--b-cyan-l) !important;
+    border-radius: 0 !important;
+    color: var(--gry) !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 20px !important;
+    box-shadow: 0 0 40px rgba(85,255,255,0.25), 0 0 8px rgba(85,255,255,0.15) inset !important;
+    padding: 18px 22px !important;
+    max-width: 580px !important;
+  }
+  body.bbs .modal-title {
+    color: var(--b-yel-l) !important;
+    font-weight: normal !important;
+    font-size: 22px !important;
+    letter-spacing: 1px !important;
+    border-bottom: 1px dashed var(--b-cyan) !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 12px !important;
+  }
+  body.bbs .modal-title::before { content: '▓▓▓ '; color: var(--b-mag-l); }
+  body.bbs .modal-title::after  { content: ' ▓▓▓'; color: var(--b-mag-l); }
+  body.bbs .form-label {
+    color: var(--b-cyan-l) !important;
+    font-size: 17px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    font-weight: normal !important;
+  }
+  body.bbs .input,
+  body.bbs select.input {
+    background: var(--bbs-bg2) !important;
+    border: 1px solid var(--b-blue-l) !important;
+    border-radius: 0 !important;
+    color: var(--wht) !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 20px !important;
+    padding: 4px 8px !important;
+    line-height: 1.1 !important;
+  }
+  body.bbs .input:focus,
+  body.bbs select.input:focus {
+    outline: none !important;
+    border-color: var(--b-yel-l) !important;
+    box-shadow: 0 0 8px rgba(255,255,85,0.4) !important;
+  }
+  body.bbs .input::placeholder { color: var(--gry-d) !important; }
+  body.bbs .input-suffix, body.bbs .form-help {
+    color: var(--gry) !important;
+    font-size: 16px !important;
+  }
+  body.bbs .btn {
+    background: var(--bbs-bg) !important;
+    border: 1px solid var(--b-cyan) !important;
+    border-radius: 0 !important;
+    color: var(--b-cyan-l) !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 19px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 4px 14px !important;
+    line-height: 1.1 !important;
+  }
+  body.bbs .btn:hover { background: var(--b-cyan) !important; color: #000 !important; }
+  body.bbs .btn.primary {
+    background: var(--b-mag) !important;
+    color: var(--wht) !important;
+    border-color: var(--b-mag-l) !important;
+  }
+  body.bbs .btn.primary:hover { background: var(--b-mag-l) !important; }
+  body.bbs .btn.danger,
+  body.bbs .btn[style*="error"] {
+    background: var(--b-red) !important;
+    border-color: var(--b-red-l) !important;
+    color: var(--wht) !important;
+  }
+
+  /* chip styling */
+  body.bbs .chip {
+    background: var(--bbs-bg2) !important;
+    border: 1px solid var(--b-blue-l) !important;
+    border-radius: 0 !important;
+    color: var(--gry) !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 17px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 2px 9px !important;
+  }
+  body.bbs .chip:hover { background: var(--bbs-bg3) !important; }
+  body.bbs .chip.selected {
+    background: var(--b-mag) !important;
+    color: var(--wht) !important;
+    border-color: var(--b-mag-l) !important;
+  }
+  body.bbs label, body.bbs label.checkbox-row {
+    color: var(--gry) !important;
+    font-size: 17px !important;
+  }
+  body.bbs input[type=checkbox], body.bbs input[type=radio] {
+    accent-color: var(--b-mag-l);
+  }
+
+  body.bbs .modal-card hr,
+  body.bbs .modal-card .form-divider {
+    border-color: var(--b-cyan) !important;
+    border-style: dashed !important;
+  }
+
+  /* preset picker re-skin */
+  body.bbs .preset-card {
+    background: var(--bbs-bg2) !important;
+    border: 1px solid var(--b-blue-l) !important;
+    border-radius: 0 !important;
+    color: var(--gry) !important;
+  }
+  body.bbs .preset-card.selected {
+    border-color: var(--b-yel-l) !important;
+    background: rgba(85,85,255,0.2) !important;
+  }
+  body.bbs .preset-card.exists {
+    border-color: var(--b-grn) !important;
+    opacity: 0.5;
+  }
+  body.bbs .preset-card .preset-name { color: var(--wht) !important; }
+  body.bbs .preset-card .preset-meta { color: var(--b-cyan-l) !important; }
+
+  /* legacy menu (theme/data popover) — restyle */
+  body.bbs .menu { display: block !important; }
+  body.bbs .menu-btn { display: none !important; }
+  body.bbs #menu .menu-panel {
+    display: none;
+    position: fixed;
+    top: 70px;
+    right: 30px;
+    background: var(--bbs-bg);
+    border: 2px solid var(--b-cyan-l);
+    box-shadow: 0 0 30px rgba(85,255,255,0.3);
+    padding: 8px 0;
+    z-index: 100;
+    min-width: 280px;
+  }
+  body.bbs #menu.open .menu-panel { display: block !important; }
+  body.bbs .menu-item {
+    background: transparent !important;
+    color: var(--b-cyan-l) !important;
+    font-family: 'VT323', monospace !important;
+    font-size: 19px !important;
+    padding: 5px 14px !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    text-align: left !important;
+    border: 0 !important;
+    cursor: pointer !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+  }
+  body.bbs .menu-item:hover {
+    background: var(--b-cyan) !important;
+    color: #000 !important;
+  }
+  body.bbs .menu-item:hover * { color: #000 !important; }
+  body.bbs .menu-label {
+    color: var(--b-yel-l) !important;
+    font-size: 17px !important;
+    padding: 6px 14px 3px !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+  }
+  body.bbs .menu-divider {
+    background: var(--b-blue) !important;
+    height: 1px !important;
+    margin: 4px 12px !important;
+  }
+
+  /* hide all the legacy theme picker items in BBS — only keep data + reset */
+  body.bbs .menu-item.theme-pick { display: none !important; }
+  body.bbs .menu-item.theme-pick + .menu-divider + .menu-label,
+  body.bbs .menu-label[data-bbs-hide] { display: none !important; }
+
+  /* the BBS app shell */
+  body.bbs #bbs-app {
+    max-width: 1300px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 5;
+  }
+
+  @media (max-width: 920px) {
+    body.bbs { font-size: 18px; padding: 10px 12px 50px; }
+    body.bbs pre { font-size: 14.5px; }
+  }
+
 </style>
 </head>
-<body>
+<body class="bbs">
 
-<header class="topbar">
-  <div class="brand"><span class="accent">ledgeon</span><span class="dim" id="date"></span></div>
-  <nav class="tabs" id="tabs">
-    <button class="tab" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="income">Income <span class="badge" id="badge-income">0</span></button>
-    <button class="tab" data-tab="bills">Bills <span class="badge" id="badge-bills">0</span></button>
-    <button class="tab" data-tab="budget">Budget</button>
-    <button class="tab" data-tab="tasks">Tasks <span class="badge" id="badge-tasks">0</span></button>
-    <button class="tab" data-tab="schedule">Schedule <span class="badge" id="badge-events">0</span></button>
-  </nav>
+<div id="bbs-app">
+  <header class="topbar" hidden>
+    <div class="brand"></div>
+    <nav class="tabs" id="tabs"></nav>
+  </header>
+
+  <!-- legacy menu popover (preserved, BBS-restyled, kept hidden inside main button bar) -->
   <div class="menu" id="menu">
     <button class="menu-btn" data-action="toggle-menu">···</button>
     <div class="menu-panel">
       <div class="menu-label">Quick start</div>
-      <button class="menu-item" data-action="preset-bills">Add common monthly bills</button>
+      <button class="menu-item" data-action="preset-bills">[+] add common bills</button>
       <div class="menu-divider"></div>
-      <div class="menu-label">Theme</div>
       <button class="menu-item theme-pick" data-action="theme" data-theme="default">Default</button>
-      <button class="menu-item theme-pick" data-action="theme" data-theme="phosphor">Phosphor (green CRT)</button>
-      <button class="menu-item theme-pick" data-action="theme" data-theme="amber">Amber (vintage CRT)</button>
-      <button class="menu-item theme-pick" data-action="theme" data-theme="solarized">Solarized Dark</button>
+      <button class="menu-item theme-pick" data-action="theme" data-theme="phosphor">Phosphor</button>
+      <button class="menu-item theme-pick" data-action="theme" data-theme="amber">Amber</button>
+      <button class="menu-item theme-pick" data-action="theme" data-theme="solarized">Solarized</button>
       <button class="menu-item theme-pick" data-action="theme" data-theme="synthwave">Synthwave</button>
-      <div class="menu-divider"></div>
       <div class="menu-label">Data</div>
-      <button class="menu-item" data-action="export">Export JSON</button>
-      <button class="menu-item" data-action="import">Import JSON</button>
+      <button class="menu-item" data-action="export">[E] export json</button>
+      <button class="menu-item" data-action="import">[I] import json</button>
       <div class="menu-divider"></div>
-      <button class="menu-item" data-action="reset" style="color: var(--error);">Reset everything</button>
+      <button class="menu-item" data-action="reset" style="color: var(--b-red-l);">[!] reset everything</button>
     </div>
   </div>
-</header>
 
-<main id="content"></main>
+  <main id="content"></main>
+</div>
 
 <!-- ─── modals ─── -->
 <div class="modal" id="modal-income">
@@ -1783,10 +2121,10 @@
       <div class="form-row">
         <div class="form-col">
           <label class="form-label">Cash tips estimate (optional)</label>
-          <div class="cashtip-row" data-mode="none">
+          <div class="cashtip-row" data-mode="percent">
             <select class="select" name="cashTipMode" onchange="this.closest('.cashtip-row').dataset.mode = this.value">
-              <option value="none" selected>none</option>
-              <option value="percent">+ percent</option>
+              <option value="none">none</option>
+              <option value="percent" selected>+ percent</option>
               <option value="amount">+ amount</option>
             </select>
             <div class="cashtip-input cashtip-input-pct">
@@ -2002,8 +2340,8 @@
 // ════════════════════════════════════════════════════════════════
 // state
 // ════════════════════════════════════════════════════════════════
-const STORAGE_KEY = 'ledgeon-state-v4';
-const TAB_KEY = 'ledgeon-tab';
+const STORAGE_KEY = 'termdo-state-v4';
+const TAB_KEY = 'termdo-tab';
 
 let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [] };
 
@@ -2025,7 +2363,7 @@ if (_migrated) saveState();
 
 // migrate from older versions (v3, v2, v1)
 if (!localStorage.getItem(STORAGE_KEY)) {
-  for (const k of ['ledgeon-state-v3', 'ledgeon-state-v2', 'ledgeon-state-v1']) {
+  for (const k of ['termdo-state-v3', 'termdo-state-v2', 'termdo-state-v1']) {
     try {
       const raw = localStorage.getItem(k);
       if (raw) {
@@ -2310,14 +2648,14 @@ function applyTheme(name) {
   // remove any existing theme classes
   document.documentElement.classList.remove('theme-phosphor', 'theme-amber', 'theme-solarized', 'theme-synthwave');
   if (theme !== 'default') document.documentElement.classList.add('theme-' + theme);
-  localStorage.setItem('ledgeon-theme', theme);
+  localStorage.setItem('termdo-theme', theme);
   // mark the active menu entry
   document.querySelectorAll('.menu-item.theme-pick').forEach(b => {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
 }
 // apply saved theme on load (the menu items get their .active class set after the DOM exists)
-applyTheme(localStorage.getItem('ledgeon-theme') || 'default');
+applyTheme(localStorage.getItem('termdo-theme') || 'default');
 
 function getViewMonth() {
   if (viewMonth) return viewMonth;
@@ -3078,34 +3416,779 @@ function escHTML(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function render() {
-  // date
-  document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+// ════════════════════════════════════════════════════════════════
+// BBS / ANSI-art rendering layer
+// pad-truncates text, builds 80-char wide chrome with box-drawing
+// ════════════════════════════════════════════════════════════════
+function bbsPad(s, w, align) {
+  s = String(s);
+  if (s.length >= w) return s.slice(0, w);
+  const sp = ' '.repeat(w - s.length);
+  return align === 'r' ? sp + s : s + sp;
+}
+function bbsTrunc(s, w) { s = String(s); return s.length > w ? s.slice(0, w - 1) + '…' : s; }
+function bbsRepeat(c, n) { return c.repeat(Math.max(0, n)); }
+function bbsFmtMoney(n, signed) {
+  const abs = Math.abs(n);
+  const s = '$' + abs.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  if (signed) return (n >= 0 ? '+' : '-') + s;
+  return (n < 0 ? '-' : '') + s;
+}
+function bbsFmtMoneyR(n, signed) { // rounded, no cents
+  const abs = Math.abs(n);
+  const s = '$' + Math.round(abs).toLocaleString('en-US');
+  if (signed) return (n >= 0 ? '+' : '-') + s;
+  return (n < 0 ? '-' : '') + s;
+}
+function bbsFmtDate(iso) {
+  if (!iso) return '     ';
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleString('en-US', {month: 'short', day: '2-digit'}).toLowerCase();
+}
+function bbsBar(pct, width, opts) {
+  opts = opts || {};
+  const cap = Math.min(100, Math.max(0, pct));
+  const filled = Math.round((cap / 100) * width);
+  const empty  = width - filled;
+  const cls = opts.color || (cap >= 70 ? 'b-grn' : cap >= 35 ? 'b-yel' : 'b-cyn');
+  return `<span class="${cls}">${'█'.repeat(filled)}</span><span class="dim">${'░'.repeat(empty)}</span>`;
+}
+function bbsBarOver(pct, target, width) {
+  // for spending bars where over-target is bad (red over)
+  if (target <= 0) return `<span class="dim">${'░'.repeat(width)}</span>`;
+  const ratio = pct / 100;
+  if (ratio <= 1) {
+    const filled = Math.round(ratio * width);
+    const empty = width - filled;
+    const cls = ratio >= 0.95 ? 'b-yel' : 'b-grn';
+    return `<span class="${cls}">${'█'.repeat(filled)}</span><span class="dim">${'░'.repeat(empty)}</span>`;
+  } else {
+    // over: full bar in red
+    return `<span class="b-red">${'█'.repeat(width)}</span>`;
+  }
+}
 
-  // unique-source autocomplete for income modal
+// ─── totals (BBS landing strip) ───────────────────────────────────
+function bbsTotals() {
+  const ctx = buildOverviewContext();
+  const goals = state.goals;
+  const dueSoon = state.bills.filter(b => {
+    if (b.paid) return false;
+    const d = daysUntil(b.dueDate);
+    return d != null && d >= 0 && d <= 5;
+  }).length;
+  const overdue = state.bills.filter(b => !b.paid && b.dueDate && daysUntil(b.dueDate) < 0).length;
+  return {
+    monthIn: ctx.monthlyIncome,
+    monthBill: ctx.monthlyBills,
+    cashFlow: ctx.net,
+    dueSoon,
+    overdue,
+    goalsActive: goals.length,
+    monthLabel: ctx.monthLabel,
+  };
+}
+
+// ─── banner (80 chars wide, top of every screen) ─────────────────
+function bbsBanner() {
+  const now = new Date();
+  const dateStr = now.toLocaleString('en-US', {month: 'short', day: '2-digit'}).toLowerCase();
+  const timeStr = now.toLocaleString('en-US', {hour: 'numeric', minute: '2-digit', hour12: false});
+  // node# uses last 4 of localStorage caller signature, derived but stable
+  let caller = parseInt(localStorage.getItem('termdo-bbs-caller') || '0', 10);
+  if (!caller) { caller = 14328 + Math.floor(Math.random() * 999); localStorage.setItem('termdo-bbs-caller', String(caller)); }
+
+  return `<pre>
+<span class="b-blu"> ╔══════════════════════════════════════════════════════════════════════════════╗ </span>
+<span class="b-blu"> ║                                                                              ║ </span>
+<span class="b-blu"> ║   <span class="cyn">▄▄▄▄▄ ▄▄▄▄▄ ▄▄▄▄  ▄  ▄ ▄▄▄▄  ▄▄▄▄</span>     <span class="yel">welcome to TermDO BBS</span>           <span class="b-blu">  ║ </span>
+<span class="b-blu"> ║   <span class="cyn">  █   █     █   █ ██ ██ █   █ █   █</span>    <span class="dim">node #04 · 38400 baud</span>          <span class="b-blu">  ║ </span>
+<span class="b-blu"> ║   <span class="cyn">  █   ██▀   █▀▀▀▀ █ ██ █ █   █ █   █</span>    <span class="dim">caller #${caller} · ${bbsPad(dateStr, 6)}</span>      <span class="b-blu">  ║ </span>
+<span class="b-blu"> ║   <span class="cyn">  █   █     █  █  █  █ █ █   █ █   █</span>    <span class="grn">▶ logged in as: budgeter</span>       <span class="b-blu">  ║ </span>
+<span class="b-blu"> ║   <span class="cyn">  ▀   ▀▀▀▀▀ ▀   ▀ ▀  ▀ ▀ ▀▀▀▀  ▀▀▀▀</span>    <span class="dim">local time: ${bbsPad(timeStr, 5)}            </span><span class="b-blu">  ║ </span>
+<span class="b-blu"> ║                                                                              ║ </span>
+<span class="b-blu"> ╚══════════════════════════════════════════════════════════════════════════════╝ </span>
+</pre>`;
+}
+
+// ─── main menu (left: tab buttons, right: status tiles) ─────────
+function bbsMenu(t) {
+  const items = [
+    { k: 'O', tab: 'overview', label: 'verview',  desc: 'monthly snapshot' },
+    { k: 'I', tab: 'income',   label: 'ncome',    desc: 'salary, tips, freelance' },
+    { k: 'B', tab: 'bills',    label: 'ills',     desc: 'recurring debits' },
+    { k: 'U', tab: 'budget',   label: 'dget',     desc: '50/30/20 buckets' },
+    { k: 'T', tab: 'tasks',    label: 'asks',     desc: 'todo list, priority' },
+    { k: 'S', tab: 'schedule', label: 'chedule',  desc: 'events & reminders' },
+    { k: 'G', tab: 'goals',    label: 'oals',     desc: 'savings targets' },
+    { k: '?', tab: '__menu',   label: 'help',     desc: 'data import/export' },
+  ];
+  const cashCls = t.cashFlow >= 0 ? 'grn' : 'red';
+  const cashStr = bbsFmtMoneyR(t.cashFlow, true);
+  const right = [
+    `<span class="b-grn"> Cash Flow </span>  <span class="${cashCls}">${bbsPad(cashStr, 12)}</span>`,
+    `<span class="b-cyn"> Bills/mo  </span>  <span class="red">${bbsPad(bbsFmtMoneyR(t.monthBill), 12)}</span>`,
+    `<span class="b-yel"> Goals     </span>  <span class="yel">${bbsPad(t.goalsActive + ' active', 12)}</span>`,
+    t.overdue > 0
+      ? `<span class="b-red"> ALERT     </span>  <span class="red blink">${bbsPad(t.overdue + ' overdue', 12)}</span>`
+      : `<span class="b-red"> Due Soon  </span>  <span class="red ${t.dueSoon > 0 ? 'blink' : ''}">${bbsPad(t.dueSoon + ' alert' + (t.dueSoon === 1 ? '' : 's'), 12)}</span>`,
+    `<span class="dim">─────────────────────────</span>`,
+    `<span class="grn">month:    </span>  <span class="wht">${bbsPad(t.monthLabel, 12)}</span>`,
+    `<span class="grn">income:   </span>  <span class="grn">${bbsPad(bbsFmtMoneyR(t.monthIn), 12)}</span>`,
+    ``,
+  ];
+  let rows = '';
+  for (let i = 0; i < items.length; i++) {
+    const it = items[i];
+    const r = right[i] || '';
+    const active = currentTab === it.tab;
+    const keyBg = active ? 'b-yel' : 'b-mag';
+    const dotsLen = Math.max(2, 11 - it.label.length);
+    const dataAttr = it.tab === '__menu' ? 'data-action="toggle-menu"' : `data-tab="${it.tab}"`;
+    const left = `<button class="key-btn" ${dataAttr}><span class="${keyBg}"> ${it.k} </span>  <span class="cyn">${it.label}${'.'.repeat(dotsLen)} ${bbsPad(it.desc, 28)}</span></button>`;
+    rows += `<span class="yel">│</span>   ${left}    <span class="dim">│</span>   ${bbsPad(r, 28)}<span class="yel">│</span>\n`;
+  }
+  return `<pre style="margin-top:14px">
+<span class="yel">┌─[ MAIN MENU ]──────────────────────────────────[ CALLER STATUS ]─────────────┐</span>
+<span class="yel">│</span>                                                                              <span class="yel">│</span>
+${rows}<span class="yel">│</span>                                                                              <span class="yel">│</span>
+<span class="yel">└──────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>`;
+}
+
+// ─── footer F-key bar ─────────────────────────────────────────────
+function bbsFooter() {
+  return `<pre style="margin-top:14px">
+<span class="b-blu"> [O] overview  [I] income  [B] bills  [U] budget  [T] tasks  [S] sched  [G] goals </span>
+<span class="b-blu"> [F2] add new entry   [Esc] close   [F5] refresh   [?] data menu                  </span>  <span class="grn">▌</span><span class="dim"> ready... </span><span class="wht blink">_</span>
+</pre>`;
+}
+
+// ─── month nav strip used inside views ────────────────────────────
+function bbsMonthNav(ctx) {
+  const todayBtn = !ctx.isCurrent
+    ? `   <button class="row-act"  data-action="view-month-today"><span class="b-yel"> [⏎ JUMP TO CURRENT] </span></button>`
+    : '';
+  return `  <button class="row-act" data-action="view-month-prev"><span class="b-cyn"> ◄ ${bbsPad(ctx.prevLabel, 7)} </span></button>      <span class="wht">${bbsPad(ctx.monthLabel.toUpperCase(), 14)}</span>      <button class="row-act" data-action="view-month-next"><span class="b-cyn"> ${bbsPad(ctx.nextLabel, 7)} ► </span></button>${todayBtn}`;
+}
+
+function bbsDatelessNote(n) {
+  if (!n) return '';
+  return `
+<pre style="margin-top:8px">
+<span class="b-yel"> ! WARN </span>  <span class="yel">${n} one-time income entr${n === 1 ? 'y has' : 'ies have'} no date — won't appear in any month total.</span>
+        <span class="dim">edit each on the [I]ncome screen and set the received date.</span>
+</pre>`;
+}
+
+// ─── overview ─────────────────────────────────────────────────────
+function bbsOverview() {
+  const ctx = buildOverviewContext();
+
+  // unified transaction log (income + bills, this month, sorted by date)
+  const todayIsoStr = isoDate(todayStart());
+  const txs = [];
+  for (const i of ctx.incomeBreak) {
+    const isFuture = !i.isRecurring && i.date && i.date > todayIsoStr;
+    txs.push({
+      kind: 'in',
+      id: i.item.id,
+      date: i.isRecurring ? '' : (i.date || ''),
+      name: i.name,
+      amount: i.monthly,
+      status: i.isRecurring ? `${i.freq}` : (isFuture ? 'pending' : 'posted'),
+      sortKey: i.date || (i.isRecurring ? '9999-99' : '0000-00'),
+    });
+  }
+  for (const b of state.bills) {
+    if (!b.dueDate) continue;
+    const billYM = b.dueDate.slice(0, 7);
+    const viewYM = `${ctx.year}-${String(ctx.month + 1).padStart(2, '0')}`;
+    if (billYM !== viewYM) continue;
+    const days = daysUntil(b.dueDate);
+    let status = 'scheduled';
+    if (b.paid) status = 'paid';
+    else if (days < 0) status = `${-days}d late`;
+    else if (days === 0) status = 'today';
+    else if (days <= 3) status = `${days}d due`;
+    else if (days <= 7) status = `${days}d due`;
+    txs.push({
+      kind: 'out',
+      id: b.id,
+      date: b.dueDate,
+      name: b.name,
+      amount: b.amount,
+      status,
+      paid: b.paid,
+      sortKey: b.dueDate,
+    });
+  }
+  txs.sort((a, b) => (a.sortKey > b.sortKey) ? -1 : 1);
+  const recentTxs = txs.slice(0, 12);
+
+  let txRows = '';
+  if (recentTxs.length === 0) {
+    txRows = `<span class="dim">  no entries for ${ctx.monthLabel} yet — press [F2] to add one.</span>\n`;
+  } else {
+    for (const tx of recentTxs) {
+      const sign = tx.kind === 'in' ? '<span class="grn">[+]</span>' : '<span class="red">[-]</span>';
+      const amt = (tx.kind === 'in' ? '+' : '-') + bbsFmtMoney(tx.amount).replace('-', '');
+      const amtCls = tx.kind === 'in' ? 'grn' : 'red';
+      let stCls = 'dim';
+      if (tx.status.includes('late')) stCls = 'red blink';
+      else if (tx.status === 'today') stCls = 'red blink';
+      else if (tx.status.includes('due')) stCls = 'yel blink';
+      else if (tx.status === 'paid') stCls = 'grn';
+      else if (tx.status === 'pending') stCls = 'cyn';
+      const dataType = tx.kind === 'in' ? 'income' : 'bills';
+      const idShort = String(tx.id).slice(-4);
+      // pay action button for unpaid bills
+      let actionBtn = '';
+      if (tx.kind === 'out' && !tx.paid) {
+        actionBtn = `  <button class="row-act" data-action="pay-bill" data-id="${tx.id}"><span class="b-grn"> [√] </span></button>`;
+      } else if (tx.kind === 'out' && tx.paid) {
+        actionBtn = `  <button class="row-act" data-action="unpay-bill" data-id="${tx.id}"><span class="b-yel"> [↶] </span></button>`;
+      }
+      const dateStr = tx.date ? bbsFmtDate(tx.date) : '  -  ';
+      txRows += `  <button class="key-btn row-line" data-action="edit" data-type="${dataType}" data-id="${tx.id}">${sign} <span class="wht">${bbsPad(idShort, 4)}</span> ${bbsPad(dateStr, 6)} <span class="cyn">${bbsPad(bbsTrunc(tx.name, 26), 26)}</span> <span class="${amtCls}">${bbsPad(amt, 12, 'r')}</span>  <span class="${stCls}">[${bbsPad(tx.status, 9)}]</span></button>${actionBtn}\n`;
+    }
+  }
+
+  // savings goals bars
+  let goalsHtml = '';
+  if (state.goals.length === 0) {
+    goalsHtml = `<span class="mag">│</span>   <span class="dim">no goals tracked yet — press [G]oals to add one</span>                               <span class="mag">│</span>\n<span class="mag">│</span>                                                                              <span class="mag">│</span>\n`;
+  } else {
+    for (const g of state.goals.slice(0, 4)) {
+      const target = Number(g.targetAmount) || 0;
+      const saved  = Number(g.currentAmount) || 0;
+      const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+      const bar = bbsBar(pct, 38);
+      const pctCls = pct >= 70 ? 'grn' : pct >= 35 ? 'yel' : 'cyn';
+      const moneyLine = `${bbsFmtMoneyR(saved)} / ${bbsFmtMoneyR(target)}`;
+      let statusTxt, statusCls;
+      if (pct >= 100) { statusTxt = 'complete'; statusCls = 'grn'; }
+      else if (g.targetDate) {
+        const tgt = new Date(g.targetDate + 'T00:00:00');
+        const today = todayStart();
+        if (tgt < today) { statusTxt = 'past due'; statusCls = 'red'; }
+        else { statusTxt = pct >= 50 ? 'on track' : 'behind'; statusCls = pct >= 50 ? 'grn' : 'yel'; }
+      } else {
+        statusTxt = pct >= 50 ? 'on track' : 'starting'; statusCls = pct >= 50 ? 'grn' : 'cyn';
+      }
+      const dueLabel = g.targetDate
+        ? new Date(g.targetDate + 'T00:00:00').toLocaleString('en-US', {month: 'short', year: '2-digit'}).toLowerCase()
+        : 'no deadline';
+      goalsHtml += `<span class="mag">│</span>  <button class="key-btn" data-action="edit" data-type="goals" data-id="${g.id}"><span class="wht">${bbsPad(bbsTrunc(g.name, 14), 14)}</span>  ${bar}  <span class="${pctCls}">${String(pct).padStart(3)}%</span></button>     <span class="mag">│</span>\n<span class="mag">│</span>  <span class="dim">${bbsPad(moneyLine, 26)}</span> <span class="${statusCls}">${bbsPad(statusTxt, 8)}</span> · target <span class="cyn">${bbsPad(dueLabel, 14)}</span>      <span class="mag">│</span>\n<span class="mag">│</span>                                                                              <span class="mag">│</span>\n`;
+    }
+    if (state.goals.length > 4) {
+      goalsHtml += `<span class="mag">│</span>  <span class="dim">+ ${state.goals.length - 4} more — press [G]oals for full list</span>                                <span class="mag">│</span>\n<span class="mag">│</span>                                                                              <span class="mag">│</span>\n`;
+    }
+  }
+
+  // KPI tiles
+  const isViewingCurrent = ctx.isCurrent;
+  const today = todayStart();
+  const daysInMonth = new Date(ctx.year, ctx.month + 1, 0).getDate();
+  const daysElapsed = isViewingCurrent ? today.getDate() : daysInMonth;
+  const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
+  const dailyBudget = daysRemaining > 0 && ctx.net > 0 ? (ctx.net / daysRemaining) : 0;
+  const savingsPct = ctx.monthlyIncome > 0 ? Math.max(0, (ctx.net / ctx.monthlyIncome) * 100) : 0;
+
+  return `${bbsDatelessNote(ctx.datelessOnce)}
+<pre style="margin-top:14px">
+<span class="cyn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-cyn">  &gt;&gt; ${bbsPad(ctx.monthLabel.toUpperCase() + ' · LATEST TRANSACTIONS', 76)}</span>
+<span class="cyn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+
+${bbsMonthNav(ctx)}
+
+  <span class="dim">      ID    DATE    NAME                          AMOUNT       STATUS</span>
+  <span class="dim">  ─── ────  ──────  ─────────────────────────   ──────────   ──────────</span>
+${txRows}  <span class="cyn">─────────────────────────────────────────────────────────────────────────────</span>
+  <span class="yel">  NET ${ctx.monthLabel.toUpperCase()}</span>${bbsPad('', 27 - ctx.monthLabel.length)}<span class="${ctx.net >= 0 ? 'b-grn' : 'b-red'}">${bbsPad(bbsFmtMoneyR(ctx.net, true) + '/mo', 14, 'r')}</span>${isViewingCurrent ? `   <span class="dim">${daysRemaining}d left · ${bbsFmtMoneyR(dailyBudget)}/day</span>` : ''}
+
+  <button class="key-btn" data-action="open-modal" data-type="income"><span class="b-mag"> + </span> <span class="cyn">log income</span></button>     <button class="key-btn" data-action="open-modal" data-type="bills"><span class="b-mag"> + </span> <span class="cyn">log bill</span></button>     <button class="key-btn" data-action="goto-tab" data-tab="budget"><span class="b-cyn"> [U] </span> <span class="cyn">view budget</span></button>
+</pre>
+
+<pre style="margin-top:8px">
+<span class="mag">┌─[ SAVINGS GOALS ]─────────────────────────────────────────[ ${bbsPad(state.goals.length + ' active', 8)} ]─────┐</span>
+<span class="mag">│</span>                                                                              <span class="mag">│</span>
+${goalsHtml}<span class="mag">└──────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>
+
+<pre style="margin-top:8px">
+<span class="grn">┌─[ MONTH STATS ]──────────────────────────────────────────────────────────────┐</span>
+<span class="grn">│</span> <span class="cyn">income basis </span> <span class="grn">${bbsPad(bbsFmtMoneyR(ctx.monthlyIncome) + '/mo', 16)}</span>  <span class="cyn">savings rate </span> <span class="${savingsPct >= 20 ? 'grn' : 'yel'}">${bbsPad(savingsPct.toFixed(0) + '%', 8)}</span>           <span class="grn">│</span>
+<span class="grn">│</span> <span class="cyn">total bills  </span> <span class="red">${bbsPad(bbsFmtMoneyR(ctx.monthlyBills) + '/mo', 16)}</span>  <span class="cyn">${bbsPad(isViewingCurrent ? 'days left   ' : 'view-month  ', 12)}</span> <span class="wht">${bbsPad(isViewingCurrent ? (daysRemaining + ' / ' + daysInMonth) : (ctx.isCurrent ? 'current' : 'archive'), 8)}</span>           <span class="grn">│</span>
+<span class="grn">│</span> <span class="cyn">net cashflow </span> <span class="${ctx.net >= 0 ? 'grn' : 'red'}">${bbsPad(bbsFmtMoneyR(ctx.net, true) + '/mo', 16)}</span>  <span class="cyn">upcoming due </span> <span class="${ctx.upcoming.filter(b=>!b.paid).length > 0 ? 'yel' : 'dim'}">${bbsPad(ctx.upcoming.filter(b=>!b.paid).length + ' bills', 8)}</span>           <span class="grn">│</span>
+<span class="grn">└──────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>`;
+}
+
+// ─── income ──────────────────────────────────────────────────────
+function bbsIncome() {
+  // current month + fallback
+  const now = new Date();
+  const curY = now.getFullYear(), curM = now.getMonth();
+  const curMonthShort = now.toLocaleString('en-US', {month: 'short'});
+  let refY = curY, refM = curM, isFallback = false;
+  let monthList = getIncomeForMonth(curY, curM);
+  if (monthList.length === 0) {
+    for (let i = 1; i <= 24; i++) {
+      const d = new Date(curY, curM - i, 1);
+      const list = getIncomeForMonth(d.getFullYear(), d.getMonth());
+      if (list.length > 0) { refY = d.getFullYear(); refM = d.getMonth(); monthList = list; isFallback = true; break; }
+    }
+  }
+  const monthEarned = monthList.reduce((s, x) => s + x.monthly, 0);
+  const monthName = new Date(refY, refM, 1).toLocaleString('en-US', {month: 'long'}).toUpperCase();
+
+  // hours for the reference month
+  let monthHours = 0;
+  for (const i of state.income) {
+    if (i.hours == null) continue;
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    if (isOnce) {
+      if (!i.receivedAt) continue;
+      const d = new Date(i.receivedAt + 'T00:00:00');
+      if (d.getFullYear() === refY && d.getMonth() === refM) monthHours += Number(i.hours);
+    } else {
+      const factor = i.frequency === 'weekly' ? 4.33333 : i.frequency === 'biweekly' ? 2.16667 : i.frequency === 'monthly' ? 1 : i.frequency === 'yearly' ? (1/12) : 0;
+      monthHours += Number(i.hours) * factor;
+    }
+  }
+  const monthAvgHr = monthHours > 0 ? (monthEarned / monthHours) : null;
+
+  let rows = '';
+  if (state.income.length === 0) {
+    rows = `\n  <span class="dim">  no income tracked yet</span>\n  <button class="key-btn" data-action="open-modal" data-type="income"><span class="b-mag"> + </span> <span class="cyn">add your first income source</span></button>\n`;
+  } else {
+    for (const i of state.income) {
+      const baseAmount = Number(i.amount) || 0;
+      const effective = effectiveIncomeAmount(i);
+      const monthly = monthlyEquivalent(effective, i.frequency);
+      const hourly = (i.hours && i.hours > 0) ? (effective / i.hours) : null;
+      const tipNote = cashTipNote(i);
+      const dateStr = i.receivedAt ? bbsFmtDate(i.receivedAt) : (i.frequency && i.frequency !== 'once' ? '  -  ' : '?????');
+      const idShort = String(i.id).slice(-4);
+      const monthlyStr = monthly > 0 ? '~' + bbsFmtMoneyR(monthly) : '   —';
+      const hoursStr = i.hours != null ? Number(i.hours).toFixed(1) + 'h' : '  -';
+      const hourlyStr = hourly != null ? '$' + hourly.toFixed(0) + '/h' : '  -';
+      rows += `  <button class="key-btn row-line" data-action="edit" data-type="income" data-id="${i.id}"><span class="grn">[+]</span> <span class="wht">${bbsPad(idShort, 4)}</span> ${bbsPad(dateStr, 6)} <span class="cyn">${bbsPad(bbsTrunc(i.source, 24), 24)}</span> <span class="grn">${bbsPad(bbsFmtMoney(effective), 11, 'r')}</span> <span class="dim">[${bbsPad(i.frequency, 8)}]</span> <span class="dim">${bbsPad(hoursStr, 6, 'r')}</span> <span class="dim">${bbsPad(hourlyStr, 7, 'r')}</span> <span class="yel">${bbsPad(monthlyStr, 11, 'r')}</span></button>${tipNote ? `  <span class="b-yel"> ${tipNote} </span>` : ''}\n`;
+    }
+  }
+
+  return `
+<pre style="margin-top:14px">
+<span class="grn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-grn">  &gt;&gt; ${bbsPad('INCOME LEDGER · ' + monthName, 76)}</span>
+<span class="grn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+${isFallback ? `\n  <span class="b-yel"> ! NOTE </span> <span class="yel">no income for ${curMonthShort.toUpperCase()} yet — showing ${monthName} as reference. press [F2] to add.</span>\n` : ''}
+  <span class="dim">      ID   DATE    SOURCE                       AMOUNT     FREQ        HOURS    $/HR     MONTHLY</span>
+  <span class="dim">  ─── ────  ──────  ────────────────────────   ──────────  ──────────  ──────  ──────  ──────────</span>
+${rows}
+  <span class="cyn">─────────────────────────────────────────────────────────────────────────────</span>
+  <span class="yel">  ${bbsPad(monthName + ' EARNED', 24)}</span>  <span class="b-grn">${bbsPad(bbsFmtMoneyR(monthEarned), 12, 'r')} </span>     <span class="dim">${monthHours > 0 ? bbsPad(monthHours.toFixed(1) + 'h logged', 16) : ''}</span>${monthAvgHr != null ? `  <span class="dim">avg $${monthAvgHr.toFixed(0)}/hr</span>` : ''}
+  <span class="yel">  ${bbsPad('RECURRING / MO', 24)}</span>  <span class="b-grn">${bbsPad(bbsFmtMoneyR(state.income.reduce((s, i) => s + monthlyEquivalent(effectiveIncomeAmount(i), i.frequency), 0)), 12, 'r')} </span>
+
+  <button class="key-btn" data-action="open-modal" data-type="income"><span class="b-mag"> + </span> <span class="cyn">add new income source</span></button>
+</pre>`;
+}
+
+// ─── bills ────────────────────────────────────────────────────────
+function bbsBills() {
+  const ref = getReferenceMonthIncome();
+  const monthIncome = ref.total;
+  const refMonthShort = getMonthShort(ref.year, ref.month);
+
+  let rows = '';
+  if (state.bills.length === 0) {
+    rows = `\n  <span class="dim">  no bills tracked yet</span>\n  <button class="key-btn" data-action="open-modal" data-type="bills"><span class="b-mag"> + </span> <span class="cyn">add a bill</span></button>     <button class="key-btn" data-action="preset-bills"><span class="b-cyn"> ◊ </span> <span class="cyn">load presets</span></button>\n`;
+  } else {
+    const sorted = [...state.bills].sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+    for (const b of sorted) {
+      const idShort = String(b.id).slice(-4);
+      const m = billMonthly(b);
+      const dl = b.dueDate ? daysUntil(b.dueDate) : null;
+      let status = b.recurring || 'one-time';
+      let stCls = 'dim';
+      if (b.paid) { status = 'paid'; stCls = 'grn'; }
+      else if (dl != null) {
+        if (dl < 0) { status = `${-dl}d late`; stCls = 'red blink'; }
+        else if (dl === 0) { status = 'today'; stCls = 'red blink'; }
+        else if (dl <= 3) { status = `${dl}d due`; stCls = 'yel blink'; }
+        else if (dl <= 7) { status = `${dl}d due`; stCls = 'yel'; }
+        else if (dl <= 30) { status = `${dl}d due`; stCls = 'cyn'; }
+        else { status = b.recurring || 'scheduled'; stCls = 'dim'; }
+      }
+      const cat = b.category || 'misc';
+      const dateStr = b.dueDate ? bbsFmtDate(b.dueDate) : '?????';
+      const isEmpty = !b.amount;
+      const amtCell = isEmpty
+        ? '<span class="b-yel">— set —    </span>'
+        : `<span class="red">-${bbsPad(bbsFmtMoney(b.amount), 10, 'r')}</span>`;
+      const lastPaidCap = (b.recurring && b.lastPaidAt && !b.paid)
+        ? `<span class="grn-d" title="last paid ${new Date(b.lastPaidAt).toLocaleString()}">✓${bbsFmtDate(isoDate(new Date(b.lastPaidAt)))}</span>`
+        : `        `;
+      // % income
+      let pctStr = '   -';
+      if (!isEmpty && monthIncome > 0) {
+        const pct = (m / monthIncome) * 100;
+        let pctCls = 'dim';
+        if (b.maxPct != null) {
+          if (pct <= b.maxPct) pctCls = 'grn';
+          else if (pct <= b.maxPct * 1.2) pctCls = 'yel';
+          else pctCls = 'red';
+        } else {
+          pctCls = pct > 30 ? 'red' : pct > 15 ? 'yel' : 'grn';
+        }
+        pctStr = `<span class="${pctCls}">${pct.toFixed(1).padStart(4)}%</span>`;
+      }
+      // pay-row action
+      let payAct = '';
+      if (!b.paid && !isEmpty) {
+        payAct = `  <button class="row-act" data-action="pay-bill" data-id="${b.id}"><span class="b-grn"> [√] </span></button>`;
+      } else if (b.paid) {
+        payAct = `  <button class="row-act" data-action="unpay-bill" data-id="${b.id}"><span class="b-yel"> [↶] </span></button>`;
+      } else if (b.recurring && b.lastPaidAt) {
+        payAct = `  <button class="row-act" data-action="unpay-bill" data-id="${b.id}"><span class="b-yel"> [↶] </span></button>`;
+      }
+      rows += `  <button class="key-btn row-line" data-action="edit" data-type="bills" data-id="${b.id}"><span class="red">[-]</span> <span class="wht">${bbsPad(idShort, 4)}</span> ${bbsPad(dateStr, 6)} <span class="cyn">${bbsPad(bbsTrunc(b.name, 24), 24)}</span> ${amtCell} ${pctStr} <span class="dim">[${bbsPad(b.recurring || 'once', 8)}]</span> <span class="dim">[${bbsPad(cat, 8)}]</span> <span class="${stCls}">[${bbsPad(status, 8)}]</span> ${lastPaidCap}</button>${payAct}\n`;
+    }
+  }
+
+  // bills by category breakdown
+  const monthBills = state.bills
+    .filter(b => b.recurring && b.amount > 0)
+    .map(b => ({item: b, monthly: monthlyEquivalent(b.amount, b.recurring)}));
+  const cats = monthBills.length ? aggregateBillsByCategory(monthBills) : [];
+  const totalRec = state.bills.filter(b => b.recurring).reduce((s, b) => s + monthlyEquivalent(b.amount, b.recurring), 0);
+  const totalUnpaid = state.bills.filter(b => !b.paid).reduce((s, b) => s + b.amount, 0);
+  const totalPctIncome = monthIncome > 0 ? (totalRec / monthIncome * 100) : 0;
+
+  let catRows = '';
+  if (cats.length) {
+    for (const c of cats) {
+      const pct = totalRec > 0 ? (c.total / totalRec * 100) : 0;
+      const bar = bbsBar(pct, 28, {color: 'b-cyn'});
+      catRows += `  <span class="cyn">${bbsPad(bbsTrunc(getCategoryLabel(c.category), 12), 12)}</span> ${bar} <span class="wht">${bbsPad(pct.toFixed(0) + '%', 4, 'r')}</span>  <span class="red">${bbsPad(bbsFmtMoneyR(c.total) + '/mo', 12, 'r')}</span>  <span class="dim">${c.count} bill${c.count === 1 ? '' : 's'}</span>\n`;
+    }
+  }
+
+  return `
+<pre style="margin-top:14px">
+<span class="red">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-red">  &gt;&gt; ${bbsPad('BILLS LEDGER · ' + state.bills.length + ' tracked', 76)}</span>
+<span class="red">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+${monthIncome === 0 ? `\n  <span class="b-yel"> ! NOTE </span> <span class="yel">add income on the [I]ncome screen to see %-of-income figures.</span>\n` : (ref.source === 'previous' ? `\n  <span class="b-cyn"> i NOTE </span> <span class="cyn">% calc against ${ref.label} income (${bbsFmtMoneyR(monthIncome)}).</span>\n` : '')}
+  <span class="dim">      ID   DATE    NAME                        AMOUNT     %INC   FREQ      CAT       STATUS    LAST</span>
+  <span class="dim">  ─── ────  ──────  ────────────────────────  ──────────  ──────  ────────  ────────  ────────  ────────</span>
+${rows}
+  <span class="cyn">─────────────────────────────────────────────────────────────────────────────</span>
+  <span class="yel">  TOTAL UNPAID</span>${bbsPad('', 18)}<span class="b-red">${bbsPad('-' + bbsFmtMoneyR(totalUnpaid), 12, 'r')} </span>${monthIncome > 0 ? `   <span class="${totalPctIncome > 70 ? 'red' : totalPctIncome > 50 ? 'yel' : 'grn'}">${totalPctIncome.toFixed(1)}% of income</span>` : ''}
+  <span class="yel">  RECURRING / MO</span>${bbsPad('', 16)}<span class="b-red">${bbsPad('-' + bbsFmtMoneyR(totalRec), 12, 'r')} </span>
+
+  <button class="key-btn" data-action="open-modal" data-type="bills"><span class="b-mag"> + </span> <span class="cyn">add new bill</span></button>     <button class="key-btn" data-action="preset-bills"><span class="b-cyn"> ◊ </span> <span class="cyn">load presets</span></button>
+</pre>${cats.length ? `
+
+<pre style="margin-top:8px">
+<span class="cyn">┌─[ RECURRING BY CATEGORY ]────────────────────────────────────────────────────┐</span>
+<span class="cyn">│</span>                                                                              <span class="cyn">│</span>
+${catRows.split('\n').filter(Boolean).map(l => `<span class="cyn">│</span>${l.replace(/\n/g, '')}                                       <span class="cyn">│</span>`).join('\n')}
+<span class="cyn">│</span>                                                                              <span class="cyn">│</span>
+<span class="cyn">└──────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>` : ''}`;
+}
+
+// ─── budget ──────────────────────────────────────────────────────
+function bbsBudget() {
+  let { year, month } = getViewMonth();
+  let incomeList = getIncomeForMonth(year, month);
+  let billsList  = getBillsForMonth(year, month);
+  let totalIncome = incomeList.reduce((s, x) => s + x.monthly, 0);
+  let totalBills  = billsList.reduce((s, x) => s + x.monthly, 0);
+  let isFallback = false;
+  if (totalIncome === 0) {
+    const ref = getReferenceMonthIncome();
+    if (ref.total > 0) {
+      year = ref.year; month = ref.month;
+      incomeList = getIncomeForMonth(year, month);
+      billsList = getBillsForMonth(year, month);
+      totalIncome = ref.total;
+      totalBills = billsList.reduce((s, x) => s + x.monthly, 0);
+      isFallback = true;
+    }
+  }
+  const monthLabelStr = getMonthLabel(year, month).toUpperCase();
+  const buckets = getBucketTotals(billsList, totalIncome);
+  const recs = generateRecommendations(totalIncome, totalBills, billsList, buckets);
+  const cashFlow = totalIncome - totalBills;
+
+  // bucket bars
+  let bucketHTML = '';
+  for (const b of BUDGET_BUCKETS) {
+    const actual = buckets[b.key] || 0;
+    const target = totalIncome * (b.targetPct / 100);
+    const actualPct = totalIncome > 0 ? Math.round(actual / totalIncome * 100) : 0;
+    const fillPct = target > 0 ? Math.round((actual / target) * 100) : 0;
+    const overTarget = !b.isImplicit && actual > target;
+    const underSavings = b.isImplicit && actual < target;
+    let barColor = 'b-grn';
+    let label = '';
+    let labelCls = 'grn';
+    if (b.isImplicit) {
+      if (actual >= target) { label = `meets ${b.targetPct}% target`; labelCls = 'grn'; barColor = 'b-grn'; }
+      else { label = `${bbsFmtMoneyR(target - actual)} below target`; labelCls = 'yel'; barColor = 'b-yel'; }
+    } else {
+      if (actual <= target) { label = `${bbsFmtMoneyR(target - actual)} under target`; labelCls = 'grn'; barColor = b.key === 'needs' ? 'b-red' : 'b-yel'; }
+      else if (actual <= target * 1.2) { label = `${bbsFmtMoneyR(actual - target)} over target`; labelCls = 'yel'; barColor = 'b-yel'; }
+      else { label = `${bbsFmtMoneyR(actual - target)} OVER target`; labelCls = 'red'; barColor = 'b-red'; }
+    }
+    const bar = bbsBarOver(fillPct, 100, 44);
+    const moneyLine = `${bbsFmtMoneyR(actual)} / ${bbsFmtMoneyR(target)}`;
+    const catsInBucket = b.cats.length
+      ? b.cats.map(cat => {
+          const total = billsList.filter(bb => (bb.item.category || 'uncategorized') === cat).reduce((s, x) => s + x.monthly, 0);
+          return total > 0 ? `<span class="dim">${getCategoryLabel(cat)}</span>` : null;
+        }).filter(Boolean).join(', ')
+      : '';
+    bucketHTML += `
+  <span class="wht">${b.label.toUpperCase().padEnd(8)} (${b.targetPct}%)</span>     ${bar}  <span class="${labelCls}">${String(actualPct).padStart(3)}%</span>
+  <span class="dim">${bbsPad(moneyLine, 22)}</span>   <span class="${labelCls}">${bbsPad(label, 28)}</span>${catsInBucket ? ` · ${catsInBucket}` : ''}
+`;
+  }
+
+  // recommendations
+  let recsHTML = '';
+  if (recs.length) {
+    for (const r of recs) {
+      const tag = r.type === 'warning' ? '<span class="b-yel"> ! </span>' : r.type === 'success' ? '<span class="b-grn"> ✓ </span>' : '<span class="b-cyn"> i </span>';
+      recsHTML += `  ${tag} <span class="dim">${escHTML(r.text)}</span>\n`;
+    }
+  } else {
+    recsHTML = `  <span class="dim">no recommendations — add income & bills first</span>\n`;
+  }
+
+  return `
+<pre style="margin-top:14px">
+<span class="yel">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-yel">  &gt;&gt; ${bbsPad('BUDGET 50/30/20 · ' + monthLabelStr, 76)}</span>
+<span class="yel">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+${isFallback ? `\n  <span class="b-yel"> ! NOTE </span> <span class="yel">no data for current month — showing ${monthLabelStr} as reference.</span>\n` : ''}
+  <span class="cyn">income basis:</span> <span class="grn">${bbsFmtMoneyR(totalIncome)}/mo</span>     <span class="cyn">total bills:</span> <span class="red">${bbsFmtMoneyR(totalBills)}/mo</span>     <span class="cyn">net:</span> <span class="${cashFlow >= 0 ? 'grn' : 'red'}">${bbsFmtMoneyR(cashFlow, true)}/mo</span>
+${bucketHTML}
+  <span class="cyn">─────────────────────────────────────────────────────────────────────────────</span>
+  <span class="dim">▶ tip: 50/30/20 is a rule-of-thumb. categorize bills via [B]ills → edit.</span>
+</pre>
+
+<pre style="margin-top:8px">
+<span class="cyn">┌─[ RECOMMENDATIONS ]──────────────────────────────────────────────────────────┐</span>
+<span class="cyn">│</span>                                                                              <span class="cyn">│</span>
+${recsHTML.split('\n').filter(Boolean).join('\n')}
+<span class="cyn">│</span>                                                                              <span class="cyn">│</span>
+<span class="cyn">└──────────────────────────────────────────────────────────────────────────────┘</span>
+</pre>`;
+}
+
+// ─── goals ────────────────────────────────────────────────────────
+function bbsGoals() {
+  const today = todayStart();
+  let rows = '';
+  if (state.goals.length === 0) {
+    rows = `\n  <span class="dim">  no savings goals tracked yet</span>\n  <button class="key-btn" data-action="open-modal" data-type="goals"><span class="b-mag"> + </span> <span class="cyn">add your first goal</span></button>\n`;
+  } else {
+    for (const g of state.goals) {
+      const target = Number(g.targetAmount) || 0;
+      const saved = Number(g.currentAmount) || 0;
+      const remaining = Math.max(0, target - saved);
+      const pct = target > 0 ? Math.min(100, Math.round((saved / target) * 100)) : 0;
+      const bar = bbsBar(pct, 44);
+      const pctCls = pct >= 100 ? 'grn' : pct >= 70 ? 'grn' : pct >= 35 ? 'yel' : 'cyn';
+      let monthsLeft = null, pastDue = false, monthlyNeed = null;
+      if (g.targetDate) {
+        const tgt = new Date(g.targetDate + 'T00:00:00');
+        if (tgt < today) pastDue = true;
+        else monthsLeft = Math.max(1, Math.round((tgt - today) / 86400000 / 30));
+        if (monthsLeft && remaining > 0) monthlyNeed = remaining / monthsLeft;
+      }
+      let statusTxt, statusCls;
+      if (pct >= 100)        { statusTxt = 'COMPLETE'; statusCls = 'b-grn'; }
+      else if (pastDue)      { statusTxt = 'past due'; statusCls = 'red'; }
+      else if (monthsLeft && monthlyNeed != null) {
+        const monthlyTarget = (g.monthlyTarget || 0);
+        if (monthlyTarget > 0 && monthlyTarget >= monthlyNeed) { statusTxt = 'on track'; statusCls = 'grn'; }
+        else if (pct >= 50) { statusTxt = 'on track'; statusCls = 'grn'; }
+        else { statusTxt = 'behind'; statusCls = 'yel'; }
+      } else {
+        statusTxt = pct >= 50 ? 'on track' : 'starting'; statusCls = pct >= 50 ? 'grn' : 'cyn';
+      }
+      const moneyLine = `${bbsFmtMoneyR(saved)} / ${bbsFmtMoneyR(target)}`;
+      const dueLabel = g.targetDate
+        ? new Date(g.targetDate + 'T00:00:00').toLocaleString('en-US', {month: 'short', year: '2-digit'}).toLowerCase()
+        : 'no deadline';
+      const monthlyLine = monthlyNeed != null
+        ? `need ${bbsFmtMoneyR(monthlyNeed)}/mo`
+        : (pct >= 100 ? 'goal reached!' : remaining > 0 ? `${bbsFmtMoneyR(remaining)} to go` : '');
+
+      rows += `  <button class="key-btn row-line" data-action="edit" data-type="goals" data-id="${g.id}"><span class="wht">${bbsPad(bbsTrunc(g.name, 18), 18)}</span>  ${bar}  <span class="${pctCls}">${String(pct).padStart(3)}%</span></button>
+  <span class="dim">${bbsPad(moneyLine, 22)}</span>   <span class="${statusCls}">${statusCls === 'b-grn' ? '<span class="' + statusCls + '"> ' + statusTxt + ' </span>' : bbsPad(statusTxt, 10)}</span>${monthlyLine ? `   <span class="yel">${monthlyLine}</span>` : ''}   target <span class="cyn">${dueLabel}</span>${g.notes ? `\n  <span class="dim">  note:</span>  <span class="cyn">${escHTML(g.notes)}</span>` : ''}
+  <button class="row-act" data-action="goal-add" data-id="${g.id}"><span class="b-grn"> [+] DEPOSIT </span></button>  <button class="row-act" data-action="goal-subtract" data-id="${g.id}"><span class="b-yel"> [-] WITHDRAW </span></button>  <button class="row-act" data-action="remove" data-id="${g.id}"><span class="b-red"> [×] DELETE </span></button>
+
+`;
+    }
+  }
+
+  // overall progress
+  const totalSaved = state.goals.reduce((s, g) => s + (Number(g.currentAmount) || 0), 0);
+  const totalTarget = state.goals.reduce((s, g) => s + (Number(g.targetAmount) || 0), 0);
+  const overallPct = totalTarget > 0 ? Math.round((totalSaved / totalTarget) * 100) : 0;
+
+  return `
+<pre style="margin-top:14px">
+<span class="mag">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-mag">  &gt;&gt; ${bbsPad('SAVINGS GOALS · ' + state.goals.length + ' tracked', 76)}</span>
+<span class="mag">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+${state.goals.length > 0 ? `
+  <span class="cyn">overall:</span> <span class="wht">${bbsPad(bbsFmtMoneyR(totalSaved) + ' / ' + bbsFmtMoneyR(totalTarget), 22)}</span>  ${bbsBar(overallPct, 30)}  <span class="${overallPct >= 50 ? 'grn' : 'yel'}">${String(overallPct).padStart(3)}%</span>
+
+  <span class="cyn">─────────────────────────────────────────────────────────────────────────────</span>
+` : ''}
+${rows}
+  <button class="key-btn" data-action="open-modal" data-type="goals"><span class="b-mag"> + </span> <span class="cyn">add new savings goal</span></button>
+</pre>`;
+}
+
+// ─── tasks ───────────────────────────────────────────────────────
+function bbsTasks() {
+  const todayIsoStr = isoDate(todayStart());
+  let rows = '';
+  if (state.tasks.length === 0) {
+    rows = `\n  <span class="dim">  no tasks yet</span>\n  <button class="key-btn" data-action="open-modal" data-type="tasks"><span class="b-mag"> + </span> <span class="cyn">add your first task</span></button>\n`;
+  } else {
+    const sorted = [...state.tasks].sort((a, b) => {
+      // open first, then by date
+      if (!!a.done !== !!b.done) return a.done ? 1 : -1;
+      const ad = a.dueDate || '9999-99-99';
+      const bd = b.dueDate || '9999-99-99';
+      return ad.localeCompare(bd);
+    });
+    for (const t of sorted) {
+      const idShort = String(t.id).slice(-4);
+      const done = !!t.done;
+      const box = done ? '<span class="grn">[x]</span>' : '<span class="red">[ ]</span>';
+      let pri;
+      if (t.priority === 'high')        pri = '<span class="b-red"> HI </span>';
+      else if (t.priority === 'medium') pri = '<span class="b-yel"> MD </span>';
+      else if (t.priority === 'low')    pri = '<span class="b-cyn"> LO </span>';
+      else pri = '<span class="dim"> -- </span>';
+      const nameCls = done ? 'dim' : 'cyn';
+      const dl = t.dueDate ? daysUntil(t.dueDate) : null;
+      let stCls = 'dim';
+      let status = 'open';
+      if (done) { status = 'done'; stCls = 'grn'; }
+      else if (dl != null) {
+        if (dl < 0) { status = `${-dl}d late`; stCls = 'red blink'; }
+        else if (dl === 0) { status = 'today'; stCls = 'red blink'; }
+        else if (dl <= 3) { status = `${dl}d`; stCls = 'yel'; }
+        else if (dl <= 14) { status = `${dl}d`; stCls = 'cyn'; }
+        else { status = 'open'; stCls = 'dim'; }
+      }
+      const dateStr = t.dueDate ? bbsFmtDate(t.dueDate) : '   -  ';
+      const toggleAct = `  <button class="row-act" data-action="toggle-task" data-id="${t.id}"><span class="${done ? 'b-yel' : 'b-grn'}"> ${done ? '[↶]' : '[√]'} </span></button>`;
+      rows += `  <button class="key-btn row-line" data-action="edit" data-type="tasks" data-id="${t.id}">${box} <span class="wht">${bbsPad(idShort, 4)}</span>  ${pri}  <span class="${nameCls}">${bbsPad(bbsTrunc(t.text, 38), 38)}</span>  <span class="dim">${bbsPad(dateStr, 6)}</span>  <span class="${stCls}">[${bbsPad(status, 8)}]</span></button>${toggleAct}\n`;
+    }
+  }
+
+  const open = state.tasks.filter(t => !t.done).length;
+  const overdue = state.tasks.filter(t => !t.done && t.dueDate && t.dueDate < todayIsoStr).length;
+  const todayCnt = state.tasks.filter(t => !t.done && t.dueDate === todayIsoStr).length;
+
+  return `
+<pre style="margin-top:14px">
+<span class="cyn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-cyn">  &gt;&gt; ${bbsPad('TASK LIST · ' + open + ' open, ' + (state.tasks.length - open) + ' done', 76)}</span>
+<span class="cyn">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+${overdue > 0 ? `\n  <span class="b-red"> ! </span> <span class="red">${overdue} task${overdue === 1 ? '' : 's'} overdue</span>${todayCnt > 0 ? `   <span class="b-yel"> ! </span> <span class="yel">${todayCnt} due today</span>` : ''}\n` : (todayCnt > 0 ? `\n  <span class="b-yel"> ! </span> <span class="yel">${todayCnt} task${todayCnt === 1 ? '' : 's'} due today</span>\n` : '')}
+  <span class="dim">       ID    PRI  TASK                                    DATE    STATUS  </span>
+  <span class="dim">  ───  ────  ────  ────────────────────────────────────────  ──────  ──────────</span>
+${rows}
+  <button class="key-btn" data-action="open-modal" data-type="tasks"><span class="b-mag"> + </span> <span class="cyn">add new task</span></button>
+</pre>`;
+}
+
+// ─── schedule ────────────────────────────────────────────────────
+function bbsSchedule() {
+  const todayIsoStr = isoDate(todayStart());
+  const sorted = [...state.events].sort((a, b) => a.date.localeCompare(b.date));
+  let rows = '';
+  if (sorted.length === 0) {
+    rows = `\n  <span class="dim">  no events scheduled</span>\n  <button class="key-btn" data-action="open-modal" data-type="events"><span class="b-mag"> + </span> <span class="cyn">add your first event</span></button>\n`;
+  } else {
+    for (const e of sorted) {
+      const idShort = String(e.id).slice(-4);
+      const dl = daysUntil(e.date);
+      let when, whenCls = 'dim';
+      if (dl == null) when = '       ';
+      else if (dl < 0) { when = `${-dl}d ago`; whenCls = 'dim'; }
+      else if (dl === 0) { when = 'today'; whenCls = 'red blink'; }
+      else if (dl <= 3) { when = `in ${dl}d`; whenCls = 'yel blink'; }
+      else if (dl <= 14) { when = `in ${dl}d`; whenCls = 'yel'; }
+      else if (dl <= 30) { when = `in ${dl}d`; whenCls = 'cyn'; }
+      else { when = `in ${dl}d`; whenCls = 'dim'; }
+      const status = dl == null ? 'event' : (dl < 0 ? 'past' : (dl === 0 ? 'today' : 'upcoming'));
+      const stCls = dl < 0 ? 'dim' : (dl === 0 ? 'red blink' : 'cyn');
+      const timeStr = e.time || '     ';
+      const dateStr = bbsFmtDate(e.date);
+      rows += `  <button class="key-btn row-line" data-action="edit" data-type="events" data-id="${e.id}"><span class="cyn">►</span> <span class="wht">${bbsPad(idShort, 4)}</span>  <span class="cyn">${bbsPad(bbsTrunc(e.name, 32), 32)}</span>  <span class="dim">${bbsPad(dateStr, 6)}</span>  <span class="dim">${bbsPad(timeStr, 6)}</span>  <span class="${whenCls}">${bbsPad(when, 8)}</span>  <span class="${stCls}">[${bbsPad(status, 8)}]</span></button>\n`;
+    }
+  }
+
+  const upcomingCnt = state.events.filter(e => e.date >= todayIsoStr).length;
+  const todayCnt = state.events.filter(e => e.date === todayIsoStr).length;
+
+  return `
+<pre style="margin-top:14px">
+<span class="blu">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+<span class="b-blu">  &gt;&gt; ${bbsPad('SCHEDULE · ' + upcomingCnt + ' upcoming' + (todayCnt ? ', ' + todayCnt + ' today' : ''), 76)}</span>
+<span class="blu">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+
+  <span class="dim">     ID    EVENT                              DATE    TIME    WHEN      STATUS  </span>
+  <span class="dim">───  ────  ────────────────────────────────   ──────  ──────  ────────  ────────</span>
+${rows}
+  <button class="key-btn" data-action="open-modal" data-type="events"><span class="b-mag"> + </span> <span class="cyn">add new event</span></button>
+</pre>`;
+}
+
+
+
+// ── BBS dispatcher ──
+function render() {
+  // Datalist for income source autocomplete (still used by income modal)
   const dl = document.getElementById('income-source-list');
   if (dl) {
     const sources = [...new Set(state.income.map(i => i.source).filter(Boolean))].sort((a, b) => a.localeCompare(b));
     dl.innerHTML = sources.map(s => `<option value="${escHTML(s)}"></option>`).join('');
   }
 
-  // badges
-  document.getElementById('badge-income').textContent = state.income.length;
-  document.getElementById('badge-bills').textContent  = state.bills.filter(b => !b.paid).length;
-  document.getElementById('badge-tasks').textContent  = state.tasks.filter(t => !t.done).length;
-  document.getElementById('badge-events').textContent = state.events.filter(e => e.date >= isoDate(todayStart())).length;
+  // build BBS view
+  const t = bbsTotals();
+  let body;
+  if      (currentTab === 'overview') body = bbsOverview();
+  else if (currentTab === 'income')   body = bbsIncome();
+  else if (currentTab === 'bills')    body = bbsBills();
+  else if (currentTab === 'budget')   body = bbsBudget();
+  else if (currentTab === 'tasks')    body = bbsTasks();
+  else if (currentTab === 'schedule') body = bbsSchedule();
+  else if (currentTab === 'goals')    body = bbsGoals();
+  else { currentTab = 'overview'; body = bbsOverview(); }
 
-  // active tab
-  document.querySelectorAll('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
-
-  // content
-  const main = document.getElementById('content');
-  if (currentTab === 'overview') main.innerHTML = renderOverview();
-  else if (currentTab === 'income') main.innerHTML = renderIncomeSheet();
-  else if (currentTab === 'bills') main.innerHTML = renderBillsSheet();
-  else if (currentTab === 'budget') main.innerHTML = renderBudget();
-  else if (currentTab === 'tasks') main.innerHTML = renderTasksSheet();
-  else if (currentTab === 'schedule') main.innerHTML = renderEventsSheet();
+  document.getElementById('content').innerHTML = bbsBanner() + bbsMenu(t) + body + bbsFooter();
 }
 
 // ── overview ──
@@ -3323,16 +4406,16 @@ function renderOverview() {
 
     <div class="ov-section">
       <div class="ov-section-head">
-        <span class="label">Income vs expenses · last 6 months</span>
+        <span class="label">Income vs bills · last 6 months</span>
       </div>
       <div class="chart-legend">
         <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
-        <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
+        <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Bills</span>
       </div>
       <div class="line-chart-wrap">
         ${renderLineChart(getMonthlyHistory(6), [
           { key: 'income', color: 'var(--income)', label: 'Income' },
-          { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
+          { key: 'bills',  color: 'var(--bill)',   label: 'Bills' },
         ])}
       </div>
     </div>
@@ -3829,16 +4912,11 @@ function renderIncomeSheet() {
     </div>
     <div class="ov-section" style="margin-bottom: 22px;">
       <div class="ov-section-head">
-        <span class="label">Income vs expenses · last 6 months</span>
-      </div>
-      <div class="chart-legend">
-        <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
-        <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
+        <span class="label">Income · last 6 months</span>
       </div>
       <div class="line-chart-wrap">
         ${renderLineChart(getMonthlyHistory(6), [
           { key: 'income', color: 'var(--income)', label: 'Income' },
-          { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
         ])}
       </div>
     </div>
@@ -4210,9 +5288,9 @@ document.addEventListener('click', (e) => {
   // close menu on outside click
   if (!e.target.closest('#menu')) document.getElementById('menu').classList.remove('open');
 
-  // tab clicks
-  const tabBtn = e.target.closest('.tab[data-tab]');
-  if (tabBtn) {
+  // tab clicks (legacy .tab or new BBS [data-tab] anywhere)
+  const tabBtn = e.target.closest('[data-tab]');
+  if (tabBtn && tabBtn.dataset.tab && !tabBtn.dataset.action) {
     currentTab = tabBtn.dataset.tab;
     localStorage.setItem(TAB_KEY, currentTab);
     render();
@@ -4295,7 +5373,7 @@ document.addEventListener('click', (e) => {
   else if (action === 'theme') { applyTheme(target.dataset.theme); }
   else if (action === 'reset') {
     if (confirm('Delete everything? This cannot be undone.')) {
-      state = { tasks: [], bills: [], events: [], income: [] };
+      state = { tasks: [], bills: [], events: [], income: [], goals: [] };
       saveState(); render();
     }
     document.getElementById('menu').classList.remove('open');
@@ -4316,11 +5394,45 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// keyboard
+// keyboard — BBS letter shortcuts
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAllModals();
     document.getElementById('menu').classList.remove('open');
+    return;
+  }
+
+  // skip when typing in inputs / modals open / modifier keys held
+  const tgt = e.target;
+  const isEditable = tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable);
+  const modalOpen = !!document.querySelector('.modal.open');
+  if (isEditable || modalOpen || e.ctrlKey || e.metaKey || e.altKey) return;
+
+  const key = e.key.toLowerCase();
+  const tabMap = { o: 'overview', i: 'income', b: 'bills', u: 'budget', t: 'tasks', s: 'schedule', g: 'goals' };
+  if (tabMap[key]) {
+    currentTab = tabMap[key];
+    localStorage.setItem(TAB_KEY, currentTab);
+    render();
+    e.preventDefault();
+    return;
+  }
+  if (e.key === '?') {
+    document.getElementById('menu').classList.toggle('open');
+    e.preventDefault();
+    return;
+  }
+  if (e.key === 'F2') {
+    // open the most contextual modal for the current tab
+    const tabToType = { overview: 'income', income: 'income', bills: 'bills', budget: 'goals', tasks: 'tasks', schedule: 'events', goals: 'goals' };
+    openModal(tabToType[currentTab] || 'income');
+    e.preventDefault();
+    return;
+  }
+  if (e.key === 'F5') {
+    e.preventDefault();
+    render();
+    return;
   }
 });
 
@@ -4460,7 +5572,7 @@ function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'ledgeon-budget-' + isoDate(todayStart()) + '.json';
+    a.download = 'termdo-budget-' + isoDate(todayStart()) + '.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (e) { alert('Export failed: ' + e.message); }
@@ -4473,13 +5585,14 @@ document.getElementById('file-import').addEventListener('change', (e) => {
   reader.onload = (ev) => {
     try {
       const imp = JSON.parse(ev.target.result);
-      const counts = `${imp.tasks?.length || 0} tasks, ${imp.bills?.length || 0} bills, ${imp.events?.length || 0} events, ${imp.income?.length || 0} income sources`;
+      const counts = `${imp.tasks?.length || 0} tasks, ${imp.bills?.length || 0} bills, ${imp.events?.length || 0} events, ${imp.income?.length || 0} income sources, ${imp.goals?.length || 0} goals`;
       if (!confirm(`Import ${counts}? This will replace your current data.`)) return;
       state = {
         tasks: Array.isArray(imp.tasks) ? imp.tasks : [],
         bills: Array.isArray(imp.bills) ? imp.bills : [],
         events: Array.isArray(imp.events) ? imp.events : [],
-        income: Array.isArray(imp.income) ? imp.income : []
+        income: Array.isArray(imp.income) ? imp.income : [],
+        goals: Array.isArray(imp.goals) ? imp.goals : []
       };
       saveState(); render();
     } catch { alert('Invalid JSON file.'); }
