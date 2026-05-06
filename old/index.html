@@ -454,144 +454,6 @@
     letter-spacing: 0.6px;
   }
 
-  /* ─── bento dashboard layout ─── */
-  .bento-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 22px;
-  }
-  .bento-card {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-  .bento-card .bc-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    gap: 8px;
-  }
-  .bento-card .bc-label {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-faint);
-    font-weight: 500;
-  }
-  .bento-card .bc-link {
-    font-size: 11px;
-    color: var(--text-faint);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-    transition: color 0.15s;
-  }
-  .bento-card .bc-link:hover { color: var(--accent); }
-  .bento-card .bc-value {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--text-bright);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.6px;
-    line-height: 1.05;
-  }
-  .bento-card .bc-value.income { color: var(--income); }
-  .bento-card .bc-value.bill { color: var(--bill); }
-  .bento-card .bc-value.positive { color: var(--income); }
-  .bento-card .bc-value.negative { color: var(--error); }
-  .bento-card .bc-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 6px;
-  }
-  /* spans */
-  .bento-card.span-2 { grid-column: span 2; }
-  .bento-card.span-3 { grid-column: span 3; }
-  .bento-card.span-4 { grid-column: span 4; }
-  .bento-card.span-6 { grid-column: span 6; }
-  /* hero variant */
-  .bento-card.hero {
-    padding: 22px 26px;
-  }
-  .bento-card.hero .bc-value {
-    font-size: 46px;
-    letter-spacing: -1.2px;
-  }
-  .bento-card.hero .bc-sub {
-    font-size: 13px;
-    margin-top: 8px;
-  }
-  /* list inside card */
-  .bento-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 4px;
-  }
-  .bento-list .bl-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 12.5px;
-    align-items: baseline;
-  }
-  .bento-list .bl-row:last-child { border-bottom: none; }
-  .bento-list .bl-row .bl-name { color: var(--text); }
-  .bento-list .bl-row .bl-meta {
-    font-size: 11px;
-    color: var(--text-faint);
-    display: block;
-    margin-top: 1px;
-  }
-  .bento-list .bl-row .bl-amt { color: var(--bill); font-variant-numeric: tabular-nums; }
-  .bento-list .bl-row .bl-amt.income { color: var(--income); }
-  .bento-list .bl-empty {
-    color: var(--text-faint);
-    font-size: 12px;
-    font-style: italic;
-    padding: 14px 0;
-    text-align: center;
-  }
-  /* mini progress bar inside card */
-  .bento-progress {
-    height: 6px;
-    background: var(--bg-input);
-    border-radius: 999px;
-    overflow: hidden;
-    margin: 6px 0 4px;
-  }
-  .bento-progress .fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 999px;
-    transition: width 0.3s;
-  }
-  .bento-progress .fill.income { background: var(--income); }
-  /* compact chart inside bento card */
-  .bento-card .line-chart-wrap {
-    flex: 1;
-    margin: 0;
-  }
-  /* responsive bento */
-  @media (max-width: 900px) {
-    .bento-grid { grid-template-columns: repeat(2, 1fr); }
-    .bento-card.span-2, .bento-card.span-3, .bento-card.span-4, .bento-card.span-6 { grid-column: span 2; }
-  }
-  @media (max-width: 560px) {
-    .bento-grid { grid-template-columns: 1fr; }
-    .bento-card.span-2, .bento-card.span-3, .bento-card.span-4, .bento-card.span-6 { grid-column: span 1; }
-  }
-
   /* ─── line chart ─── */
   .line-chart-wrap {
     width: 100%;
@@ -3391,121 +3253,91 @@ function renderOverview() {
     ${renderMonthNav(ctx)}
     ${renderDatelessWarning(ctx.datelessOnce)}
 
-    <div class="bento-grid">
-
-      <div class="bento-card hero span-6">
-        <div class="bc-head">
-          <span class="bc-label">Net · ${ctx.monthLabel}</span>
-          <span class="bc-label" style="text-transform:none; letter-spacing:0; font-size:11px; color: var(--text-dim);">${ctx.net >= 0 ? 'discretionary' : 'over budget'}</span>
-        </div>
-        <div class="bc-value ${netCls}">${(ctx.monthlyIncome > 0 || ctx.monthlyBills > 0) ? fmtMoney(ctx.net, {round: true, signed: true}) : '—'}</div>
-        <div class="bc-sub">${deltaHTML(ctx.net, prev.income - prev.bills)}</div>
+    <div class="kpi-hero">
+      <div class="label">Net · ${ctx.monthLabel}</div>
+      <div class="value ${netCls}">${(ctx.monthlyIncome > 0 || ctx.monthlyBills > 0) ? fmtMoney(ctx.net, {round: true, signed: true}) : '—'}</div>
+      <div class="sub">
+        ${ctx.net >= 0 ? 'discretionary income' : 'over budget this month'}
+        · ${deltaHTML(ctx.net, prev.income - prev.bills)}
       </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Income</span><button class="bc-link" data-action="goto-tab" data-tab="income">view all →</button></div>
-        <div class="bc-value income">${ctx.monthlyIncome > 0 ? fmtMoney(ctx.monthlyIncome, {round: true}) : '—'}</div>
-        <div class="bc-sub">${ctx.incomeBreak.length} source${ctx.incomeBreak.length === 1 ? '' : 's'} · ${monthHours > 0 ? fmtHM(monthHours) + ' worked' : 'no hours logged'}</div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Expenses</span><button class="bc-link" data-action="goto-tab" data-tab="bills">view all →</button></div>
-        <div class="bc-value bill">${ctx.monthlyBills > 0 ? fmtMoney(ctx.monthlyBills, {round: true}) : '—'}</div>
-        <div class="bc-sub">${ctx.billsBreak.length} bill${ctx.billsBreak.length === 1 ? '' : 's'} · ${paidThisMonth} paid this month</div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Savings rate</span><button class="bc-link" data-action="goto-tab" data-tab="budget">budget →</button></div>
-        <div class="bc-value ${savingsPct >= 20 ? 'positive' : 'bill'}">${ctx.monthlyIncome > 0 ? savingsPct.toFixed(0) + '%' : '—'}</div>
-        <div class="bento-progress"><div class="fill ${savingsPct >= 20 ? 'income' : ''}" style="width: ${Math.min(100, savingsPct).toFixed(1)}%; ${savingsPct < 20 ? 'background: var(--bill);' : ''}"></div></div>
-        <div class="bc-sub">${savingsPct >= 20 ? 'meets 20% target' : `${(20 - savingsPct).toFixed(0)}% below 20% target`}</div>
-      </div>
-
-      <div class="bento-card span-4">
-        <div class="bc-head">
-          <span class="bc-label">Income vs expenses · 6 months</span>
-          <span class="chart-legend" style="margin-bottom:0;">
-            <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
-            <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
-          </span>
-        </div>
-        <div class="line-chart-wrap">
-          ${renderLineChart(getMonthlyHistory(6), [
-            { key: 'income', color: 'var(--income)', label: 'Income' },
-            { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
-          ], { height: 200 })}
-        </div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head">
-          <span class="bc-label">Upcoming · 14d</span>
-          <span class="bc-label" style="text-transform:none; letter-spacing:0; color: var(--bill);">${ctx.upcomingTotal > 0 ? fmtMoney(ctx.upcomingTotal, {round: true}) : ''}</span>
-        </div>
-        ${ctx.upcoming.length === 0 ? `<div class="bl-empty">no bills due soon</div>` : `
-          <div class="bento-list">
-            ${ctx.upcoming.slice(0, 6).map(b => `
-              <div class="bl-row">
-                <div>
-                  <div class="bl-name">${escHTML(b.name)}</div>
-                  <span class="bl-meta">${formatDate(b.dueDate)}${b.paid ? ' · paid' : ''}</span>
-                </div>
-                <span class="bl-amt">${fmtMoney(b.amount, {round: true})}</span>
-              </div>
-            `).join('')}
-            ${ctx.upcoming.length > 6 ? `<button class="bc-link" data-action="goto-tab" data-tab="bills" style="text-align:left; margin-top:6px;">+ ${ctx.upcoming.length - 6} more →</button>` : ''}
-          </div>
-        `}
-      </div>
-
-      <div class="bento-card span-3">
-        <div class="bc-head">
-          <span class="bc-label">Tasks</span>
-          <button class="bc-link" data-action="goto-tab" data-tab="tasks">view all →</button>
-        </div>
-        ${(() => {
-          const open = state.tasks.filter(t => !t.done).slice(0, 5);
-          if (open.length === 0 && state.tasks.length === 0) return `<div class="bl-empty">no tasks yet</div>`;
-          if (open.length === 0) return `<div class="bl-empty">all tasks done — nice.</div>`;
-          return `<div class="bento-list">${open.map(t => {
-            const overdue = t.dueDate && isOverdue(t.dueDate);
-            const today = t.dueDate && isTodayDate(t.dueDate);
-            return `<div class="bl-row">
-              <div>
-                <div class="bl-name">${escHTML(t.text)}</div>
-                ${t.dueDate ? `<span class="bl-meta" style="${overdue ? 'color: var(--error);' : today ? 'color: var(--accent);' : ''}">${overdue ? 'overdue · ' : today ? 'today · ' : ''}${formatDate(t.dueDate)}</span>` : ''}
-              </div>
-              <span class="bl-meta" style="margin-top:0;">${t.priority === 'high' ? '↑ high' : t.priority === 'low' ? '↓ low' : ''}</span>
-            </div>`;
-          }).join('')}</div>`;
-        })()}
-      </div>
-
-      <div class="bento-card span-3">
-        <div class="bc-head">
-          <span class="bc-label">Goals</span>
-          <button class="bc-link" data-action="goto-tab" data-tab="budget">view all →</button>
-        </div>
-        ${(() => {
-          if (state.goals.length === 0) return `<div class="bl-empty">no savings goals yet</div>`;
-          return `<div class="bento-list">${state.goals.slice(0, 4).map(g => {
-            const target = Number(g.targetAmount) || 0;
-            const saved = Number(g.currentAmount) || 0;
-            const pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-            return `<div class="bl-row" style="grid-template-columns: 1fr;">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
-                  <span class="bl-name">${escHTML(g.name)}</span>
-                  <span class="bl-meta" style="margin-top:0;">${fmtMoney(saved, {round: true})} / ${fmtMoney(target, {round: true})}</span>
-                </div>
-                <div class="bento-progress" style="margin-top:5px;"><div class="fill income" style="width: ${pct.toFixed(1)}%;"></div></div>
-              </div>
-            </div>`;
-          }).join('')}</div>`;
-        })()}
-      </div>
-
     </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-tile">
+        <div class="kpi-label">Income</div>
+        <div class="kpi-value income">${ctx.monthlyIncome > 0 ? fmtMoney(ctx.monthlyIncome, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${ctx.incomeBreak.length} source${ctx.incomeBreak.length === 1 ? '' : 's'}</div>
+        ${deltaHTML(ctx.monthlyIncome, prev.income)}
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Bills</div>
+        <div class="kpi-value bill">${ctx.monthlyBills > 0 ? fmtMoney(ctx.monthlyBills, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${ctx.billsBreak.length} bill${ctx.billsBreak.length === 1 ? '' : 's'}</div>
+        ${deltaHTML(ctx.monthlyBills, prev.bills, {invertColors: true})}
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Savings rate</div>
+        <div class="kpi-value ${savingsPct >= 20 ? 'positive' : 'bill'}">${ctx.monthlyIncome > 0 ? savingsPct.toFixed(0) + '%' : '—'}</div>
+        <div class="kpi-sub">${savingsPct >= 20 ? 'meets 20% target' : '20% target'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Hours worked</div>
+        <div class="kpi-value">${monthHours > 0 ? fmtHM(monthHours) : '—'}</div>
+        <div class="kpi-sub">${avgHr != null ? '$' + avgHr.toFixed(2) + '/hr avg' : 'no hours logged'}</div>
+      </div>
+      ${isViewingCurrent ? `
+      <div class="kpi-tile">
+        <div class="kpi-label">Days remaining</div>
+        <div class="kpi-value">${daysRemaining}</div>
+        <div class="kpi-sub">of ${daysInMonth} this month</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Daily budget</div>
+        <div class="kpi-value">${dailyBudget > 0 ? fmtMoney(dailyBudget, {round: true}) : '—'}</div>
+        <div class="kpi-sub">remaining net ÷ days left</div>
+      </div>
+      ` : ''}
+      <div class="kpi-tile">
+        <div class="kpi-label">Largest bill</div>
+        <div class="kpi-value bill">${largestBill ? fmtMoney(largestBill.monthly, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${largestBill ? escHTML(largestBill.name) : 'no bills'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Top category</div>
+        <div class="kpi-value bill">${topCat ? fmtMoney(topCat.total, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${topCat ? getCategoryLabel(topCat.category) : 'no bills'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Largest income</div>
+        <div class="kpi-value income">${largestIncome ? fmtMoney(largestIncome.monthly, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${largestIncome ? escHTML(largestIncome.name) : 'no income'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Upcoming due</div>
+        <div class="kpi-value bill">${unpaidUpcoming}</div>
+        <div class="kpi-sub">in next 14 days</div>
+      </div>
+    </div>
+
+    ${renderWeeklyAllowanceMini(ctx.monthlyIncome, ctx.monthlyBills)}
+
+    <div class="ov-section">
+      <div class="ov-section-head">
+        <span class="label">Income vs expenses · last 6 months</span>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
+        <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
+      </div>
+      <div class="line-chart-wrap">
+        ${renderLineChart(getMonthlyHistory(6), [
+          { key: 'income', color: 'var(--income)', label: 'Income' },
+          { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
+        ])}
+      </div>
+    </div>
+
+    ${renderUpcomingBillsSection(ctx.upcoming, ctx.upcomingTotal)}
   `;
 }
 

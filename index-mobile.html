@@ -454,144 +454,6 @@
     letter-spacing: 0.6px;
   }
 
-  /* ─── bento dashboard layout ─── */
-  .bento-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 12px;
-    margin-bottom: 22px;
-  }
-  .bento-card {
-    background: var(--bg-soft);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-  .bento-card .bc-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    gap: 8px;
-  }
-  .bento-card .bc-label {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-faint);
-    font-weight: 500;
-  }
-  .bento-card .bc-link {
-    font-size: 11px;
-    color: var(--text-faint);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    padding: 0;
-    transition: color 0.15s;
-  }
-  .bento-card .bc-link:hover { color: var(--accent); }
-  .bento-card .bc-value {
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--text-bright);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.6px;
-    line-height: 1.05;
-  }
-  .bento-card .bc-value.income { color: var(--income); }
-  .bento-card .bc-value.bill { color: var(--bill); }
-  .bento-card .bc-value.positive { color: var(--income); }
-  .bento-card .bc-value.negative { color: var(--error); }
-  .bento-card .bc-sub {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 6px;
-  }
-  /* spans */
-  .bento-card.span-2 { grid-column: span 2; }
-  .bento-card.span-3 { grid-column: span 3; }
-  .bento-card.span-4 { grid-column: span 4; }
-  .bento-card.span-6 { grid-column: span 6; }
-  /* hero variant */
-  .bento-card.hero {
-    padding: 22px 26px;
-  }
-  .bento-card.hero .bc-value {
-    font-size: 46px;
-    letter-spacing: -1.2px;
-  }
-  .bento-card.hero .bc-sub {
-    font-size: 13px;
-    margin-top: 8px;
-  }
-  /* list inside card */
-  .bento-list {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-top: 4px;
-  }
-  .bento-list .bl-row {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    padding: 7px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 12.5px;
-    align-items: baseline;
-  }
-  .bento-list .bl-row:last-child { border-bottom: none; }
-  .bento-list .bl-row .bl-name { color: var(--text); }
-  .bento-list .bl-row .bl-meta {
-    font-size: 11px;
-    color: var(--text-faint);
-    display: block;
-    margin-top: 1px;
-  }
-  .bento-list .bl-row .bl-amt { color: var(--bill); font-variant-numeric: tabular-nums; }
-  .bento-list .bl-row .bl-amt.income { color: var(--income); }
-  .bento-list .bl-empty {
-    color: var(--text-faint);
-    font-size: 12px;
-    font-style: italic;
-    padding: 14px 0;
-    text-align: center;
-  }
-  /* mini progress bar inside card */
-  .bento-progress {
-    height: 6px;
-    background: var(--bg-input);
-    border-radius: 999px;
-    overflow: hidden;
-    margin: 6px 0 4px;
-  }
-  .bento-progress .fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 999px;
-    transition: width 0.3s;
-  }
-  .bento-progress .fill.income { background: var(--income); }
-  /* compact chart inside bento card */
-  .bento-card .line-chart-wrap {
-    flex: 1;
-    margin: 0;
-  }
-  /* responsive bento */
-  @media (max-width: 900px) {
-    .bento-grid { grid-template-columns: repeat(2, 1fr); }
-    .bento-card.span-2, .bento-card.span-3, .bento-card.span-4, .bento-card.span-6 { grid-column: span 2; }
-  }
-  @media (max-width: 560px) {
-    .bento-grid { grid-template-columns: 1fr; }
-    .bento-card.span-2, .bento-card.span-3, .bento-card.span-4, .bento-card.span-6 { grid-column: span 1; }
-  }
-
   /* ─── line chart ─── */
   .line-chart-wrap {
     width: 100%;
@@ -1723,6 +1585,159 @@
     margin-top: 18px;
   }
 
+  /* ─── mobile-first compact layout ─── */
+  body {
+    padding-bottom: 72px;
+  }
+  main {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 18px 16px 32px;
+  }
+  .topbar {
+    padding: 11px 18px;
+  }
+  .topbar .brand { font-size: 14px; }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    z-index: 100;
+    padding: 4px 0 6px;
+    /* respect iOS safe area */
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+  .bottom-nav .tab {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    font: inherit;
+    font-size: 10.5px;
+    padding: 6px 2px 4px;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: color 0.12s;
+    cursor: pointer;
+    min-width: 0;
+    position: relative;
+  }
+  .bottom-nav .tab svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .bottom-nav .tab span {
+    font-size: 10px;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .bottom-nav .tab:hover { color: var(--text-bright); background: transparent; }
+  .bottom-nav .tab.active {
+    color: var(--accent);
+    background: transparent;
+  }
+  .bottom-nav .tab.active svg {
+    transform: translateY(-1px);
+  }
+  .bottom-nav .tab .badge {
+    font-size: 9.5px;
+    color: var(--text-faint);
+    background: rgba(255,255,255,0.04);
+    padding: 0 4px;
+    border-radius: 999px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+  }
+  .bottom-nav .tab.active .badge {
+    color: var(--accent);
+    background: rgba(212,165,116,0.15);
+  }
+
+  /* hero number more prominent in narrow column */
+  .kpi-hero {
+    text-align: center;
+    padding: 24px 18px;
+  }
+  .kpi-hero .label {
+    font-size: 10.5px;
+  }
+  .kpi-hero .value {
+    font-size: 48px;
+    letter-spacing: -1.4px;
+  }
+
+  /* KPI grid: 2 columns max in narrow column */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .kpi-tile {
+    padding: 11px 13px;
+  }
+  .kpi-tile .kpi-value {
+    font-size: 17px;
+  }
+
+  /* tables become more list-like */
+  table.sheet {
+    font-size: 12px;
+  }
+  table.sheet th, table.sheet td {
+    padding: 7px 6px;
+  }
+  table.sheet td.actions { white-space: nowrap; }
+  table.sheet td.actions button {
+    padding: 3px 7px;
+    font-size: 10.5px;
+  }
+
+  /* sheet toolbar wraps cleaner */
+  .sheet-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* upcoming bills + breakdown rows pack tighter */
+  .upcoming-row {
+    grid-template-columns: 70px 1fr auto auto;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .upcoming-row .due-in { display: none; }
+
+  .breakdown-row {
+    grid-template-columns: 110px 1fr 70px 36px;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  /* pie section stacks */
+  .pie-section { grid-template-columns: 1fr; gap: 16px; }
+  .pie-wrap { width: 200px; height: 200px; margin: 0 auto; }
+
+  /* form rows allow wrapping on narrow */
+  .form-row { flex-wrap: wrap; }
+  .form-col-sm { min-width: 0; }
+
+  /* modal fits narrow */
+  .modal-content { width: calc(100% - 28px); max-width: 460px; }
+
   /* ─── responsive ─── */
   @media (max-width: 720px) {
     .topbar { padding: 10px 14px; gap: 12px; }
@@ -1844,14 +1859,7 @@
 
 <header class="topbar">
   <div class="brand"><span class="accent">ledgeon</span><span class="dim" id="date"></span></div>
-  <nav class="tabs" id="tabs">
-    <button class="tab" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="income">Income <span class="badge" id="badge-income">0</span></button>
-    <button class="tab" data-tab="bills">Bills <span class="badge" id="badge-bills">0</span></button>
-    <button class="tab" data-tab="budget">Budget</button>
-    <button class="tab" data-tab="tasks">Tasks <span class="badge" id="badge-tasks">0</span></button>
-    <button class="tab" data-tab="schedule">Schedule <span class="badge" id="badge-events">0</span></button>
-  </nav>
+  <div style="flex: 1;"></div>
   <div class="menu" id="menu">
     <button class="menu-btn" data-action="toggle-menu">···</button>
     <div class="menu-panel">
@@ -1875,6 +1883,33 @@
 </header>
 
 <main id="content"></main>
+
+<nav class="bottom-nav" id="tabs">
+  <button class="tab" data-tab="overview" aria-label="Overview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    <span>Overview</span>
+  </button>
+  <button class="tab" data-tab="income" aria-label="Income">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2 3-2s3 .6 3 2-1.5 2-3 2.5-3 1-3 2.5 1.3 2 3 2 3-.6 3-2"/></svg>
+    <span>Income <span class="badge" id="badge-income">0</span></span>
+  </button>
+  <button class="tab" data-tab="bills" aria-label="Bills">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18l2-1.5L9 21l2-1.5L13 21l2-1.5L17 21l2-1.5V3z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+    <span>Bills <span class="badge" id="badge-bills">0</span></span>
+  </button>
+  <button class="tab" data-tab="budget" aria-label="Budget">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9l8 4"/><path d="M12 21a9 9 0 1 1 0-18"/></svg>
+    <span>Budget</span>
+  </button>
+  <button class="tab" data-tab="tasks" aria-label="Tasks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m9 12 2 2 4-5"/></svg>
+    <span>Tasks <span class="badge" id="badge-tasks">0</span></span>
+  </button>
+  <button class="tab" data-tab="schedule" aria-label="Schedule">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    <span>Schedule <span class="badge" id="badge-events">0</span></span>
+  </button>
+</nav>
 
 <!-- ─── modals ─── -->
 <div class="modal" id="modal-income">
@@ -3391,121 +3426,91 @@ function renderOverview() {
     ${renderMonthNav(ctx)}
     ${renderDatelessWarning(ctx.datelessOnce)}
 
-    <div class="bento-grid">
-
-      <div class="bento-card hero span-6">
-        <div class="bc-head">
-          <span class="bc-label">Net · ${ctx.monthLabel}</span>
-          <span class="bc-label" style="text-transform:none; letter-spacing:0; font-size:11px; color: var(--text-dim);">${ctx.net >= 0 ? 'discretionary' : 'over budget'}</span>
-        </div>
-        <div class="bc-value ${netCls}">${(ctx.monthlyIncome > 0 || ctx.monthlyBills > 0) ? fmtMoney(ctx.net, {round: true, signed: true}) : '—'}</div>
-        <div class="bc-sub">${deltaHTML(ctx.net, prev.income - prev.bills)}</div>
+    <div class="kpi-hero">
+      <div class="label">Net · ${ctx.monthLabel}</div>
+      <div class="value ${netCls}">${(ctx.monthlyIncome > 0 || ctx.monthlyBills > 0) ? fmtMoney(ctx.net, {round: true, signed: true}) : '—'}</div>
+      <div class="sub">
+        ${ctx.net >= 0 ? 'discretionary income' : 'over budget this month'}
+        · ${deltaHTML(ctx.net, prev.income - prev.bills)}
       </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Income</span><button class="bc-link" data-action="goto-tab" data-tab="income">view all →</button></div>
-        <div class="bc-value income">${ctx.monthlyIncome > 0 ? fmtMoney(ctx.monthlyIncome, {round: true}) : '—'}</div>
-        <div class="bc-sub">${ctx.incomeBreak.length} source${ctx.incomeBreak.length === 1 ? '' : 's'} · ${monthHours > 0 ? fmtHM(monthHours) + ' worked' : 'no hours logged'}</div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Expenses</span><button class="bc-link" data-action="goto-tab" data-tab="bills">view all →</button></div>
-        <div class="bc-value bill">${ctx.monthlyBills > 0 ? fmtMoney(ctx.monthlyBills, {round: true}) : '—'}</div>
-        <div class="bc-sub">${ctx.billsBreak.length} bill${ctx.billsBreak.length === 1 ? '' : 's'} · ${paidThisMonth} paid this month</div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head"><span class="bc-label">Savings rate</span><button class="bc-link" data-action="goto-tab" data-tab="budget">budget →</button></div>
-        <div class="bc-value ${savingsPct >= 20 ? 'positive' : 'bill'}">${ctx.monthlyIncome > 0 ? savingsPct.toFixed(0) + '%' : '—'}</div>
-        <div class="bento-progress"><div class="fill ${savingsPct >= 20 ? 'income' : ''}" style="width: ${Math.min(100, savingsPct).toFixed(1)}%; ${savingsPct < 20 ? 'background: var(--bill);' : ''}"></div></div>
-        <div class="bc-sub">${savingsPct >= 20 ? 'meets 20% target' : `${(20 - savingsPct).toFixed(0)}% below 20% target`}</div>
-      </div>
-
-      <div class="bento-card span-4">
-        <div class="bc-head">
-          <span class="bc-label">Income vs expenses · 6 months</span>
-          <span class="chart-legend" style="margin-bottom:0;">
-            <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
-            <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
-          </span>
-        </div>
-        <div class="line-chart-wrap">
-          ${renderLineChart(getMonthlyHistory(6), [
-            { key: 'income', color: 'var(--income)', label: 'Income' },
-            { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
-          ], { height: 200 })}
-        </div>
-      </div>
-
-      <div class="bento-card span-2">
-        <div class="bc-head">
-          <span class="bc-label">Upcoming · 14d</span>
-          <span class="bc-label" style="text-transform:none; letter-spacing:0; color: var(--bill);">${ctx.upcomingTotal > 0 ? fmtMoney(ctx.upcomingTotal, {round: true}) : ''}</span>
-        </div>
-        ${ctx.upcoming.length === 0 ? `<div class="bl-empty">no bills due soon</div>` : `
-          <div class="bento-list">
-            ${ctx.upcoming.slice(0, 6).map(b => `
-              <div class="bl-row">
-                <div>
-                  <div class="bl-name">${escHTML(b.name)}</div>
-                  <span class="bl-meta">${formatDate(b.dueDate)}${b.paid ? ' · paid' : ''}</span>
-                </div>
-                <span class="bl-amt">${fmtMoney(b.amount, {round: true})}</span>
-              </div>
-            `).join('')}
-            ${ctx.upcoming.length > 6 ? `<button class="bc-link" data-action="goto-tab" data-tab="bills" style="text-align:left; margin-top:6px;">+ ${ctx.upcoming.length - 6} more →</button>` : ''}
-          </div>
-        `}
-      </div>
-
-      <div class="bento-card span-3">
-        <div class="bc-head">
-          <span class="bc-label">Tasks</span>
-          <button class="bc-link" data-action="goto-tab" data-tab="tasks">view all →</button>
-        </div>
-        ${(() => {
-          const open = state.tasks.filter(t => !t.done).slice(0, 5);
-          if (open.length === 0 && state.tasks.length === 0) return `<div class="bl-empty">no tasks yet</div>`;
-          if (open.length === 0) return `<div class="bl-empty">all tasks done — nice.</div>`;
-          return `<div class="bento-list">${open.map(t => {
-            const overdue = t.dueDate && isOverdue(t.dueDate);
-            const today = t.dueDate && isTodayDate(t.dueDate);
-            return `<div class="bl-row">
-              <div>
-                <div class="bl-name">${escHTML(t.text)}</div>
-                ${t.dueDate ? `<span class="bl-meta" style="${overdue ? 'color: var(--error);' : today ? 'color: var(--accent);' : ''}">${overdue ? 'overdue · ' : today ? 'today · ' : ''}${formatDate(t.dueDate)}</span>` : ''}
-              </div>
-              <span class="bl-meta" style="margin-top:0;">${t.priority === 'high' ? '↑ high' : t.priority === 'low' ? '↓ low' : ''}</span>
-            </div>`;
-          }).join('')}</div>`;
-        })()}
-      </div>
-
-      <div class="bento-card span-3">
-        <div class="bc-head">
-          <span class="bc-label">Goals</span>
-          <button class="bc-link" data-action="goto-tab" data-tab="budget">view all →</button>
-        </div>
-        ${(() => {
-          if (state.goals.length === 0) return `<div class="bl-empty">no savings goals yet</div>`;
-          return `<div class="bento-list">${state.goals.slice(0, 4).map(g => {
-            const target = Number(g.targetAmount) || 0;
-            const saved = Number(g.currentAmount) || 0;
-            const pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-            return `<div class="bl-row" style="grid-template-columns: 1fr;">
-              <div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; gap:10px;">
-                  <span class="bl-name">${escHTML(g.name)}</span>
-                  <span class="bl-meta" style="margin-top:0;">${fmtMoney(saved, {round: true})} / ${fmtMoney(target, {round: true})}</span>
-                </div>
-                <div class="bento-progress" style="margin-top:5px;"><div class="fill income" style="width: ${pct.toFixed(1)}%;"></div></div>
-              </div>
-            </div>`;
-          }).join('')}</div>`;
-        })()}
-      </div>
-
     </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-tile">
+        <div class="kpi-label">Income</div>
+        <div class="kpi-value income">${ctx.monthlyIncome > 0 ? fmtMoney(ctx.monthlyIncome, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${ctx.incomeBreak.length} source${ctx.incomeBreak.length === 1 ? '' : 's'}</div>
+        ${deltaHTML(ctx.monthlyIncome, prev.income)}
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Bills</div>
+        <div class="kpi-value bill">${ctx.monthlyBills > 0 ? fmtMoney(ctx.monthlyBills, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${ctx.billsBreak.length} bill${ctx.billsBreak.length === 1 ? '' : 's'}</div>
+        ${deltaHTML(ctx.monthlyBills, prev.bills, {invertColors: true})}
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Savings rate</div>
+        <div class="kpi-value ${savingsPct >= 20 ? 'positive' : 'bill'}">${ctx.monthlyIncome > 0 ? savingsPct.toFixed(0) + '%' : '—'}</div>
+        <div class="kpi-sub">${savingsPct >= 20 ? 'meets 20% target' : '20% target'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Hours worked</div>
+        <div class="kpi-value">${monthHours > 0 ? fmtHM(monthHours) : '—'}</div>
+        <div class="kpi-sub">${avgHr != null ? '$' + avgHr.toFixed(2) + '/hr avg' : 'no hours logged'}</div>
+      </div>
+      ${isViewingCurrent ? `
+      <div class="kpi-tile">
+        <div class="kpi-label">Days remaining</div>
+        <div class="kpi-value">${daysRemaining}</div>
+        <div class="kpi-sub">of ${daysInMonth} this month</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Daily budget</div>
+        <div class="kpi-value">${dailyBudget > 0 ? fmtMoney(dailyBudget, {round: true}) : '—'}</div>
+        <div class="kpi-sub">remaining net ÷ days left</div>
+      </div>
+      ` : ''}
+      <div class="kpi-tile">
+        <div class="kpi-label">Largest bill</div>
+        <div class="kpi-value bill">${largestBill ? fmtMoney(largestBill.monthly, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${largestBill ? escHTML(largestBill.name) : 'no bills'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Top category</div>
+        <div class="kpi-value bill">${topCat ? fmtMoney(topCat.total, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${topCat ? getCategoryLabel(topCat.category) : 'no bills'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Largest income</div>
+        <div class="kpi-value income">${largestIncome ? fmtMoney(largestIncome.monthly, {round: true}) : '—'}</div>
+        <div class="kpi-sub">${largestIncome ? escHTML(largestIncome.name) : 'no income'}</div>
+      </div>
+      <div class="kpi-tile">
+        <div class="kpi-label">Upcoming due</div>
+        <div class="kpi-value bill">${unpaidUpcoming}</div>
+        <div class="kpi-sub">in next 14 days</div>
+      </div>
+    </div>
+
+    ${renderWeeklyAllowanceMini(ctx.monthlyIncome, ctx.monthlyBills)}
+
+    <div class="ov-section">
+      <div class="ov-section-head">
+        <span class="label">Income vs expenses · last 6 months</span>
+      </div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="dot" style="background: var(--income);"></span>Income</span>
+        <span class="legend-item"><span class="dot" style="background: var(--bill);"></span>Expenses</span>
+      </div>
+      <div class="line-chart-wrap">
+        ${renderLineChart(getMonthlyHistory(6), [
+          { key: 'income', color: 'var(--income)', label: 'Income' },
+          { key: 'bills',  color: 'var(--bill)',   label: 'Expenses' },
+        ])}
+      </div>
+    </div>
+
+    ${renderUpcomingBillsSection(ctx.upcoming, ctx.upcomingTotal)}
   `;
 }
 
