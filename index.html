@@ -1021,6 +1021,209 @@
     .weekly-math { border-left: none; border-top: 1px dashed var(--border); padding-left: 0; padding-top: 14px; }
   }
 
+  /* ─── petty spending tracker ─── */
+  .petty-card {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--income);
+    border-radius: var(--radius);
+    padding: 22px 26px;
+    margin-bottom: 22px;
+  }
+  .petty-card.near { border-left-color: var(--accent); }
+  .petty-card.over { border-left-color: var(--error); }
+  .petty-summary {
+    display: grid;
+    grid-template-columns: minmax(200px, 1fr) 2fr;
+    gap: 28px;
+    align-items: center;
+  }
+  .petty-summary .ps-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .petty-summary .ps-value {
+    font-size: 36px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -1px;
+    line-height: 1;
+    color: var(--text-bright);
+  }
+  .petty-summary .ps-value.over { color: var(--error); }
+  .petty-summary .ps-unit { font-size: 14px; color: var(--text-faint); margin-left: 4px; }
+  .petty-summary .ps-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .petty-summary .ps-right { min-width: 0; }
+  .petty-summary .ps-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .petty-progress {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .petty-progress-fill {
+    height: 100%;
+    background: var(--income);
+    border-radius: 999px;
+    transition: width 0.3s, background-color 0.3s;
+  }
+  .petty-progress-fill.near { background: var(--accent); }
+  .petty-progress-fill.over { background: var(--error); }
+  .petty-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .petty-cat-chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  .petty-cat-chip .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .petty-add-form {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    margin: 16px 0 14px;
+    flex-wrap: wrap;
+  }
+  .petty-add-form .pa-amount { flex: 0 0 110px; min-width: 100px; }
+  .petty-add-form .pa-cat    { flex: 0 0 160px; min-width: 130px; }
+  .petty-add-form .pa-note   { flex: 1 1 180px; min-width: 140px; }
+  .petty-add-form .pa-date   { flex: 0 0 150px; min-width: 130px; }
+  .petty-add-form input,
+  .petty-add-form select { width: 100%; }
+  .petty-add-form .pa-submit { flex-shrink: 0; }
+
+  .petty-list { margin-top: 6px; }
+  .petty-day-head {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-faint);
+    font-weight: 500;
+    margin: 14px 0 4px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .petty-day-head:first-child { border-top: none; padding-top: 0; margin-top: 4px; }
+  .petty-day-head .pdh-total {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    text-transform: none;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .petty-entry {
+    display: grid;
+    grid-template-columns: 100px 1fr 90px 26px;
+    gap: 12px;
+    padding: 7px 0;
+    font-size: 12.5px;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .petty-entry:last-child { border-bottom: none; }
+  .petty-entry .pe-cat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+  .petty-entry .pe-cat .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .petty-entry .pe-note {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .petty-entry .pe-note.empty { color: var(--text-faint); font-style: italic; }
+  .petty-entry .pe-amount {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--bill);
+    font-weight: 500;
+  }
+  .petty-entry .pe-del {
+    background: transparent;
+    border: none;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .petty-entry .pe-del:hover { color: var(--error); background: rgba(255,255,255,0.05); }
+
+  .petty-empty {
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 12.5px;
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+
+  @media (max-width: 720px) {
+    .petty-card { padding: 18px 16px; }
+    .petty-summary { grid-template-columns: 1fr; gap: 14px; }
+    .petty-summary .ps-value { font-size: 30px; }
+    .petty-add-form { padding: 9px; gap: 6px; }
+    .petty-add-form .pa-amount,
+    .petty-add-form .pa-cat,
+    .petty-add-form .pa-date { flex: 1 1 calc(50% - 3px); }
+    .petty-add-form .pa-note { flex: 1 1 100%; }
+    .petty-add-form .pa-submit { flex: 1 1 100%; }
+    .petty-entry { grid-template-columns: 1fr 80px 22px; gap: 8px; font-size: 12px; }
+    .petty-entry .pe-cat { grid-row: 2; grid-column: 1 / 2; font-size: 11px; margin-top: -3px; }
+    .petty-entry .pe-note { grid-row: 1; }
+    .petty-entry .pe-amount { grid-row: 1; grid-column: 2; }
+    .petty-entry .pe-del { grid-row: 1; grid-column: 3; }
+  }
+
   /* ─── weekly breakdown by category ─── */
   .weekly-breakdown {
     background: var(--bg-soft);
@@ -1723,12 +1926,98 @@
     margin-top: 18px;
   }
 
+  /* ─── bottom-nav (mobile only — hidden by default) ─── */
+  .bottom-nav { display: none; }
+
   /* ─── responsive ─── */
   @media (max-width: 720px) {
-    .topbar { padding: 10px 14px; gap: 12px; }
-    main { padding: 18px 14px 50px; }
-    .tabs { gap: 2px; }
-    .tab { padding: 5px 8px; font-size: 11.5px; }
+    /* hide desktop top tabs, show mobile bottom nav */
+    .top-tabs { display: none; }
+    .bottom-nav {
+      display: grid;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      grid-template-columns: repeat(6, 1fr);
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      padding: 4px 0 6px;
+      padding-bottom: max(6px, env(safe-area-inset-bottom));
+    }
+    .bottom-nav .tab {
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      font: inherit;
+      padding: 6px 2px 4px;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: color 0.12s;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .bottom-nav .tab svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .bottom-nav .tab span {
+      font-size: 10px;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .bottom-nav .tab:hover { color: var(--text-bright); background: transparent; }
+    .bottom-nav .tab.active { color: var(--accent); }
+    .bottom-nav .tab.active svg { transform: translateY(-1px); }
+    .bottom-nav .tab .badge {
+      font-size: 9.5px;
+      color: var(--text-faint);
+      background: rgba(255,255,255,0.04);
+      padding: 0 4px;
+      border-radius: 999px;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
+    }
+    .bottom-nav .tab.active .badge {
+      color: var(--accent);
+      background: rgba(212,165,116,0.15);
+    }
+
+    /* narrow main column, leave room for fixed bottom nav */
+    body { padding-bottom: 72px; }
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 14px 32px;
+    }
+    .topbar { padding: 11px 16px; gap: 12px; }
+    .topbar .brand { font-size: 14px; }
+
+    /* hero number prominent in narrow column */
+    .kpi-hero { text-align: center; padding: 24px 18px; }
+    .kpi-hero .label { font-size: 10.5px; }
+    .kpi-hero .value { font-size: 44px; letter-spacing: -1.2px; }
+    .bento-card.hero { padding: 22px 20px; text-align: center; }
+    .bento-card.hero .bc-value { font-size: 42px; }
+
+    /* KPI grid 2-up on phones */
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kpi-tile { padding: 11px 13px; }
+    .kpi-tile .kpi-value { font-size: 17px; }
+
+    /* tighter list rows + tables */
     .ov-stats { grid-template-columns: 1fr; }
     .ov-stat { border-right: none; border-bottom: 1px solid var(--border); }
     .ov-stat:last-child { border-bottom: none; }
@@ -1742,6 +2031,12 @@
     table.sheet { font-size: 12px; }
     table.sheet th, table.sheet td { padding: 6px 8px; }
     table.sheet td.actions button { padding: 2px 6px; font-size: 10.5px; }
+    .sheet-toolbar { flex-wrap: wrap; gap: 8px; }
+
+    /* form rows wrap on narrow */
+    .form-row { flex-wrap: wrap; }
+    .form-col-sm { min-width: 0; }
+    .modal-content { width: calc(100% - 28px); max-width: 460px; }
   }
 
   /* ─── preset picker modal ─── */
@@ -1844,13 +2139,13 @@
 
 <header class="topbar">
   <div class="brand"><span class="accent">ledgeon</span><span class="dim" id="date"></span></div>
-  <nav class="tabs" id="tabs">
+  <nav class="tabs top-tabs" id="tabs">
     <button class="tab" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="income">Income <span class="badge" id="badge-income">0</span></button>
-    <button class="tab" data-tab="bills">Bills <span class="badge" id="badge-bills">0</span></button>
+    <button class="tab" data-tab="income">Income <span class="badge badge-income">0</span></button>
+    <button class="tab" data-tab="bills">Bills <span class="badge badge-bills">0</span></button>
     <button class="tab" data-tab="budget">Budget</button>
-    <button class="tab" data-tab="tasks">Tasks <span class="badge" id="badge-tasks">0</span></button>
-    <button class="tab" data-tab="schedule">Schedule <span class="badge" id="badge-events">0</span></button>
+    <button class="tab" data-tab="tasks">Tasks <span class="badge badge-tasks">0</span></button>
+    <button class="tab" data-tab="schedule">Schedule <span class="badge badge-events">0</span></button>
   </nav>
   <div class="menu" id="menu">
     <button class="menu-btn" data-action="toggle-menu">···</button>
@@ -1875,6 +2170,33 @@
 </header>
 
 <main id="content"></main>
+
+<nav class="bottom-nav">
+  <button class="tab" data-tab="overview" aria-label="Overview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    <span>Overview</span>
+  </button>
+  <button class="tab" data-tab="income" aria-label="Income">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2 3-2s3 .6 3 2-1.5 2-3 2.5-3 1-3 2.5 1.3 2 3 2 3-.6 3-2"/></svg>
+    <span>Income <span class="badge badge-income">0</span></span>
+  </button>
+  <button class="tab" data-tab="bills" aria-label="Bills">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v18l2-1.5L9 21l2-1.5L13 21l2-1.5L17 21l2-1.5V3z"/><path d="M8 8h8M8 12h8M8 16h6"/></svg>
+    <span>Bills <span class="badge badge-bills">0</span></span>
+  </button>
+  <button class="tab" data-tab="budget" aria-label="Budget">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9l8 4"/><path d="M12 21a9 9 0 1 1 0-18"/></svg>
+    <span>Budget</span>
+  </button>
+  <button class="tab" data-tab="tasks" aria-label="Tasks">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m9 12 2 2 4-5"/></svg>
+    <span>Tasks <span class="badge badge-tasks">0</span></span>
+  </button>
+  <button class="tab" data-tab="schedule" aria-label="Schedule">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    <span>Schedule <span class="badge badge-events">0</span></span>
+  </button>
+</nav>
 
 <!-- ─── modals ─── -->
 <div class="modal" id="modal-income">
@@ -2143,12 +2465,14 @@
 const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
 
-let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [] };
+let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [], petty: [] };
 
 // ensure income array exists for older data
 if (!Array.isArray(state.income)) state.income = [];
 // ensure goals array exists for older data
 if (!Array.isArray(state.goals)) state.goals = [];
+// ensure petty array exists for older data
+if (!Array.isArray(state.petty)) state.petty = [];
 
 // migrate: any one-time income missing a receivedAt gets backfilled from createdAt
 // so it shows up in some month's budget instead of being invisible
@@ -2403,7 +2727,7 @@ function fmtHM(decimal) {
 // id generation
 // ════════════════════════════════════════════════════════════════
 function nextId(collection) {
-  const prefix = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g' }[collection];
+  const prefix = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p' }[collection];
   let max = 0;
   for (const item of state[collection]) {
     const n = parseInt(item.id.slice(1), 10);
@@ -2685,6 +3009,68 @@ function addToGoalSaved(id, delta) {
   g.currentAmount = Math.max(0, (g.currentAmount || 0) + d);
   saveState();
 }
+
+// ════════════════════════════════════════════════════════════════
+// petty spending
+// ════════════════════════════════════════════════════════════════
+// Categories surfaced in the petty quick-add. Drawn from CATEGORIES so
+// labels/colors stay consistent with the rest of the app.
+const PETTY_CATEGORIES = ['food', 'transport', 'entertainment', 'personal', 'pets', 'other'];
+
+function addPetty(amount, category, note, date) {
+  const a = Number(amount);
+  if (isNaN(a) || a <= 0) return null;
+  const item = {
+    id: nextId('petty'),
+    amount: a,
+    category: category && CATEGORIES[category] ? category : null,
+    note: (note || '').trim(),
+    date: date || isoDate(todayStart()),
+    createdAt: new Date().toISOString(),
+  };
+  state.petty.push(item);
+  saveState();
+  return item;
+}
+
+// Sunday-Saturday calendar week.
+function getCurrentWeekRange() {
+  const today = todayStart();
+  const day = today.getDay(); // 0 = Sunday
+  const start = new Date(today.getTime() - day * 86400000);
+  const end = new Date(start.getTime() + 6 * 86400000);
+  return { startIso: isoDate(start), endIso: isoDate(end), start, end };
+}
+
+function getPettyThisWeek() {
+  const { startIso, endIso } = getCurrentWeekRange();
+  return state.petty
+    .filter(p => p.date && p.date >= startIso && p.date <= endIso)
+    .sort((a, b) =>
+      b.date.localeCompare(a.date) ||
+      (b.createdAt || '').localeCompare(a.createdAt || '')
+    );
+}
+
+function getPettyForMonth(year, month) {
+  const start = isoDate(new Date(year, month, 1));
+  const end = isoDate(new Date(year, month + 1, 0));
+  return state.petty.filter(p => p.date && p.date >= start && p.date <= end);
+}
+
+function aggregatePettyByCategory(entries) {
+  const map = {};
+  for (const e of entries) {
+    const cat = e.category || 'uncategorized';
+    if (!map[cat]) map[cat] = { total: 0, count: 0 };
+    map[cat].total += Number(e.amount) || 0;
+    map[cat].count++;
+  }
+  return Object.entries(map)
+    .map(([cat, v]) => ({ category: cat, total: v.total, count: v.count }))
+    .sort((a, b) => b.total - a.total);
+}
+
 function toggleTask(id) {
   const t = state.tasks.find(x => x.id === id);
   if (!t) return;
@@ -2743,7 +3129,7 @@ function unpayBill(id) {
   saveState();
 }
 function removeItem(id) {
-  const map = { t: 'tasks', b: 'bills', e: 'events', i: 'income', g: 'goals' };
+  const map = { t: 'tasks', b: 'bills', e: 'events', i: 'income', g: 'goals', p: 'petty' };
   const collection = map[id[0]];
   if (!collection) return;
   state[collection] = state[collection].filter(x => x.id !== id);
@@ -2751,7 +3137,7 @@ function removeItem(id) {
 }
 
 function typeLabel(type) {
-  return { tasks: 'task', bills: 'bill', events: 'event', income: 'income', goals: 'goal' }[type] || type;
+  return { tasks: 'task', bills: 'bill', events: 'event', income: 'income', goals: 'goal', petty: 'spend' }[type] || type;
 }
 
 function prefillForm(type, item) {
@@ -3227,14 +3613,15 @@ function render() {
     dl.innerHTML = sources.map(s => `<option value="${escHTML(s)}"></option>`).join('');
   }
 
-  // badges
-  document.getElementById('badge-income').textContent = state.income.length;
-  document.getElementById('badge-bills').textContent  = state.bills.filter(b => !b.paid).length;
-  document.getElementById('badge-tasks').textContent  = state.tasks.filter(t => !t.done).length;
-  document.getElementById('badge-events').textContent = state.events.filter(e => e.date >= isoDate(todayStart())).length;
+  // badges (both navs share)
+  const setBadge = (cls, val) => document.querySelectorAll('.' + cls).forEach(el => el.textContent = val);
+  setBadge('badge-income', state.income.length);
+  setBadge('badge-bills',  state.bills.filter(b => !b.paid).length);
+  setBadge('badge-tasks',  state.tasks.filter(t => !t.done).length);
+  setBadge('badge-events', state.events.filter(e => e.date >= isoDate(todayStart())).length);
 
-  // active tab
-  document.querySelectorAll('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+  // active tab (both navs)
+  document.querySelectorAll('.tab[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
 
   // content
   const main = document.getElementById('content');
@@ -3637,6 +4024,8 @@ function renderBudget() {
 
     ${renderWeeklyAllowance(totalIncome, totalBills)}
 
+    ${renderPettySection(calculateWeeklyAllowance(totalIncome, totalBills).weekly)}
+
     ${renderWeeklyBreakdown(totalIncome, totalBills)}
 
     <div class="budget-buckets">
@@ -3815,6 +4204,134 @@ function renderWeeklyAllowance(totalIncome, totalBills) {
         <div class="row total"><span class="label">= Available / month</span><span class="value">${isNegative ? '−' : ''}${fmtMoney(Math.abs(w.monthlyAvailable), {round: true})}</span></div>
         <div class="formula">÷ 4.33 weeks ≈ ${sign}${fmtMoney(weeklyAbs, {round: true})}/wk · ÷ 30 days ≈ ${sign}${fmtMoney(dailyAbs, {round: true})}/day</div>
       </div>
+    </div>
+  `;
+}
+
+// Petty spending tracker for the budget tab. weeklyAllowance comes from
+// calculateWeeklyAllowance() — pass 0 if income/bills aren't set yet and
+// we'll just show the log without the comparison.
+function renderPettySection(weeklyAllowance) {
+  const allowance = Number(weeklyAllowance) || 0;
+  const weekEntries = getPettyThisWeek();
+  const spent = weekEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const left = allowance - spent;
+  const pct = allowance > 0 ? (spent / allowance) * 100 : 0;
+
+  let statusCls = '';
+  if (allowance > 0) {
+    if (pct >= 100) statusCls = 'over';
+    else if (pct >= 75) statusCls = 'near';
+  }
+
+  // category breakdown chips
+  const catTotals = aggregatePettyByCategory(weekEntries);
+  const catChipsHTML = catTotals.length
+    ? `<div class="petty-cats">${catTotals.map(c => `
+        <span class="petty-cat-chip">
+          <span class="dot" style="background: ${getCategoryColor(c.category)};"></span>
+          ${getCategoryLabel(c.category) || 'uncategorized'} · ${fmtMoney(c.total, {round: true})}
+        </span>`).join('')}</div>`
+    : '';
+
+  // category options for the quick-add select
+  const catOptions = ['<option value="">— category (optional) —</option>']
+    .concat(PETTY_CATEGORIES.map(k =>
+      `<option value="${k}">${getCategoryLabel(k)}</option>`
+    )).join('');
+
+  // group entries by date
+  const byDay = {};
+  for (const e of weekEntries) {
+    if (!byDay[e.date]) byDay[e.date] = [];
+    byDay[e.date].push(e);
+  }
+  const dayKeys = Object.keys(byDay).sort((a, b) => b.localeCompare(a));
+
+  const todayIso = isoDate(todayStart());
+  const yesterdayIso = isoDate(new Date(todayStart().getTime() - 86400000));
+  const dayLabel = (iso) => {
+    if (iso === todayIso) return 'Today';
+    if (iso === yesterdayIso) return 'Yesterday';
+    return formatDate(iso);
+  };
+
+  const listHTML = dayKeys.length === 0
+    ? `<div class="petty-empty">No spends logged this week yet. Add one above to start tracking.</div>`
+    : dayKeys.map(d => {
+        const dayTotal = byDay[d].reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        return `<div class="petty-day-head">
+            <span>${dayLabel(d)}</span>
+            <span class="pdh-total">${fmtMoney(dayTotal, {round: true})}</span>
+          </div>
+          ${byDay[d].map(e => `
+            <div class="petty-entry">
+              <span class="pe-cat">
+                <span class="dot" style="background: ${getCategoryColor(e.category)};"></span>
+                ${e.category ? getCategoryLabel(e.category) : 'uncategorized'}
+              </span>
+              <span class="pe-note ${e.note ? '' : 'empty'}">${e.note ? escHTML(e.note) : '—'}</span>
+              <span class="pe-amount">${fmtMoney(e.amount, {round: true})}</span>
+              <button class="pe-del" data-action="remove" data-id="${e.id}" title="Delete">×</button>
+            </div>`).join('')}`;
+      }).join('');
+
+  // The headline value: "$X spent" or fallback if no allowance yet
+  const summaryRight = allowance > 0
+    ? `<div class="ps-right">
+        <div class="ps-bar-label">
+          <span>${fmtMoney(spent, {round: true})} of ${fmtMoney(allowance, {round: true})} used</span>
+          <span>${pct.toFixed(0)}%</span>
+        </div>
+        <div class="petty-progress">
+          <div class="petty-progress-fill ${statusCls}" style="width: ${Math.min(100, pct).toFixed(1)}%;"></div>
+        </div>
+        ${catChipsHTML}
+      </div>`
+    : `<div class="ps-right">
+        <div class="ps-sub" style="font-style: italic;">
+          Add income and bills above to see how this stacks up against your weekly allowance.
+        </div>
+        ${catChipsHTML}
+      </div>`;
+
+  return `
+    <div class="ov-section-head">
+      <span class="label">Petty spending · this week</span>
+    </div>
+    <div class="petty-card ${statusCls}">
+      <div class="petty-summary">
+        <div>
+          <div class="ps-label">Spent this week</div>
+          <div class="ps-value ${statusCls === 'over' ? 'over' : ''}">${fmtMoney(spent, {round: true})}</div>
+          <div class="ps-sub">
+            ${allowance > 0
+              ? (left >= 0
+                  ? `${fmtMoney(left, {round: true})} left of weekly allowance`
+                  : `${fmtMoney(-left, {round: true})} over weekly allowance`)
+              : `${weekEntries.length} entr${weekEntries.length === 1 ? 'y' : 'ies'} this week`}
+          </div>
+        </div>
+        ${summaryRight}
+      </div>
+
+      <form class="petty-add-form" data-type="petty" autocomplete="off">
+        <div class="pa-amount">
+          <input type="text" class="input" name="amount" id="petty-amount-input" placeholder="$0.00" required inputmode="decimal" aria-label="Amount">
+        </div>
+        <div class="pa-cat">
+          <select class="select" name="category" aria-label="Category">${catOptions}</select>
+        </div>
+        <div class="pa-note">
+          <input type="text" class="input" name="note" placeholder="optional note (e.g. coffee, gas)" maxlength="80" aria-label="Note">
+        </div>
+        <div class="pa-date">
+          <input type="date" class="input" name="date" value="${todayIso}" aria-label="Date">
+        </div>
+        <button type="submit" class="btn primary pa-submit">+ track</button>
+      </form>
+
+      <div class="petty-list">${listHTML}</div>
     </div>
   `;
 }
@@ -4608,6 +5125,15 @@ document.addEventListener('submit', (e) => {
         const newest = state.goals[state.goals.length - 1];
         if (newest) { newest.currentAmount = current; saveState(); }
       }
+    } else if (type === 'petty') {
+      const amount = parseAmount(fd.get('amount'));
+      if (isNaN(amount) || amount <= 0) { alert('Please enter a valid amount.'); return; }
+      addPetty(amount, fd.get('category') || null, fd.get('note') || '', fd.get('date') || null);
+      // refocus amount field after re-render so the user can quickly log another
+      setTimeout(() => {
+        const el = document.getElementById('petty-amount-input');
+        if (el) el.focus();
+      }, 0);
     }
   }
 
@@ -4621,7 +5147,8 @@ document.addEventListener('submit', (e) => {
 function exportData() {
   try {
     const data = JSON.stringify({
-      tasks: state.tasks, bills: state.bills, events: state.events, income: state.income,
+      tasks: state.tasks, bills: state.bills, events: state.events,
+      income: state.income, goals: state.goals, petty: state.petty,
       exportedAt: new Date().toISOString()
     }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
@@ -4641,13 +5168,15 @@ document.getElementById('file-import').addEventListener('change', (e) => {
   reader.onload = (ev) => {
     try {
       const imp = JSON.parse(ev.target.result);
-      const counts = `${imp.tasks?.length || 0} tasks, ${imp.bills?.length || 0} bills, ${imp.events?.length || 0} events, ${imp.income?.length || 0} income sources`;
+      const counts = `${imp.tasks?.length || 0} tasks, ${imp.bills?.length || 0} bills, ${imp.events?.length || 0} events, ${imp.income?.length || 0} income sources, ${imp.goals?.length || 0} goals, ${imp.petty?.length || 0} petty entries`;
       if (!confirm(`Import ${counts}? This will replace your current data.`)) return;
       state = {
-        tasks: Array.isArray(imp.tasks) ? imp.tasks : [],
-        bills: Array.isArray(imp.bills) ? imp.bills : [],
+        tasks:  Array.isArray(imp.tasks)  ? imp.tasks  : [],
+        bills:  Array.isArray(imp.bills)  ? imp.bills  : [],
         events: Array.isArray(imp.events) ? imp.events : [],
-        income: Array.isArray(imp.income) ? imp.income : []
+        income: Array.isArray(imp.income) ? imp.income : [],
+        goals:  Array.isArray(imp.goals)  ? imp.goals  : [],
+        petty:  Array.isArray(imp.petty)  ? imp.petty  : []
       };
       saveState(); render();
     } catch { alert('Invalid JSON file.'); }
