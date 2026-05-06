@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>termdo — budget</title>
+<title>ledgeon — budget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -1705,7 +1705,7 @@
 <body>
 
 <header class="topbar">
-  <div class="brand"><span class="accent">termdo</span><span class="dim" id="date"></span></div>
+  <div class="brand"><span class="accent">ledgeon</span><span class="dim" id="date"></span></div>
   <nav class="tabs" id="tabs">
     <button class="tab" data-tab="overview">Overview</button>
     <button class="tab" data-tab="income">Income <span class="badge" id="badge-income">0</span></button>
@@ -2002,8 +2002,8 @@
 // ════════════════════════════════════════════════════════════════
 // state
 // ════════════════════════════════════════════════════════════════
-const STORAGE_KEY = 'termdo-state-v4';
-const TAB_KEY = 'termdo-tab';
+const STORAGE_KEY = 'ledgeon-state-v4';
+const TAB_KEY = 'ledgeon-tab';
 
 let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [] };
 
@@ -2025,7 +2025,7 @@ if (_migrated) saveState();
 
 // migrate from older versions (v3, v2, v1)
 if (!localStorage.getItem(STORAGE_KEY)) {
-  for (const k of ['termdo-state-v3', 'termdo-state-v2', 'termdo-state-v1']) {
+  for (const k of ['ledgeon-state-v3', 'ledgeon-state-v2', 'ledgeon-state-v1']) {
     try {
       const raw = localStorage.getItem(k);
       if (raw) {
@@ -2310,14 +2310,14 @@ function applyTheme(name) {
   // remove any existing theme classes
   document.documentElement.classList.remove('theme-phosphor', 'theme-amber', 'theme-solarized', 'theme-synthwave');
   if (theme !== 'default') document.documentElement.classList.add('theme-' + theme);
-  localStorage.setItem('termdo-theme', theme);
+  localStorage.setItem('ledgeon-theme', theme);
   // mark the active menu entry
   document.querySelectorAll('.menu-item.theme-pick').forEach(b => {
     b.classList.toggle('active', b.dataset.theme === theme);
   });
 }
 // apply saved theme on load (the menu items get their .active class set after the DOM exists)
-applyTheme(localStorage.getItem('termdo-theme') || 'default');
+applyTheme(localStorage.getItem('ledgeon-theme') || 'default');
 
 function getViewMonth() {
   if (viewMonth) return viewMonth;
@@ -4455,7 +4455,7 @@ function exportData() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'termdo-budget-' + isoDate(todayStart()) + '.json';
+    a.download = 'ledgeon-budget-' + isoDate(todayStart()) + '.json';
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (e) { alert('Export failed: ' + e.message); }
