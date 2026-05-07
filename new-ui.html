@@ -1106,20 +1106,13 @@ function renderBudget() {
   return `
     <div class="out">
       ${fallbackMsg}
-      <div class="weekly-card">
-        <div class="headline">
-           <span class="label">weekly discretionary allowance</span>
-           <span class="value">${fmtMoney(weekly)}<span class="unit">/wk</span></span>
-           <span class="daily">${fmtMoney(daily)} / day</span>
-        </div>
-        <div class="weekly-math">
-           <div class="row"><span class="label">monthly income</span><span class="value income">${fmtMoney(inc)}</span></div>
-           <div class="row"><span class="label">fixed expenses</span><span class="value expense">−${fmtMoney(fixedBills)}</span></div>
-           ${savingsTarget > 0 ? `<div class="row"><span class="label">savings goals target</span><span class="value expense">−${fmtMoney(savingsTarget)}</span></div>` : ''}
-           <div class="row total"><span class="label">discretionary (net)</span><span class="value">${fmtMoney(net)}</span></div>
-           <div class="formula">net ÷ 4.33 weeks</div>
-        </div>
-      </div>
+      <h3>allowance breakdown</h3>
+      <div class="kv"><span class="k">weekly discretionary</span><span class="v" style="color: var(--lime); font-size: 16px;">${fmtMoney(weekly)} / wk</span><span class="x">${fmtMoney(daily)} / day</span></div>
+      <div style="margin-top: 16px;"></div>
+      <div class="kv"><span class="k">monthly income</span><span class="v ok">${fmtMoney(inc)}</span><span class="x">baseline</span></div>
+      <div class="kv"><span class="k">fixed expenses</span><span class="v bad">−${fmtMoney(fixedBills)}</span><span class="x">liability</span></div>
+      ${savingsTarget > 0 ? `<div class="kv"><span class="k">savings goals target</span><span class="v bad">−${fmtMoney(savingsTarget)}</span><span class="x">reserved for goals</span></div>` : ''}
+      <div class="kv"><span class="k">discretionary (net)</span><span class="v warm">${fmtMoney(net)}</span><span class="x">net ÷ 4.33 weeks</span></div>
     </div>
 
     <div class="out">
