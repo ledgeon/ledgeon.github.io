@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ledgeon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0e13;
+    --bg-deep: #070a0f;
+    --bg-soft: #11151c;
+    --bg-input: #1a1f28;
+
+    --line: #1e242e;
+    --line-soft: #161b23;
+    --line-strong: #2c3340;
+
+    --t: #d6d9de;
+    --t-bright: #fafafa;
+    --t-dim: #a1a8b3;
+    --t-faint: #6e7480;
+    --t-mute: #4a4f5a;
+
+    --warm: #d4a574;
+    --warm-soft: rgba(212,165,116,0.12);
+
+    --lime: #b3dd44;
+    --lime-soft: rgba(179,221,68,0.12);
+
+    --ok: #86c98a;
+    --bad: #e09f7c;
+    --warn: #e0c46c;
+    --err: #e57373;
+
+    --cyan: #6dd0d0;
+    --sky: #7aaef0;
+    --rose: #e09fb4;
+    --plum: #b89cd4;
+
+    --r: 4px;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--t);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 12% -10%, rgba(212,165,116,0.04), transparent 50%),
+      radial-gradient(ellipse at 90% 110%, rgba(179,221,68,0.025), transparent 50%),
+      var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; }
+  input, select, textarea { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ───────── header & tabs ───────── */
+  header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(11,14,19,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    overflow-x: auto;
+  }
+  header .brand {
+    color: var(--t-bright);
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  header .brand b { color: var(--warm); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .tab {
+    color: var(--t-faint);
+    font-size: 12.5px;
+    padding: 4px 12px;
+    border-radius: var(--r);
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: lowercase;
+  }
+  .tab:hover { color: var(--t-bright); background: var(--bg-soft); }
+  .tab.active {
+    color: var(--lime);
+    background: var(--lime-soft);
+  }
+  .tab .badge {
+    font-size: 10px;
+    color: var(--bg);
+    background: var(--t-mute);
+    padding: 0 5px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .tab.active .badge { background: var(--lime); color: var(--bg); }
+
+  .right-actions { display: flex; gap: 10px; }
+  .right-actions button {
+    color: var(--t-faint);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: var(--r);
+    font-size: 11.5px;
+    transition: all 0.15s;
+    text-transform: lowercase;
+  }
+  .right-actions button:hover { color: var(--lime); border-color: var(--lime); }
+
+  /* ───────── main layout ───────── */
+  main {
+    flex: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 24px 60px;
+  }
+
+  /* ───────── terminal blocks ───────── */
+  .out {
+    margin-bottom: 24px;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  .out h3 {
+    color: var(--warm);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .out h3 .action {
+    color: var(--cyan);
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    text-transform: lowercase;
+    font-weight: 400;
+    cursor: pointer;
+  }
+  .out h3 .action:hover { color: var(--t-bright); text-decoration: underline; }
+
+  /* key-value rows */
+  .kv {
+    display: grid;
+    grid-template-columns: 180px 1fr auto;
+    gap: 14px;
+    align-items: baseline;
+    padding: 4px 0;
+  }
+  .kv .k { color: var(--t-faint); font-size: 12.5px; text-transform: lowercase; }
+  .kv .v { color: var(--t-bright); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .kv .v.ok   { color: var(--ok); }
+  .kv .v.bad  { color: var(--bad); }
+  .kv .v.warm { color: var(--warm); }
+  .kv .x { color: var(--t-faint); font-size: 12px; text-align: right; }
+
+  /* ascii bars */
+  .bar-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+  }
+  .bar-line .lbl { color: var(--t-dim); width: 140px; flex-shrink: 0; text-transform: lowercase; font-size: 12.5px; }
+  .bar-line .bar { flex: 1; letter-spacing: -1px; line-height: 1; font-size: 14px; }
+  .bar-line .bar .f { color: var(--cyan); }
+  .bar-line .bar .e { color: var(--line-strong); }
+  .bar-line.ok .bar .f { color: var(--ok); }
+  .bar-line.bad .bar .f { color: var(--bad); }
+  .bar-line.warm .bar .f { color: var(--warm); }
+  .bar-line .va { color: var(--t-bright); font-weight: 500; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums;}
+  .bar-line .x { color: var(--t-faint); font-size: 11px; margin-left: 8px; }
+
+  /* tables */
+  table.tbl { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12.5px; }
+  table.tbl th {
+    text-align: left; color: var(--t-faint); font-weight: 400; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 12px 10px 0;
+    border-bottom: 1px solid var(--line); cursor: pointer; user-select: none;
+  }
+  table.tbl th:hover { color: var(--lime); }
+  table.tbl th.sorted { color: var(--lime); }
+  table.tbl th.sorted::after { content: ' ↓'; }
+  table.tbl th.sorted.asc::after { content: ' ↑'; }
+  table.tbl th.r { text-align: right; }
+  table.tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line-soft); }
+  table.tbl td.r { text-align: right; }
+  table.tbl tr.row:hover { background: var(--bg-soft); }
+  table.tbl tr.row td:first-child { padding-left: 8px; }
+  table.tbl tr.done td { opacity: 0.5; text-decoration: line-through; }
+  table.tbl td .id { color: var(--t-mute); font-size: 11px; background: var(--bg-deep); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--line); }
+  table.tbl td .cat { color: var(--t-mute); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; margin-left: 10px; }
+  
+  .tbl-actions button {
+    color: var(--t-faint); border: 1px solid var(--line); padding: 2px 8px;
+    border-radius: 3px; font-size: 11px; margin-left: 6px; transition: all 0.15s;
+  }
+  .tbl-actions button:hover { color: var(--lime); border-color: var(--lime); }
+  .tbl-actions button.err:hover { color: var(--err); border-color: var(--err); }
+  .tbl-actions button.ok:hover { color: var(--ok); border-color: var(--ok); }
+
+  /* tags & status */
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .tag.ok { background: rgba(134,201,138,0.13); color: var(--ok); }
+  .tag.warn { background: rgba(224,196,108,0.13); color: var(--warn); }
+  .tag.err { background: rgba(229,115,115,0.13); color: var(--err); }
+  .tag.info { background: rgba(109,208,208,0.13); color: var(--cyan); }
+
+  /* charts */
+  .chart-card {
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 18px 20px; margin-bottom: 24px;
+  }
+  .chart-card .ch-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .chart-card .ch-head .ttl { color: var(--t-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 2px; }
+  .chart-card .ch-head .sub { color: var(--t-bright); font-size: 12.5px; font-weight: 500; }
+  
+  /* SVG overrides for specific charts */
+  .trend-svg { width: 100%; height: 200px; display: block; }
+  .pie-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .pie-wrap svg.pie { width: 160px; height: 160px; flex-shrink: 0; }
+  .pie-wrap .pie-center-label { fill: var(--t-bright); font-size: 6px; font-weight: 600; text-anchor: middle; font-family: 'JetBrains Mono', monospace; }
+  .pie-wrap .pie-center-sub { fill: var(--t-faint); font-size: 2.5px; text-anchor: middle; letter-spacing: 0.5px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+  .pie-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+  .pie-legend .pli { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 12px; align-items: baseline; font-size: 12.5px; }
+  .pie-legend .pli .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* month nav */
+  .month-nav {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    padding: 8px 12px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+  }
+  .month-nav .month-label { flex: 1; text-align: center; font-size: 13px; color: var(--t-bright); font-weight: 500; text-transform: lowercase; }
+  .month-nav button { color: var(--t-dim); padding: 4px 12px; border: 1px solid var(--line); border-radius: 3px; font-size: 11.5px; transition: 0.15s; }
+  .month-nav button:hover { color: var(--lime); border-color: var(--lime); background: var(--bg-input); }
+
+  /* modals */
+  .modal {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal.open { display: flex; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(7, 10, 15, 0.85); backdrop-filter: blur(4px); }
+  .modal-card {
+    position: relative; background: var(--bg-soft); border: 1px solid var(--line-strong);
+    border-radius: var(--r); width: 100%; max-width: 480px; padding: 24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .modal-title { color: var(--warm); font-size: 11.5px; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+
+  .form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .form-col { flex: 1; min-width: 140px; }
+  .form-label { display: block; color: var(--t-faint); font-size: 11px; text-transform: lowercase; margin-bottom: 6px; }
+  .input, .select, textarea {
+    width: 100%; background: var(--bg-deep); border: 1px solid var(--line); color: var(--t-bright);
+    font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 3px; outline: none;
+  }
+  .input:focus, .select:focus, textarea:focus { border-color: var(--lime); }
+  .input::placeholder, textarea::placeholder { color: var(--t-mute); }
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .form-actions button { padding: 6px 16px; border: 1px solid var(--line); color: var(--t-dim); border-radius: 3px; font-size: 12.5px; transition: 0.15s; text-transform: lowercase; }
+  .form-actions button:hover { color: var(--t-bright); border-color: var(--t-dim); }
+  .form-actions button.primary { color: var(--lime); border-color: var(--lime); }
+  .form-actions button.primary:hover { background: var(--lime-soft); }
+
+  .empty-state { padding: 40px 20px; text-align: center; color: var(--t-mute); font-style: italic; border: 1px dashed var(--line); border-radius: var(--r); }
+
+  /* preset picker */
+  .preset-cat { color: var(--warm); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1.5px; margin: 16px 0 8px; }
+  .preset-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; transition: 0.15s; }
+  .preset-row:hover { background: var(--bg-deep); border-color: var(--line); }
+  .preset-row .box { width: 14px; height: 14px; border: 1px solid var(--t-faint); border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+  .preset-row.sel .box { background: var(--lime); border-color: var(--lime); }
+  .preset-row.sel .box::after { content: ''; width: 7px; height: 4px; border-left: 2px solid var(--bg-deep); border-bottom: 2px solid var(--bg-deep); transform: rotate(-45deg) translate(0,-1px); }
+  .preset-row.exists { opacity: 0.4; pointer-events: none; }
+  .preset-row .nm { flex: 1; color: var(--t); font-size: 13px; }
+  .preset-row .pct { color: var(--t-faint); font-size: 11px; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><b>ledgeon</b></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-tab="overview">overview</button>
+    <button class="tab" data-tab="income">income <span class="badge badge-income">0</span></button>
+    <button class="tab" data-tab="bills">bills <span class="badge badge-bills">0</span></button>
+    <button class="tab" data-tab="budget">budget</button>
+    <button class="tab" data-tab="tasks">tasks <span class="badge badge-tasks">0</span></button>
+    <button class="tab" data-tab="schedule">schedule</button>
+  </nav>
+  <div class="right-actions">
+    <button id="btn-export">export</button>
+    <button id="btn-reset" style="color: var(--err); border-color: var(--line);">reset</button>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<div class="modal" id="modal-income">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add income</div>
+    <form data-type="income">
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">source</label><input type="text" class="input" name="source" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+        <div class="form-col"><label class="form-label">frequency</label>
+          <select class="select" name="frequency">
+            <option value="monthly" selected>monthly</option>
+            <option value="biweekly">biweekly</option>
+            <option value="weekly">weekly</option>
+            <option value="yearly">yearly</option>
+            <option value="once">one-time</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">date received (optional)</label><input type="date" class="input" name="receivedAt"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="close-modal">cancel</button>
+        <button type="submit" class="primary">save income</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-bills">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add bill</div>
+    <form data-type="bills">
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">name</label><input type="text" class="input" name="name" required></div>
+        <div class="form-col" style="min-width: 100px;"><label class="form-label">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">category</label>
+          <select class="select" name="category">
+            <option value="housing">housing</option><option value="utilities">utilities</option><option value="transport">transport</option>
+            <option value="insurance">insurance</option><option value="food">food</option><option value="media">media</option>
+            <option value="debt">debt</option><option value="health">health</option><option value="other">other</option>
+          </select>
+        </div>
+        <div class="form-col"><label class="form-label">recurrence</label>
+          <select class="select" name="recurring">
+            <option value="monthly" selected>monthly</option><option value="weekly">weekly</option><option value="yearly">yearly</option><option value="">one-time</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">due date (optional)</label><input type="date" class="input" name="date"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="close-modal">cancel</button>
+        <button type="submit" class="primary">save bill</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-tasks">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add task</div>
+    <form data-type="tasks">
+      <div class="form-row"><div class="form-col"><label class="form-label">task description</label><input type="text" class="input" name="text" required></div></div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">priority</label>
+          <select class="select" name="priority"><option value="">none</option><option value="low">low</option><option value="med">medium</option><option value="high">high</option></select>
+        </div>
+        <div class="form-col"><label class="form-label">due date (optional)</label><input type="date" class="input" name="date"></div>
+      </div>
+      <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save task</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-events">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add event</div>
+    <form data-type="events">
+      <div class="form-row"><div class="form-col"><label class="form-label">event name</label><input type="text" class="input" name="name" required></div></div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">date</label><input type="date" class="input" name="date" required></div>
+        <div class="form-col"><label class="form-label">time</label><input type="time" class="input" name="time"></div>
+      </div>
+      <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save event</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-goals">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add savings goal</div>
+    <form data-type="goals">
+      <div class="form-row"><div class="form-col"><label class="form-label">goal name</label><input type="text" class="input" name="name" required></div></div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">target amount</label><input type="text" class="input" name="targetAmount" required></div>
+        <div class="form-col"><label class="form-label">currently saved</label><input type="text" class="input" name="currentAmount" value="0"></div>
+      </div>
+      <div class="form-row"><div class="form-col"><label class="form-label">target date (optional)</label><input type="date" class="input" name="targetDate"></div></div>
+      <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save goal</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-presets">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card" style="max-width: 540px; max-height: 85vh; display: flex; flex-direction: column;">
+    <div class="modal-title">add preset bills</div>
+    <div style="font-size: 12px; color: var(--t-faint); margin-bottom: 12px; line-height: 1.5;">
+      select common bills to add. these calculate typical rule-of-thumb amounts based on your current income.
+    </div>
+    <div id="preset-list" style="overflow-y: auto; flex: 1; padding-right: 8px;"></div>
+    <div class="form-actions">
+      <button type="button" data-action="close-modal">cancel</button>
+      <button type="button" class="primary" id="preset-apply-btn" data-action="apply-presets" disabled>add selected</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════════
+// Core State & Logic
+// ════════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'ledgeon-state-v5';
+const TAB_KEY = 'ledgeon-tab';
+
+let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [] };
+let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
+let sortState = { income: { col: 'amount', dir: 'desc' }, bills: { col: 'date', dir: 'asc' }, tasks: { col: 'date', dir: 'asc' }, events: { col: 'date', dir: 'asc' } };
+let editingItem = null; 
+let viewMonth = null;
+
+const CATEGORIES = {
+  housing: { label: 'housing', max: 35, color: '#d4a574' },
+  utilities: { label: 'utilities', max: 10, color: '#7eb6f0' },
+  transport: { label: 'transport', max: 15, color: '#b08bc7' },
+  insurance: { label: 'insurance', max: 10, color: '#e57373' },
+  food: { label: 'food', max: 15, color: '#86c98a' },
+  media: { label: 'media & subs', max: 5, color: '#f5c890' },
+  debt: { label: 'debt', max: 15, color: '#ff8a65' },
+  health: { label: 'health', max: 5, color: '#c8a2ff' },
+  other: { label: 'other', max: null, color: '#6b7280' }
+};
+
+const PRESET_BILLS = [
+  { name: 'Rent / Mortgage', recurring: 'monthly', category: 'housing', pct: 28 },
+  { name: 'Electricity', recurring: 'monthly', category: 'utilities', pct: 3 },
+  { name: 'Internet', recurring: 'monthly', category: 'utilities', pct: 1.5 },
+  { name: 'Car Insurance', recurring: 'monthly', category: 'transport', pct: 3 },
+  { name: 'Groceries', recurring: 'monthly', category: 'food', pct: 10 },
+  { name: 'Streaming', recurring: 'monthly', category: 'media', pct: 1 }
+];
+
+function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; } }
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {} }
+
+function nextId(col) {
+  const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g' }[col];
+  let max = 0;
+  for (const item of state[col]) { const n = parseInt(item.id.slice(1), 10); if (n > max) max = n; }
+  return pfx + (max + 1);
+}
+
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function todayStart() { return startOfDay(new Date()); }
+function isoDate(d) { const x = startOfDay(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; }
+function formatDate(s) {
+  if (!s) return '—';
+  const d = new Date(s + 'T00:00:00');
+  const diff = Math.round((d - todayStart()) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'tomorrow';
+  if (diff === -1) return 'yesterday';
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toLowerCase();
+}
+function isOverdue(s) { return s && new Date(s+'T00:00:00') < todayStart(); }
+function isTodayDate(s) { return s && +new Date(s+'T00:00:00') === +todayStart(); }
+function fmtMoney(n, opts = {}) {
+  const v = Number(n) || 0;
+  const abs = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: opts.round ? 0 : 2, maximumFractionDigits: opts.round ? 0 : 2 });
+  return (v < 0 ? '−$' : (opts.sign && v > 0 ? '+$' : '$')) + abs;
+}
+
+function monthlyEq(amount, freq) {
+  if (!amount) return 0;
+  switch (freq) {
+    case 'weekly': return amount * 4.333;
+    case 'biweekly': return amount * 2.166;
+    case 'yearly': return amount / 12;
+    case 'once': return 0;
+    default: return amount;
+  }
+}
+
+function getViewMonth() {
+  if (viewMonth) return viewMonth;
+  const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() };
+}
+function getMonthData(y, m) {
+  const income = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
+  const bills = state.bills.reduce((s, b) => b.recurring ? s + monthlyEq(b.amount, b.recurring) : s, 0);
+  return { income, bills, net: income - bills };
+}
+
+function asciiBar(pct, width = 24) {
+  const f = Math.max(0, Math.min(width, Math.round(width * (pct / 100))));
+  return `<span class="f">${'█'.repeat(f)}</span><span class="e">${'░'.repeat(width - f)}</span>`;
+}
+
+function escHTML(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+// ════════════════════════════════════════════════════════════════
+// Rendering
+// ════════════════════════════════════════════════════════════════
+function updateBadges() {
+  document.querySelectorAll('.badge-income').forEach(el => el.textContent = state.income.length);
+  document.querySelectorAll('.badge-bills').forEach(el => el.textContent = state.bills.filter(b => !b.paid).length);
+  document.querySelectorAll('.badge-tasks').forEach(el => el.textContent = state.tasks.filter(t => !t.done).length);
+}
+
+function render() {
+  updateBadges();
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === currentTab));
+  const main = document.getElementById('content');
+  
+  if (currentTab === 'overview') main.innerHTML = renderOverview();
+  else if (currentTab === 'income') main.innerHTML = renderIncome();
+  else if (currentTab === 'bills') main.innerHTML = renderBills();
+  else if (currentTab === 'budget') main.innerHTML = renderBudget();
+  else if (currentTab === 'tasks') main.innerHTML = renderTasks();
+  else if (currentTab === 'schedule') main.innerHTML = renderEvents();
+}
+
+// ── Overview ──
+function renderOverview() {
+  const { year, month } = getViewMonth();
+  const d = new Date(year, month, 1);
+  const mLabel = d.toLocaleString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
+  const { income, bills, net } = getMonthData(year, month);
+  const isCurrent = year === new Date().getFullYear() && month === new Date().getMonth();
+
+  const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
+  const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
+
+  return `
+    <div class="month-nav">
+      <button data-action="prev-month">← prev</button>
+      <div class="month-label">${mLabel}</div>
+      <button data-action="next-month">next →</button>
+      ${!isCurrent ? `<button data-action="curr-month">jump to current</button>` : ''}
+    </div>
+
+    <div class="out">
+      <h3>${mLabel} · summary <span class="action" data-tab="budget" data-action="goto">view budget →</span></h3>
+      <div class="kv"><span class="k">monthly income</span><span class="v ok">${fmtMoney(income)}</span><span class="x">${state.income.length} sources</span></div>
+      <div class="kv"><span class="k">monthly bills</span><span class="v bad">${fmtMoney(bills)}</span><span class="x">${income > 0 ? (bills/income*100).toFixed(1) + '% of income' : ''}</span></div>
+      <div class="kv"><span class="k">discretionary / net</span><span class="v ${net >= 0 ? 'warm' : 'err'}">${fmtMoney(net, {sign:true})}</span><span class="x">after fixed expenses</span></div>
+      
+      <div style="margin-top:20px;"></div>
+      <div class="bar-line ok"><span class="lbl">income</span><span class="bar">${asciiBar(100)}</span><span class="va ok">${fmtMoney(income, {round:true})}</span></div>
+      <div class="bar-line bad"><span class="lbl">bills</span><span class="bar">${asciiBar(income ? (bills/income)*100 : 0)}</span><span class="va bad">${fmtMoney(bills, {round:true})}</span></div>
+      <div class="bar-line warm"><span class="lbl">discretionary</span><span class="bar">${asciiBar(income ? (Math.max(0, net)/income)*100 : 0)}</span><span class="va warm">${fmtMoney(Math.max(0, net), {round:true})}</span></div>
+    </div>
+
+    <div class="out" style="margin-top: 32px;">
+      <h3>upcoming bills · 14d <span class="action" data-tab="bills" data-action="goto">manage bills →</span></h3>
+      ${upcoming.length ? `
+        <table class="tbl">
+          <tbody>
+            ${upcoming.slice(0,5).map(b => `
+              <tr class="row">
+                <td><span class="tag ${isOverdue(b.dueDate) ? 'err' : (isTodayDate(b.dueDate) ? 'warn' : 'info')}">${formatDate(b.dueDate)}</span></td>
+                <td>${escHTML(b.name)}</td>
+                <td class="r num bad">${fmtMoney(b.amount)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : `<div class="empty-state">no bills due in the next 14 days.</div>`}
+    </div>
+  `;
+}
+
+// ── Income ──
+function renderIncome() {
+  const total = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
+  const rows = sortRows(state.income, 'income').map(i => {
+    const mo = monthlyEq(i.amount, i.frequency);
+    return `<tr class="row">
+      <td><span class="id">${i.id}</span></td>
+      <td>${escHTML(i.source)}</td>
+      <td class="num">${fmtMoney(i.amount)}</td>
+      <td style="color:var(--t-faint);">${i.frequency}</td>
+      <td class="r num ok">${fmtMoney(mo, {round:true})}</td>
+      <td class="r tbl-actions"><button data-action="edit" data-type="income" data-id="${i.id}">edit</button><button class="err" data-action="rm" data-type="income" data-id="${i.id}">rm</button></td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="out">
+      <h3>income sources <span class="action" data-action="open-modal" data-type="income">+ add income</span></h3>
+      <div class="kv"><span class="k">total monthly equivalent</span><span class="v ok">${fmtMoney(total)}</span><span class="x">projected annual: ${fmtMoney(total*12, {round:true})}</span></div>
+      ${rows ? `
+        <table class="tbl" style="margin-top: 16px;">
+          <thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}<th>freq</th><th class="r">monthly</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      ` : `<div class="empty-state" style="margin-top: 16px;">no income sources added.</div>`}
+    </div>
+  `;
+}
+
+// ── Bills ──
+function renderBills() {
+  const incomeTotal = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
+  const total = state.bills.reduce((s, b) => b.recurring ? s + monthlyEq(b.amount, b.recurring) : s, 0);
+  
+  const rows = sortRows(state.bills, 'bills').map(b => {
+    const mo = b.recurring ? monthlyEq(b.amount, b.recurring) : 0;
+    const p = incomeTotal ? (mo / incomeTotal * 100) : 0;
+    const isDue = b.dueDate && !b.paid && isOverdue(b.dueDate);
+    return `<tr class="row ${b.paid ? 'done' : ''}">
+      <td><span class="id">${b.id}</span></td>
+      <td>${escHTML(b.name)} <span class="cat" style="color:${(CATEGORIES[b.category]||CATEGORIES.other).color}">${b.category||'none'}</span></td>
+      <td class="num bad">${fmtMoney(b.amount)}</td>
+      <td style="color:var(--t-faint);">${b.recurring || 'once'}</td>
+      <td class="${isDue ? 'err' : ''}">${formatDate(b.dueDate)}</td>
+      <td class="r num">${p > 0 ? p.toFixed(1)+'%' : '—'}</td>
+      <td class="r tbl-actions">
+        ${!b.paid ? `<button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button>` : `<button data-action="unpay-bill" data-id="${b.id}">undo</button>`}
+        <button data-action="edit" data-type="bills" data-id="${b.id}">edit</button>
+        <button class="err" data-action="rm" data-type="bills" data-id="${b.id}">rm</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `
+    <div class="out">
+      <h3>recurring bills <div style="display:flex;gap:16px"><span class="action" data-action="open-presets">+ presets</span><span class="action" data-action="open-modal" data-type="bills">+ add bill</span></div></h3>
+      <div class="kv"><span class="k">total monthly liability</span><span class="v bad">${fmtMoney(total)}</span><span class="x">${incomeTotal ? (total/incomeTotal*100).toFixed(1)+'% of income' : ''}</span></div>
+      ${rows ? `
+        <table class="tbl" style="margin-top: 16px;">
+          <thead><tr>${th('bills','id','id')}${th('bills','name','name')}${th('bills','amount','amount')}<th>freq</th>${th('bills','date','due')}<th class="r">% inc</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      ` : `<div class="empty-state" style="margin-top: 16px;">no bills tracked yet.</div>`}
+    </div>
+  `;
+}
+
+// ── Budget ──
+function renderBudget() {
+  const inc = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
+  if (inc === 0) return `<div class="out"><div class="empty-state">add income first to build a budget.</div></div>`;
+  
+  const byCat = {};
+  state.bills.filter(b=>b.recurring).forEach(b => {
+    const c = b.category || 'other';
+    byCat[c] = (byCat[c] || 0) + monthlyEq(b.amount, b.recurring);
+  });
+
+  const rows = Object.keys(CATEGORIES).map(k => {
+    const used = byCat[k] || 0; if (used === 0) return '';
+    const cap = CATEGORIES[k].max || 100;
+    const pct = (used / inc) * 100;
+    const status = pct > cap ? 'bad' : (pct > cap*0.8 ? 'warn' : 'ok');
+    return `
+      <div class="bar-line ${status}">
+        <span class="lbl">${CATEGORIES[k].label}</span>
+        <span class="bar">${asciiBar(Math.min(100, (pct/cap)*100), 20)}</span>
+        <span class="va">${fmtMoney(used, {round:true})}</span>
+        <span class="x">${pct.toFixed(1)}% / ${CATEGORIES[k].max ? cap+'% max' : 'no cap'}</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="out">
+      <h3>rule-of-thumb category caps <span class="action" data-tab="bills" data-action="goto">edit bills →</span></h3>
+      ${rows || '<div class="empty-state" style="margin-top:10px;">no categorized bills yet.</div>'}
+    </div>
+    <div class="out" style="margin-top:32px;">
+      <h3>savings goals <span class="action" data-action="open-modal" data-type="goals">+ add goal</span></h3>
+      ${state.goals.length ? state.goals.map(g => {
+        const p = g.target > 0 ? (g.current / g.target) * 100 : 0;
+        return `
+          <div style="margin-bottom: 16px;">
+            <div class="kv" style="grid-template-columns: 1fr auto;"><span class="v" style="color:var(--t-bright)">${escHTML(g.name)}</span><span class="v">${fmtMoney(g.current, {round:true})} / ${fmtMoney(g.target, {round:true})}</span></div>
+            <div class="bar-line ${p>=100?'ok':''}"><span class="bar" style="font-size:16px;">${asciiBar(p, 40)}</span><span class="x">${p.toFixed(1)}%</span></div>
+            <div class="tbl-actions" style="margin-top:4px; text-align:right;">
+              <button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button>
+              <button data-action="edit" data-type="goals" data-id="${g.id}">edit</button>
+              <button class="err" data-action="rm" data-type="goals" data-id="${g.id}">rm</button>
+            </div>
+          </div>
+        `;
+      }).join('') : `<div class="empty-state">no goals set.</div>`}
+    </div>
+  `;
+}
+
+// ── Tasks ──
+function renderTasks() {
+  const rows = sortRows(state.tasks, 'tasks').map(t => {
+    return `<tr class="row ${t.done ? 'done' : ''}">
+      <td><span class="id">${t.id}</span></td>
+      <td>${escHTML(t.text)}</td>
+      <td><span class="tag ${t.priority==='high'?'err':(t.priority==='med'?'warn':'')}">${t.priority||'none'}</span></td>
+      <td class="${isOverdue(t.dueDate)&&!t.done?'err':''}">${formatDate(t.dueDate)}</td>
+      <td class="r tbl-actions">
+        <button class="ok" data-action="toggle-task" data-id="${t.id}">${t.done?'undo':'done'}</button>
+        <button data-action="edit" data-type="tasks" data-id="${t.id}">edit</button>
+        <button class="err" data-action="rm" data-type="tasks" data-id="${t.id}">rm</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return `
+    <div class="out">
+      <h3>tasks <span class="action" data-action="open-modal" data-type="tasks">+ add task</span></h3>
+      ${rows ? `<table class="tbl"><thead><tr>${th('tasks','id','id')}${th('tasks','text','task')}<th>priority</th>${th('tasks','date','due')}<th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty-state">no tasks.</div>`}
+    </div>
+  `;
+}
+
+// ── Events ──
+function renderEvents() {
+  const rows = sortRows(state.events, 'events').map(e => `
+    <tr class="row">
+      <td><span class="id">${e.id}</span></td>
+      <td>${escHTML(e.name)}</td>
+      <td class="${isTodayDate(e.date)?'warn':(isOverdue(e.date)?'err':'')}">${formatDate(e.date)}</td>
+      <td style="color:var(--t-faint);">${e.time || '—'}</td>
+      <td class="r tbl-actions">
+        <button data-action="edit" data-type="events" data-id="${e.id}">edit</button>
+        <button class="err" data-action="rm" data-type="events" data-id="${e.id}">rm</button>
+      </td>
+    </tr>
+  `).join('');
+  return `
+    <div class="out">
+      <h3>schedule <span class="action" data-action="open-modal" data-type="events">+ add event</span></h3>
+      ${rows ? `<table class="tbl"><thead><tr>${th('events','id','id')}${th('events','name','event')}${th('events','date','date')}<th>time</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty-state">schedule clear.</div>`}
+    </div>
+  `;
+}
+
+// Sorting helpers
+function th(type, key, label) {
+  const s = sortState[type];
+  const cls = s.col === key ? `sorted ${s.dir}` : '';
+  return `<th class="${cls}" data-action="sort" data-type="${type}" data-col="${key}">${label}</th>`;
+}
+function sortRows(arr, type) {
+  const { col, dir } = sortState[type];
+  const mult = dir === 'asc' ? 1 : -1;
+  return [...arr].sort((a,b) => {
+    let va = a[col], vb = b[col];
+    if (col==='date') { va = va||'9999'; vb = vb||'9999'; }
+    if (typeof va==='number') return (va - vb)*mult;
+    return String(va||'').localeCompare(String(vb||''))*mult;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// Events & Actions
+// ════════════════════════════════════════════════════════════════
+document.addEventListener('click', e => {
+  const tab = e.target.closest('.tab[data-tab]');
+  if (tab) { currentTab = tab.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); return; }
+
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+
+  if (action === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
+  else if (action === 'open-modal') openModal(btn.dataset.type);
+  else if (action === 'close-modal') document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+  else if (action === 'sort') {
+    const t = btn.dataset.type, c = btn.dataset.col;
+    if (sortState[t].col === c) sortState[t].dir = sortState[t].dir === 'asc' ? 'desc' : 'asc';
+    else { sortState[t].col = c; sortState[t].dir = 'asc'; }
+    render();
+  }
+  else if (action === 'rm') {
+    if (confirm('Delete this item?')) {
+      state[btn.dataset.type] = state[btn.dataset.type].filter(x => x.id !== btn.dataset.id);
+      saveState(); render();
+    }
+  }
+  else if (action === 'edit') { openModal(btn.dataset.type, btn.dataset.id); }
+  else if (action === 'pay-bill') {
+    const b = state.bills.find(x => x.id === btn.dataset.id);
+    if (b) {
+      if (b.recurring && b.dueDate) {
+        const d = new Date(b.dueDate + 'T00:00:00');
+        if (b.recurring==='monthly') d.setMonth(d.getMonth()+1); else if (b.recurring==='weekly') d.setDate(d.getDate()+7); else if (b.recurring==='yearly') d.setFullYear(d.getFullYear()+1);
+        b.dueDate = isoDate(d);
+      } else { b.paid = true; }
+      saveState(); render();
+    }
+  }
+  else if (action === 'unpay-bill') { const b = state.bills.find(x => x.id === btn.dataset.id); if (b) { b.paid = false; saveState(); render(); } }
+  else if (action === 'toggle-task') { const t = state.tasks.find(x => x.id === btn.dataset.id); if (t) { t.done = !t.done; saveState(); render(); } }
+  else if (action === 'goal-add') {
+    const g = state.goals.find(x => x.id === btn.dataset.id);
+    if (g) {
+      const amt = parseFloat(prompt(`Fund "${g.name}" - Amount:`));
+      if (amt && amt > 0) { g.current += amt; saveState(); render(); }
+    }
+  }
+  else if (action === 'prev-month') { const v=getViewMonth(); viewMonth={year:v.month===0?v.year-1:v.year, month:v.month===0?11:v.month-1}; render(); }
+  else if (action === 'next-month') { const v=getViewMonth(); viewMonth={year:v.month===11?v.year+1:v.year, month:v.month===11?0:v.month+1}; render(); }
+  else if (action === 'curr-month') { viewMonth = null; render(); }
+  else if (action === 'open-presets') { openPresetPicker(); }
+});
+
+// Modals
+function openModal(type, id = null) {
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+  const form = document.querySelector(`#modal-${type} form`);
+  if (!form) return; form.reset();
+  editingItem = id ? { type, id } : null;
+  const title = document.querySelector(`#modal-${type} .modal-title`);
+  title.textContent = (id ? 'edit ' : 'add ') + type.slice(0,-1);
+
+  if (id) {
+    const item = state[type].find(x => x.id === id);
+    if (item) {
+      Object.keys(item).forEach(k => {
+        if (form.elements[k]) form.elements[k].value = item[k];
+      });
+      if (type==='goals') { form.elements.targetAmount.value=item.target; form.elements.currentAmount.value=item.current; }
+    }
+  }
+  document.getElementById('modal-'+type).classList.add('open');
+  setTimeout(() => form.querySelector('input')?.focus(), 50);
+}
+
+document.querySelectorAll('form[data-type]').forEach(f => {
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(f);
+    const type = f.dataset.type;
+    const isEdit = editingItem && editingItem.type === type;
+    const item = isEdit ? state[type].find(x => x.id === editingItem.id) : { id: nextId(type) };
+
+    const parseAmt = v => { const n = parseFloat(String(v).replace(/[$,\s]/g,'')); return isNaN(n)?0:n; };
+
+    if (type === 'income') {
+      item.source = fd.get('source'); item.amount = parseAmt(fd.get('amount'));
+      item.frequency = fd.get('frequency'); item.receivedAt = fd.get('receivedAt') || null;
+    } else if (type === 'bills') {
+      item.name = fd.get('name'); item.amount = parseAmt(fd.get('amount'));
+      item.category = fd.get('category'); item.recurring = fd.get('recurring'); item.dueDate = fd.get('date') || null;
+      if (!isEdit) item.paid = false;
+    } else if (type === 'tasks') {
+      item.text = fd.get('text'); item.priority = fd.get('priority'); item.dueDate = fd.get('date') || null;
+      if (!isEdit) item.done = false;
+    } else if (type === 'events') {
+      item.name = fd.get('name'); item.date = fd.get('date'); item.time = fd.get('time');
+    } else if (type === 'goals') {
+      item.name = fd.get('name'); item.target = parseAmt(fd.get('targetAmount')); 
+      item.current = parseAmt(fd.get('currentAmount')); item.targetDate = fd.get('targetDate') || null;
+    }
+
+    if (!isEdit) state[type].push(item);
+    saveState(); document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); render();
+  });
+});
+
+// Presets Logic
+let presetSel = new Set();
+function openPresetPicker() {
+  presetSel.clear();
+  const inc = state.income.reduce((s,i)=>s+monthlyEq(i.amount,i.frequency),0);
+  const list = document.getElementById('preset-list');
+  if (inc===0) { list.innerHTML = `<div class="empty-state">add income first to compute preset bounds.</div>`; }
+  else {
+    const existing = new Set(state.bills.map(b=>b.name.toLowerCase()));
+    list.innerHTML = PRESET_BILLS.map((p, i) => {
+      const amt = inc * (p.pct/100);
+      const ex = existing.has(p.name.toLowerCase());
+      return `<div class="preset-row ${ex?'exists':''}" data-idx="${i}">
+        <div class="box"></div><div class="nm">${p.name}</div><div class="pct">${fmtMoney(amt,{round:true})} · ${p.pct}%</div>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.preset-row:not(.exists)').forEach(r => r.addEventListener('click', () => {
+      const i = parseInt(r.dataset.idx);
+      if (presetSel.has(i)) { presetSel.delete(i); r.classList.remove('sel'); } else { presetSel.add(i); r.classList.add('sel'); }
+      const btn = document.getElementById('preset-apply-btn');
+      btn.disabled = presetSel.size===0; btn.textContent = `add ${presetSel.size} selected`;
+    }));
+  }
+  document.getElementById('modal-presets').classList.add('open');
+}
+
+document.getElementById('preset-apply-btn').addEventListener('click', () => {
+  const inc = state.income.reduce((s,i)=>s+monthlyEq(i.amount,i.frequency),0);
+  presetSel.forEach(idx => {
+    const p = PRESET_BILLS[idx];
+    state.bills.push({ id: nextId('bills'), name: p.name, amount: Math.round(inc*(p.pct/100)), category: p.category, recurring: p.recurring, paid: false });
+  });
+  saveState(); document.getElementById('modal-presets').classList.remove('open'); render();
+});
+
+// Export / Reset
+document.getElementById('btn-export').addEventListener('click', () => {
+  const b = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u;
+  a.download = 'ledgeon-data.json'; document.body.appendChild(a); a.click(); URL.revokeObjectURL(u);
+});
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if(confirm('Wipe all data? Cannot be undone.')) { state = {tasks:[], bills:[], events:[], income:[], goals:[]}; saveState(); render(); }
+});
+
+// Init
+render();
+
+</script>
+</body>
+</html>
