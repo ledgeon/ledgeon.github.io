@@ -259,8 +259,8 @@
   .trend-svg { width: 100%; height: 180px; display: block; }
   .pie-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
   .pie-wrap svg.pie { width: 160px; height: 160px; flex-shrink: 0; }
-  .pie-wrap .pie-center-label { fill: var(--t-bright); font-size: 6px; font-weight: 600; text-anchor: middle; font-family: 'JetBrains Mono', monospace; }
-  .pie-wrap .pie-center-sub { fill: var(--t-faint); font-size: 2.5px; text-anchor: middle; letter-spacing: 0.5px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+  .pie-wrap .pie-center-label { fill: var(--t-bright); font-size: 22px; font-weight: 600; text-anchor: middle; font-family: 'JetBrains Mono', monospace; }
+  .pie-wrap .pie-center-sub { fill: var(--t-faint); font-size: 10px; text-anchor: middle; letter-spacing: 0.5px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
   .pie-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
   .pie-legend .pli { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 12px; align-items: baseline; font-size: 12.5px; }
   .pie-legend .pli .dot { width: 10px; height: 10px; border-radius: 2px; }
@@ -566,22 +566,25 @@ function formatDate(s) {
 function isOverdue(s) { return s && new Date(s+'T00:00:00') < todayStart(); }
 function isTodayDate(s) { return s && +new Date(s+'T00:00:00') === +todayStart(); }
 function fmtMoney(n, opts = {}) {
-  const v = Number(n) || 0;
+  // Strips any previous formatting (like $ or ,) before formatting
+  const v = parseFloat(String(n).replace(/[^\d.-]/g, '')) || 0;
   const abs = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: opts.round ? 0 : 2, maximumFractionDigits: opts.round ? 0 : 2 });
   return (v < 0 ? '−$' : (opts.sign && v > 0 ? '+$' : '$')) + abs;
 }
 
-// Fixed Monthly Logic to Handle Legacy Data properly
+// Fixed Monthly Logic to safely parse older string-based legacy data
 function monthlyEq(amount, freq) {
-  if (!amount || isNaN(amount)) return 0;
+  const val = parseFloat(String(amount).replace(/[^\d.-]/g, ''));
+  if (!val || isNaN(val)) return 0;
+  
   const f = freq || 'monthly'; // default to monthly for legacy data
   switch (f) {
-    case 'weekly': return amount * 4.333;
-    case 'biweekly': return amount * 2.166;
-    case 'monthly': return amount;
-    case 'yearly': return amount / 12;
+    case 'weekly': return val * 4.333;
+    case 'biweekly': return val * 2.166;
+    case 'monthly': return val;
+    case 'yearly': return val / 12;
     case 'once': return 0;
-    default: return amount;
+    default: return val;
   }
 }
 
@@ -591,7 +594,6 @@ function getViewMonth() {
 }
 
 function getMonthData() {
-  // Calculates equivalent monthly income and bills
   const income = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
   const bills = state.bills.reduce((s, b) => b.recurring !== 'once' ? s + monthlyEq(b.amount, b.recurring) : s, 0);
   return { income, bills, net: income - bills };
@@ -599,7 +601,6 @@ function getMonthData() {
 
 function getMonthlyHistory(monthsBack = 6) {
   const now = new Date(); const out = [];
-  // For simplicity, using overall monthly logic as a proxy for historical data
   const { income, bills } = getMonthData();
   for (let i = monthsBack - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -650,7 +651,14 @@ function renderDonut(slices, total, label) {
     const seg = `<circle cx="100" cy="100" r="80" fill="none" stroke="${s.color}" stroke-width="15" pathLength="100" stroke-dasharray="${pct} 100" stroke-dashoffset="${-cum}" transform="rotate(-90 100 100)"></circle>`;
     cum += pct; return seg;
   }).join('');
-  return `<svg class="pie" viewBox="0 0 200 200">${segs}<text x="100" y="95" class="pie-center-label">${label}</text><text x="100" y="110" class="pie-center-sub">total / mo</text></svg>`;
+  
+  // Fixed label text scaling for inside the chart
+  return `
+    <svg class="pie" viewBox="0 0 200 200">
+      ${segs}
+      <text x="100" y="105" class="pie-center-label">${label}</text>
+      <text x="100" y="125" class="pie-center-sub">total / mo</text>
+    </svg>`;
 }
 
 
@@ -684,9 +692,9 @@ function renderOverview() {
   
   const { income, bills } = getMonthData();
   
-  // Factor in spending for the specific month
   const mStr = `${year}-${String(month+1).padStart(2,'0')}`;
-  const pettySpent = state.petty.filter(p => p.date && p.date.startsWith(mStr)).reduce((s, p) => s + Number(p.amount), 0);
+  const pettySpent = state.petty.filter(p => p.date && p.date.startsWith(mStr))
+    .reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   
   const net = income - bills - pettySpent;
   const isCurrent = year === new Date().getFullYear() && month === new Date().getMonth();
@@ -694,7 +702,6 @@ function renderOverview() {
   const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
   const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
 
-  // Annual projections
   const annIncome = income * 12;
   const annBills = bills * 12;
 
@@ -848,7 +855,7 @@ function renderExpenses() {
 function renderSpending() {
   const mStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
   const thisMonth = state.petty.filter(p => p.date && p.date.startsWith(mStr));
-  const mTotal = thisMonth.reduce((s, p) => s + Number(p.amount), 0);
+  const mTotal = thisMonth.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
 
   const rows = [...state.petty].sort((a,b) => b.date.localeCompare(a.date)).map(p => `
     <tr class="row">
@@ -879,7 +886,6 @@ function renderBudget() {
   const inc = state.income.reduce((s, i) => s + monthlyEq(i.amount, i.frequency), 0);
   if (inc === 0) return `<div class="out"><div class="empty-state">add income first to build a budget.</div></div>`;
   
-  // Clean Budget Categories based purely on tracked expenses (removing arbitrary 50/30/20 caps)
   const byCat = {};
   state.bills.filter(b=>b.recurring !== 'once').forEach(b => {
     const c = b.category || 'other';
@@ -959,6 +965,10 @@ function sortRows(arr, type) {
   return [...arr].sort((a,b) => {
     let va = a[col], vb = b[col];
     if (col==='date' || col==='dueDate') { va = va||'9999'; vb = vb||'9999'; }
+    if (col==='amount') {
+      va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
+      vb = parseFloat(String(vb).replace(/[^\d.-]/g, '')) || 0;
+    }
     if (typeof va==='number') return (va - vb)*mult;
     return String(va||'').localeCompare(String(vb||''))*mult;
   });
