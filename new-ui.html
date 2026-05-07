@@ -476,10 +476,20 @@
 // ════════════════════════════════════════════════════════════════
 // Core State & Logic
 // ════════════════════════════════════════════════════════════════
-const STORAGE_KEY = 'ledgeon-state-v5';
+// Reverted back to v4 so it seamlessly picks up the old version's data
+const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
 
-let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [] };
+let state = loadState() || { tasks: [], bills: [], events: [], income: [], goals: [], petty: [] };
+
+// Defensive checks just in case any arrays are missing from an older v4 save
+if (!Array.isArray(state.tasks)) state.tasks = [];
+if (!Array.isArray(state.bills)) state.bills = [];
+if (!Array.isArray(state.events)) state.events = [];
+if (!Array.isArray(state.income)) state.income = [];
+if (!Array.isArray(state.goals)) state.goals = [];
+if (!Array.isArray(state.petty)) state.petty = [];
+
 let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
 let sortState = { income: { col: 'amount', dir: 'desc' }, bills: { col: 'date', dir: 'asc' }, tasks: { col: 'date', dir: 'asc' }, events: { col: 'date', dir: 'asc' } };
 let editingItem = null; 
@@ -965,7 +975,7 @@ document.getElementById('btn-export').addEventListener('click', () => {
   a.download = 'ledgeon-data.json'; document.body.appendChild(a); a.click(); URL.revokeObjectURL(u);
 });
 document.getElementById('btn-reset').addEventListener('click', () => {
-  if(confirm('Wipe all data? Cannot be undone.')) { state = {tasks:[], bills:[], events:[], income:[], goals:[]}; saveState(); render(); }
+  if(confirm('Wipe all data? Cannot be undone.')) { state = {tasks:[], bills:[], events:[], income:[], goals:[], petty:[]}; saveState(); render(); }
 });
 
 // Init
