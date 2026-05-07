@@ -562,50 +562,126 @@ function getMonthlyStats(year, month) {
 
   for (const i of state.income) {
     const isOnce = i.frequency === 'once' || !i.frequency;
-    const effective = effectiveIncomeAmount(i);
-    const tipAmt = getTipAmount(i);
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     
-    // STRICT BOUNDARY: Enforce creation/received date so phantom recurring income 
-    // does not bleed infinitely into the past and drag down the valid historical average
-    const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
-    const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-    const startY = d.getFullYear();
-    const startM = d.getMonth();
+    let base = amt;
+    if (i.baseAmount !== undefined) {
+      base = parseFloat(String(i.baseAmount).replace(/[^\d.-]/g, '')) || 0;
+    }
+    const tipAmt = Math.max(0, amt - base);
 
     if (isOnce) {
-      if (startY === year && startM === month) {
-          income += effective;
+      const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
+      const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+      if (d.getFullYear() === year && d.getMonth() === month) {
+          income += amt;
           tips += tipAmt;
       }
     } else {
-      if (year > startY || (year === startY && month >= startM)) {
-        income += monthlyEq(effective, i.frequency);
-        tips += monthlyEq(tipAmt, i.frequency);
-      }
+      income += monthlyEq(amt, i.frequency);
+      tips += monthlyEq(tipAmt, i.frequency);
     }
   }
 
   for (const b of state.bills) {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = !b.recurring || b.recurring === 'once';
-    
-    const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
-    const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-    const startY = d.getFullYear();
-    const startM = d.getMonth();
-
     if (!isOnce) {
-      if (year > startY || (year === startY && month >= startM)) {
-        bills += monthlyEq(amt, b.recurring);
-      }
-    } else if (b.dueDate) {
-      if (startY === year && startM === month) bills += amt;
+      bills += monthlyEq(amt, b.recurring);
+    } else {
+      // Fix: Fall back to createdAt or today if dueDate is left blank
+      const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
+      const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+      if (d.getFullYear() === year && d.getMonth() === month) bills += amt;
     }
   }
 
   return { income, bills, net: income - bills, tips };
 }
 
+// Strict Engine for YTD, Projections, and Averages
+function getIncomeStats() {
+  const now = new Date();
+  const curY = now.getFullYear();
+  const curM = now.getMonth();
+
+  // 1. Average Monthly & Projected Annual (Ignores current month)
+  let rawInc = [];
+  let rawBills = [];
+  for (let i = 1; i <= 12; i++) {
+     let m = curM - i;
+     let y = curY;
+     if (m < 0) { m += 12; y -= 1; }
+     const st = getMonthlyStats(y, m);
+     if (st.income > 0) rawInc.push(st.income);
+     if (st.bills > 0) rawBills.push(st.bills);
+  }
+  
+  let validInc = rawInc.length > 1 ? rawInc.filter(inc => inc >= Math.max(...rawInc) * 0.5) : rawInc;
+  if (validInc.length === 0) {
+      const cur = getMonthlyStats(curY, curM);
+      if (cur.income > 0) validInc.push(cur.income);
+  }
+  const avgMonthly = validInc.length ? validInc.reduce((a,b)=>a+b,0) / validInc.length : 0;
+  const projAnnual = avgMonthly * 12;
+
+  // New: Calculate strict averages for bills to prevent 0*12 errors
+  let validBills = rawBills;
+  if (validBills.length === 0) {
+      const cur = getMonthlyStats(curY, curM);
+      if (cur.bills > 0) validBills.push(cur.bills);
+  }
+  const avgMonthlyBills = validBills.length ? validBills.reduce((a,b)=>a+b,0) / validBills.length : 0;
+  const projAnnualBills = avgMonthlyBills * 12;
+
+  // 2. YTD Calculations
+  let ytdIncome = 0;
+  let ytdHours = 0;
+
+  const daysInCurMonth = new Date(curY, curM + 1, 0).getDate();
+  const daysElapsed = now.getDate();
+  const monthsElapsedThisYear = curM + (daysElapsed / daysInCurMonth);
+
+  for (const i of state.income) {
+     const effective = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+     const h = Number(i.hours) || 0;
+     const isOnce = i.frequency === 'once' || !i.frequency;
+
+     if (isOnce) {
+       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
+       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+       if (d.getFullYear() === curY) {
+           ytdIncome += effective;
+           ytdHours += h;
+       }
+     } else {
+       const dt = i.createdAt ? new Date(i.createdAt) : now;
+       const startY = dt.getFullYear();
+       const startM = dt.getMonth();
+
+       let startMonthsElapsed = 0;
+       if (startY < curY) {
+           startMonthsElapsed = 0; 
+       } else if (startY === curY) {
+           const daysInStartMonth = new Date(startY, startM + 1, 0).getDate();
+           const startFraction = (daysInStartMonth - dt.getDate() + 1) / daysInStartMonth;
+           startMonthsElapsed = startM + (1 - startFraction);
+       } else continue; 
+
+       const activeMonthsThisYear = Math.max(0, monthsElapsedThisYear - startMonthsElapsed);
+       const monthlyInc = monthlyEq(effective, i.frequency);
+       const f = i.frequency === 'weekly' ? 4.33333 : i.frequency === 'biweekly' ? 2.16667 : i.frequency === 'monthly' ? 1 : i.frequency === 'yearly' ? (1/12) : 0;
+       const monthlyHrs = h * f;
+
+       ytdIncome += monthlyInc * activeMonthsThisYear;
+       ytdHours += monthlyHrs * activeMonthsThisYear;
+     }
+  }
+
+  const ytdHourly = ytdHours > 0 ? ytdIncome / ytdHours : 0;
+
+  return { ytdIncome, ytdHours, ytdHourly, avgMonthly, projAnnual, avgMonthlyBills, projAnnualBills };
+}
 function getMonthlyHistory(monthsBack = 6) {
   const now = new Date(); const out = [];
   for (let i = monthsBack - 1; i >= 0; i--) {
@@ -839,8 +915,8 @@ function renderOverview() {
     <div class="out" style="margin-top: 32px;">
       <h3>annual projections</h3>
       <div class="kv"><span class="k">estimated yearly income</span><span class="v ok">${fmtMoney(stats.projAnnual, {round:true})}</span><span class="x">based on past strict avg</span></div>
-      <div class="kv"><span class="k">estimated yearly expenses</span><span class="v bad">${fmtMoney(bills * 12, {round:true})}</span><span class="x">${stats.projAnnual > 0 ? ((bills*12)/stats.projAnnual*100).toFixed(1) + '% of annual inc' : ''}</span></div>
-      <div class="kv"><span class="k">annual discretionary</span><span class="v warm">${fmtMoney(stats.projAnnual - (bills * 12), {round:true})}</span><span class="x">before petty spending</span></div>
+      <div class="kv"><span class="k">estimated yearly expenses</span><span class="v bad">${fmtMoney(stats.projAnnualBills, {round:true})}</span><span class="x">${stats.projAnnual > 0 ? (stats.projAnnualBills/stats.projAnnual*100).toFixed(1) + '% of annual inc' : ''}</span></div>
+      <div class="kv"><span class="k">annual discretionary</span><span class="v warm">${fmtMoney(stats.projAnnual - stats.projAnnualBills, {round:true})}</span><span class="x">before petty spending</span></div>
     </div>
 
     <div class="out" style="margin-top: 32px;">
@@ -868,7 +944,6 @@ function renderOverview() {
     </div>
   `;
 }
-
 // ── Income ──
 function renderIncome() {
   const { year, month } = getViewMonth();
@@ -936,13 +1011,10 @@ function renderExpenses() {
     const isOnce = !b.recurring || b.recurring === 'once';
     let bMo = 0;
     if (!isOnce) {
+        bMo = monthlyEq(amt, b.recurring);
+    } else {
         const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
         const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-        if (year > d.getFullYear() || (year === d.getFullYear() && month >= d.getMonth())) {
-           bMo = monthlyEq(amt, b.recurring);
-        }
-    } else if (b.dueDate) {
-        const d = new Date(b.dueDate + (b.dueDate.includes('T') ? '' : 'T00:00:00'));
         if (d.getFullYear() === year && d.getMonth() === month) bMo = amt;
     }
     if (bMo > 0) {
