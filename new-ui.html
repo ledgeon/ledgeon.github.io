@@ -544,12 +544,10 @@ for (const k of possibleKeys) {
 
 // Backwards compatibility migration for old data structures
 state.income.forEach(i => {
-  // Fix hours key mismatch from index.html
   if (i.hoursWorked !== undefined && i.hours === undefined) {
     i.hours = i.hoursWorked;
     delete i.hoursWorked;
   }
-  // Migrate legacy cash tips to new format
   if (i.cashTipPct || i.cashTipAmount) {
     i.tipsEnabled = true;
     if (i.cashTipPct) { i.tipsType = 'percent'; i.tipsValue = i.cashTipPct; }
@@ -563,10 +561,6 @@ const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
 
 let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
-if (currentTab === 'bills') currentTab = 'expenses'; 
-if (currentTab === 'spending') currentTab = 'budget';
-
-// Fallback to prevent blank screens if stored tab no longer exists in the new UI
 if (!['overview', 'income', 'expenses', 'budget', 'tasks'].includes(currentTab)) {
   currentTab = 'overview';
 }
@@ -694,18 +688,26 @@ function getMonthlyHistory(monthsBack = 6) {
   return out;
 }
 
-// Calculates true average of past active months for more accurate annual projection
+// Calculates true average of PAST active months for more accurate annual projection
 function getProjectedAnnual() {
   const d = new Date();
   let validMonths = [];
-  for (let i = 0; i < 12; i++) {
+  
+  // Start loop at 1 to skip the current (likely incomplete) month
+  for (let i = 1; i <= 12; i++) {
     let m = d.getMonth() - i;
     let y = d.getFullYear();
     if (m < 0) { m += 12; y -= 1; }
     const st = getMonthlyStats(y, m);
-    // Ignore months with zero income to prevent skewing the average
     if (st.income > 0) validMonths.push(st.income);
   }
+  
+  // If there's literally no past history, fallback to the current month if it has data
+  if (!validMonths.length) {
+    const curr = getMonthlyStats(d.getFullYear(), d.getMonth());
+    if (curr.income > 0) validMonths.push(curr.income);
+  }
+  
   if (!validMonths.length) return 0;
   const avg = validMonths.reduce((a, b) => a + b, 0) / validMonths.length;
   return avg * 12;
@@ -851,7 +853,7 @@ function renderOverview() {
 
     <div class="out" style="margin-top: 32px;">
       <h3>annual projections</h3>
-      <div class="kv"><span class="k">estimated yearly income</span><span class="v ok">${fmtMoney(annIncome, {round:true})}</span><span class="x">based on tracked monthly avg</span></div>
+      <div class="kv"><span class="k">estimated yearly income</span><span class="v ok">${fmtMoney(annIncome, {round:true})}</span><span class="x">based on tracked past avg</span></div>
       <div class="kv"><span class="k">estimated yearly expenses</span><span class="v bad">${fmtMoney(annBills, {round:true})}</span><span class="x">${annIncome > 0 ? (annBills/annIncome*100).toFixed(1) + '% of annual inc' : ''}</span></div>
       <div class="kv"><span class="k">annual discretionary</span><span class="v warm">${fmtMoney(annIncome - annBills, {round:true})}</span><span class="x">before petty spending</span></div>
     </div>
@@ -890,7 +892,11 @@ function renderIncome() {
   const rows = sortRows(state.income, 'income').map(i => {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = i.frequency === 'once' || !i.frequency;
-    const hourlyText = i.hours ? `<span style="font-size:10px; color:var(--t-faint);">(${fmtMoney(amt / i.hours)}/hr)</span>` : '';
+    
+    // Explicitly show base and tip info
+    const base = i.baseAmount !== undefined ? i.baseAmount : amt;
+    const hourlyText = i.hours ? `<span style="font-size:10px; color:var(--t-faint); margin-left:4px;">(${fmtMoney(base / i.hours)}/hr)</span>` : '';
+    const tipText = (i.tipsEnabled && amt > base) ? `<span style="font-size:10px; color:var(--lime); margin-left:4px;">(+${fmtMoney(amt-base)} tip)</span>` : '';
     
     const moText = isOnce ? '—' : fmtMoney(monthlyEq(amt, i.frequency), {round:true});
     const dateStr = i.receivedAt || (isOnce ? i.createdAt || isoDate(todayStart()) : '');
@@ -898,7 +904,7 @@ function renderIncome() {
     return `<tr class="row">
       <td><span class="id">${i.id}</span></td>
       <td>${escHTML(i.source)}</td>
-      <td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)} ${hourlyText}</td>
+      <td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)} ${hourlyText} ${tipText}</td>
       <td style="color:var(--t-faint);">${i.frequency || 'once'}</td>
       <td class="num">${dateStr ? formatDate(dateStr) : '—'}</td>
       <td class="r num">${moText}</td>
@@ -1010,38 +1016,41 @@ function renderBudget() {
   let { income: inc, bills: fixedBills } = getMonthlyStats(year, month);
   
   let fallbackMsg = '';
+  // Fallback to average of strictly valid past months if current is $0
   if (inc === 0) {
-    // Loop backwards up to 6 months to find a baseline income
+    let validPast = [];
     for (let i = 1; i <= 6; i++) {
       let m = month - i, y = year;
       if (m < 0) { m += 12; y -= 1; }
       let pastStats = getMonthlyStats(y, m);
-      if (pastStats.income > 0) {
-        inc = pastStats.income;
-        const pastDate = new Date(y, m, 1);
-        const pastLabel = pastDate.toLocaleString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
-        fallbackMsg = `<div class="kv" style="margin-bottom:16px;"><span class="k">note</span><span class="v warn">using ${pastLabel} income (${fmtMoney(inc)}) as baseline</span><span class="x">no income logged for viewed month</span></div>`;
-        break;
-      }
+      if (pastStats.income > 0) validPast.push(pastStats.income);
+    }
+    if (validPast.length > 0) {
+      inc = validPast.reduce((a,b) => a+b, 0) / validPast.length;
+      fallbackMsg = `<div class="kv" style="margin-bottom:16px;"><span class="k">note</span><span class="v warn">using average past income (${fmtMoney(inc)})</span><span class="x">current month incomplete</span></div>`;
     }
   }
 
   if (inc === 0) return `<div class="out"><div class="empty-state">no income recorded recently to build a budget against.</div></div>`;
 
-  // Calculate Savings Goals Requirements
+  // Calculate Savings Goals Requirements & Expose for Display
   let savingsTarget = 0;
   const today = todayStart();
   state.goals.forEach(g => {
     const target = parseFloat(g.targetAmount) || 0;
     const saved = parseFloat(g.currentAmount) || 0;
     const remaining = Math.max(0, target - saved);
+    let reqMo = 0;
     if (remaining > 0 && g.targetDate) {
       const td = new Date(g.targetDate + (g.targetDate.includes('T') ? '' : 'T00:00:00'));
       if (td > today) {
-        const monthsLeft = Math.max(1, Math.round((td - today) / (30 * 86400000)));
-        savingsTarget += remaining / monthsLeft;
+        // Average 30.44 days per month for math
+        const monthsLeft = Math.max(1, (td - today) / (30.44 * 86400000));
+        reqMo = remaining / monthsLeft;
+        savingsTarget += reqMo;
       }
     }
+    g._reqMo = reqMo; // Bind explicitly to the object for rendering
   });
   
   const net = inc - fixedBills - savingsTarget;
@@ -1133,10 +1142,12 @@ function renderBudget() {
       <h3>savings goals <span class="action" data-action="open-modal" data-type="goals">+ add goal</span></h3>
       ${state.goals.length ? state.goals.map(g => {
         const p = g.targetAmount > 0 ? (g.currentAmount / g.targetAmount) * 100 : 0;
+        const reqText = g._reqMo > 0 ? `<div class="x" style="color:var(--warn); margin-top:4px;">requires ${fmtMoney(g._reqMo)} / mo</div>` : '';
         return `
           <div style="margin-bottom: 16px;">
             <div class="kv" style="grid-template-columns: 1fr auto;"><span class="v" style="color:var(--t-bright)">${escHTML(g.name)}</span><span class="v">${fmtMoney(g.currentAmount, {round:true})} / ${fmtMoney(g.targetAmount, {round:true})}</span></div>
             <div class="bar-line ${p>=100?'ok':''}"><span class="bar" style="font-size:16px;">${asciiBar(p, 40)}</span><span class="x">${p.toFixed(1)}%</span></div>
+            ${reqText}
             <div class="tbl-actions" style="margin-top:4px; text-align:right;">
               <button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button>
               <button data-action="edit" data-type="goals" data-id="${g.id}">edit</button>
@@ -1291,12 +1302,20 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.hours = parseAmt(fd.get('hours')) || null;
       item.tipsEnabled = fd.get('tipsEnabled') === 'on';
       item.tipsType = fd.get('tipsType') || 'percent';
-      item.tipsValue = parseAmt(fd.get('tipsValue')) || 6;
       
       let finalAmt = baseAmt;
       if (item.tipsEnabled) {
-        if (item.tipsType === 'percent') finalAmt += baseAmt * (item.tipsValue / 100);
-        else finalAmt += item.tipsValue;
+        // Fallback to 6 if blank or 0
+        let tipVStr = fd.get('tipsValue');
+        let tipV = parseAmt(tipVStr);
+        if (!tipVStr || tipV === 0) tipV = 6; 
+        item.tipsValue = tipV;
+
+        if (item.tipsType === 'percent') {
+          finalAmt += baseAmt * (tipV / 100);
+        } else {
+          finalAmt += tipV;
+        }
       }
       
       item.amount = finalAmt;
