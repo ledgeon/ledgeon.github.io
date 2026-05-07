@@ -202,6 +202,17 @@
   .preset-row .nm { flex: 1; color: var(--t); font-size: 13px; }
   .preset-row .pct { color: var(--t-faint); font-size: 11px; text-align: right;}
 
+  /* delta indicator — used inline within .kv .x slots */
+  .kpi-delta { display: inline-block; font-size: 11px; }
+  .kpi-delta.up { color: var(--ok); }
+  .kpi-delta.down { color: var(--bad); }
+  .kpi-delta.flat { color: var(--t-faint); }
+
+  /* chart legend — matches the existing thin/faint visual weight */
+  .chart-legend { display: flex; gap: 16px; font-size: 11px; color: var(--t-faint); margin-bottom: 8px; flex-wrap: wrap; }
+  .chart-legend .li { display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend .dot { width: 10px; height: 2.5px; border-radius: 2px; }
+
 </style>
 </head>
 <body>
@@ -616,29 +627,282 @@ function asciiBar(pct, width = 24) {
 
 function escHTML(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-function renderLineChart(data) {
-  const W = 700, H = 180, pad = { top: 10, right: 20, bottom: 20, left: 50 };
-  const allValues = []; data.forEach(d => { allValues.push(d.income); allValues.push(d.bills); });
-  const yMax = Math.ceil(Math.max(...allValues, 100) / 100) * 100;
+function renderLineChart(data, lines, opts = {}) {
+  // Backward compat: if called with just data, default to income/bills lines
+  if (!lines) lines = [{ key: 'income', color: 'var(--ok)', label: 'income' }, { key: 'bills', color: 'var(--bad)', label: 'expenses' }];
+  const W = 700, H = opts.height || 180, pad = { top: 10, right: 20, bottom: 22, left: 50 };
+  const allValues = []; data.forEach(d => lines.forEach(l => allValues.push(d[l.key] || 0)));
+  const isMoney = opts.format !== 'plain';
+  const yMax = Math.max(...allValues, 100);
+  const niceMax = isMoney ? Math.ceil(yMax / 100) * 100 : Math.ceil(yMax / 5) * 5;
   const innerW = W - pad.left - pad.right; const innerH = H - pad.top - pad.bottom;
   const xPos = (i) => pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
-  const yPos = (v) => pad.top + innerH - (v / yMax) * innerH;
+  const yPos = (v) => pad.top + innerH - (v / niceMax) * innerH;
   const grids = []; for (let i = 0; i <= 4; i++) {
-    const v = (yMax / 4) * i; const y = yPos(v);
-    grids.push(`<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="var(--line-strong)" stroke-dasharray="2 4" /><text x="${pad.left - 8}" y="${y + 4}" fill="var(--t-faint)" font-size="11" text-anchor="end" font-family="monospace">$${v}</text>`);
+    const v = (niceMax / 4) * i; const y = yPos(v);
+    const lbl = isMoney ? '$' + v : v.toFixed(0);
+    grids.push(`<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="var(--line-strong)" stroke-dasharray="2 4" /><text x="${pad.left - 8}" y="${y + 4}" fill="var(--t-faint)" font-size="11" text-anchor="end" font-family="monospace">${lbl}</text>`);
   }
-  const path = (key, col) => `<path d="${data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(d[key])}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2" />`;
-  const dots = data.map((d, i) => `<circle cx="${xPos(i)}" cy="${yPos(d.income)}" r="3.5" fill="var(--bg-deep)" stroke="var(--ok)" stroke-width="1.5"></circle><circle cx="${xPos(i)}" cy="${yPos(d.bills)}" r="3.5" fill="var(--bg-deep)" stroke="var(--bad)" stroke-width="1.5"></circle>`).join('');
-  return `<svg viewBox="0 0 ${W} ${H}" class="trend-svg">${grids.join('')}${path('income', 'var(--ok)')}${path('bills', 'var(--bad)')}${dots}${data.map((d, i) => `<text x="${xPos(i)}" y="${H - 5}" fill="var(--t-dim)" font-size="11" text-anchor="middle" font-family="monospace">${d.label}</text>`).join('')}</svg>`;
+  const path = (key, col) => `<path d="${data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xPos(i)} ${yPos(d[key] || 0)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="2" />`;
+  const dots = data.map((d, i) => lines.map(l => `<circle cx="${xPos(i)}" cy="${yPos(d[l.key] || 0)}" r="3.5" fill="var(--bg-deep)" stroke="${l.color}" stroke-width="1.5"></circle>`).join('')).join('');
+  const xLabels = data.map((d, i) => `<text x="${xPos(i)}" y="${H - 5}" fill="var(--t-dim)" font-size="11" text-anchor="middle" font-family="monospace">${d.label}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="trend-svg">${grids.join('')}${lines.map(l => path(l.key, l.color)).join('')}${dots}${xLabels}</svg>`;
 }
 
-function renderDonut(slices, total, label) {
+function chartLegend(lines) {
+  return `<div class="chart-legend">${lines.map(l => `<span class="li"><span class="dot" style="background:${l.color}"></span>${l.label}</span>`).join('')}</div>`;
+}
+
+function renderBurnDown(burn) {
+  const { points, days, monthlyAllowance, lastDay } = burn;
+  if (monthlyAllowance <= 0) return '<div class="empty-state">add income & bills to see your discretionary pace.</div>';
+  const W = 700, H = 160, pad = { top: 10, right: 20, bottom: 22, left: 50 };
+  const innerW = W - pad.left - pad.right; const innerH = H - pad.top - pad.bottom;
+  const yMax = Math.max(monthlyAllowance, ...points.map(p => p.actual)) * 1.1;
+  const xPos = d => pad.left + ((d - 1) / (days - 1)) * innerW;
+  const yPos = v => pad.top + innerH - (v / yMax) * innerH;
+  const grids = []; for (let i = 0; i <= 4; i++) {
+    const v = (yMax / 4) * i; const y = yPos(v);
+    grids.push(`<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="var(--line-strong)" stroke-dasharray="2 4" /><text x="${pad.left - 8}" y="${y + 4}" fill="var(--t-faint)" font-size="11" text-anchor="end" font-family="monospace">$${Math.round(v)}</text>`);
+  }
+  // ideal line (full month)
+  const idealPath = `<line x1="${xPos(1)}" y1="${yPos(points[0].ideal)}" x2="${xPos(days)}" y2="${yPos(monthlyAllowance)}" stroke="var(--t-faint)" stroke-width="1.5" stroke-dasharray="4 4" />`;
+  // actual line (only up to lastDay for current month)
+  const actualPts = points.filter(p => !p.isFuture);
+  const actualPath = actualPts.length > 1 ? `<path d="${actualPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xPos(p.day)} ${yPos(p.actual)}`).join(' ')}" fill="none" stroke="var(--lime)" stroke-width="2" />` : '';
+  // marker for today
+  const last = actualPts[actualPts.length - 1];
+  const marker = last ? `<circle cx="${xPos(last.day)}" cy="${yPos(last.actual)}" r="4" fill="var(--lime)"></circle>` : '';
+  // x labels every ~5 days
+  const xLabels = [1, Math.round(days/4), Math.round(days/2), Math.round(3*days/4), days].map(d => `<text x="${xPos(d)}" y="${H - 5}" fill="var(--t-dim)" font-size="10" text-anchor="middle" font-family="monospace">d${d}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="trend-svg">${grids.join('')}${idealPath}${actualPath}${marker}${xLabels}</svg>`;
+}
+
+
+
+function renderDonut(slices, total, label, sub) {
   if (total <= 0 || !slices.length) return `<svg class="pie" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="var(--line)" stroke-width="15" /></svg>`;
   let cum = 0; return `<svg class="pie" viewBox="0 0 200 200">${slices.map(s => {
     const pct = (s.value / total) * 100; const seg = `<circle cx="100" cy="100" r="80" fill="none" stroke="${s.color}" stroke-width="15" pathLength="100" stroke-dasharray="${pct} 100" stroke-dashoffset="${-cum}" transform="rotate(-90 100 100)"></circle>`;
     cum += pct; return seg;
-  }).join('')}<text x="100" y="105" class="pie-center-label">${label}</text><text x="100" y="125" class="pie-center-sub">total / mo</text></svg>`;
+  }).join('')}<text x="100" y="105" class="pie-center-label">${label}</text><text x="100" y="125" class="pie-center-sub">${sub || 'total / mo'}</text></svg>`;
 }
+
+// Find the most recent month with non-zero income, walking back up to 12 months.
+function getReferenceMonth() {
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    let m = now.getMonth() - i; let y = now.getFullYear();
+    while (m < 0) { m += 12; y -= 1; }
+    const s = getMonthlyStats(y, m);
+    if (s.income > 0) return { year: y, month: m, ...s, label: new Date(y, m).toLocaleString('en-US', { month: 'short' }).toLowerCase() };
+  }
+  return null;
+}
+
+// Aggregate petty entries by category.
+function aggregatePettyByCategory(entries) {
+  const byCat = {};
+  for (const e of entries) {
+    const cat = e.category || 'other';
+    const amt = parseFloat(String(e.amount).replace(/[^\d.-]/g, '')) || 0;
+    byCat[cat] = (byCat[cat] || 0) + amt;
+  }
+  return Object.entries(byCat).map(([cat, total]) => ({ cat, total })).sort((a,b) => b.total - a.total);
+}
+
+// Aggregate the bills-monthly list by category (returns sorted array).
+function aggregateBillsByCategory(bills, year, month) {
+  const byCat = {};
+  for (const b of bills) {
+    const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
+    const isOnce = !b.recurring || b.recurring === 'once';
+    const mo = isOnce
+      ? ((b.dueDate || b.createdAt || isoDate(todayStart())).startsWith(`${year}-${String(month+1).padStart(2,'0')}`) ? amt : 0)
+      : monthlyEq(amt, b.recurring);
+    if (mo <= 0) continue;
+    const cat = b.category || 'other';
+    if (!byCat[cat]) byCat[cat] = { total: 0, names: [] };
+    byCat[cat].total += mo;
+    byCat[cat].names.push(b.name);
+  }
+  return Object.entries(byCat).map(([cat, v]) => ({
+    cat, total: v.total, names: v.names,
+    label: CATEGORIES[cat]?.label || cat,
+    color: CATEGORIES[cat]?.color || '#6b7280',
+  })).sort((a,b) => b.total - a.total);
+}
+
+// Compute monthly required savings target from goals with target dates.
+function getSavingsTarget() {
+  let total = 0; const breakdown = [];
+  for (const g of state.goals) {
+    const target = parseFloat(g.targetAmount) || 0;
+    const saved = parseFloat(g.currentAmount) || 0;
+    const remaining = Math.max(0, target - saved);
+    if (remaining === 0 || !g.targetDate) continue;
+    const td = new Date(g.targetDate + 'T00:00:00');
+    if (td <= todayStart()) continue;
+    const monthsLeft = Math.max(1, (td - todayStart()) / (30.44 * 86400000));
+    const monthly = remaining / monthsLeft;
+    total += monthly;
+    breakdown.push({ name: g.name, monthly });
+  }
+  return { total, breakdown };
+}
+
+// Petty entries for the current week (Mon-Sun).
+function getPettyThisWeek() {
+  const today = todayStart();
+  const dow = (today.getDay() + 6) % 7; // monday-indexed
+  const monday = new Date(today.getTime() - dow * 86400000);
+  const sunday = new Date(monday.getTime() + 6 * 86400000);
+  const startIso = isoDate(monday); const endIso = isoDate(sunday);
+  return state.petty.filter(p => p.date && p.date >= startIso && p.date <= endIso)
+    .sort((a,b) => b.date.localeCompare(a.date));
+}
+
+// Compute per-day net (income received - petty spent) for the given month.
+function getCashFlowDays(year, month) {
+  const days = new Date(year, month + 1, 0).getDate();
+  const flow = Array(days).fill(0).map(() => ({ income: 0, spent: 0 }));
+  // one-time income on a specific date
+  for (const i of state.income) {
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    if (!isOnce) continue;
+    const dateStr = i.receivedAt || i.createdAt; if (!dateStr) continue;
+    const d = new Date(dateStr + 'T00:00:00');
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+      flow[d.getDate() - 1].income += amt;
+    }
+  }
+  // petty spending
+  for (const p of state.petty) {
+    if (!p.date || !p.date.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) continue;
+    const day = parseInt(p.date.split('-')[2], 10);
+    if (day >= 1 && day <= days) {
+      flow[day - 1].spent += parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0;
+    }
+  }
+  return flow;
+}
+
+// Effective $/hr per month for the past N months.
+function getHourlyTrend(monthsBack = 6) {
+  const now = new Date(); const out = [];
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const y = d.getFullYear(); const m = d.getMonth();
+    let monthIncome = 0; let monthBase = 0; let monthHours = 0;
+    for (const inc of state.income) {
+      const amt = parseFloat(String(inc.amount).replace(/[^\d.-]/g, '')) || 0;
+      const base = inc.baseAmount !== undefined ? (parseFloat(String(inc.baseAmount).replace(/[^\d.-]/g, '')) || 0) : amt;
+      const h = Number(inc.hours) || 0;
+      const isOnce = inc.frequency === 'once' || !inc.frequency;
+      if (isOnce) {
+        const dateStr = inc.receivedAt || inc.createdAt;
+        if (!dateStr) continue;
+        const dd = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+        if (dd.getFullYear() === y && dd.getMonth() === m) {
+          monthIncome += amt; monthBase += base; monthHours += h;
+        }
+      } else {
+        const f = inc.frequency === 'weekly' ? 4.33333 : inc.frequency === 'biweekly' ? 2.16667 : inc.frequency === 'monthly' ? 1 : inc.frequency === 'yearly' ? (1/12) : 0;
+        monthIncome += amt * f;
+        monthBase += base * f;
+        monthHours += h * f;
+      }
+    }
+    out.push({
+      label: d.toLocaleString('en-US', { month: 'short' }).toLowerCase(),
+      hourly: monthHours > 0 ? monthIncome / monthHours : 0,
+      baseHourly: monthHours > 0 ? monthBase / monthHours : 0,
+      hours: monthHours,
+    });
+  }
+  return out;
+}
+
+// Burn-down: actual cumulative discretionary spent vs the straight-line ideal pace.
+function getBurnDown(year, month, monthlyAllowance) {
+  const days = new Date(year, month + 1, 0).getDate();
+  const today = todayStart();
+  const isCurrent = today.getFullYear() === year && today.getMonth() === month;
+  const lastDay = isCurrent ? today.getDate() : days;
+  const dailyRate = monthlyAllowance / days;
+  // gather petty by day
+  const byDay = Array(days + 1).fill(0); // index 1..days
+  for (const p of state.petty) {
+    if (!p.date || !p.date.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) continue;
+    const day = parseInt(p.date.split('-')[2], 10);
+    if (day >= 1 && day <= days) byDay[day] += parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0;
+  }
+  const points = []; let cum = 0;
+  for (let d = 1; d <= days; d++) {
+    cum += byDay[d];
+    points.push({ day: d, actual: cum, ideal: dailyRate * d, isFuture: isCurrent && d > lastDay });
+  }
+  return { points, days, monthlyAllowance, lastDay };
+}
+
+// Year-over-year for a given month: returns this year's + last year's stats.
+function getYoY(year, month) {
+  const cur = getMonthlyStats(year, month);
+  const prev = getMonthlyStats(year - 1, month);
+  return {
+    cur, prev,
+    incomeDelta: cur.income - prev.income,
+    billsDelta: cur.bills - prev.bills,
+    netDelta: (cur.income - cur.bills) - (prev.income - prev.bills),
+    hasPrev: prev.income > 0 || prev.bills > 0,
+  };
+}
+
+// Personalized recommendations based on the current/reference month.
+function generateRecommendations(income, bills, billsList, year, month) {
+  const recs = [];
+  if (income === 0) { recs.push({ type: 'info', text: 'Add income to see personalized recommendations.' }); return recs; }
+  if (bills === 0) { recs.push({ type: 'info', text: 'Add your recurring bills (or use the preset picker on the expenses tab) to see how they compare against budgeting rules of thumb.' }); return recs; }
+  const ratio = bills / income;
+  if (ratio > 0.8) recs.push({ type: 'warning', text: `Your bills are <strong>${Math.round(ratio*100)}% of income</strong> — well above the typical 50% needs / 30% wants threshold. There's little room for savings or surprises.` });
+  else if (ratio > 0.65) recs.push({ type: 'warning', text: `Your bills are <strong>${Math.round(ratio*100)}% of income</strong>. The 50/30/20 rule recommends keeping fixed expenses below ~50% to leave room for savings.` });
+  else if (ratio > 0.5) recs.push({ type: 'info', text: `Your bills are <strong>${Math.round(ratio*100)}% of income</strong> — manageable but on the higher end of the recommended range.` });
+  else recs.push({ type: 'success', text: `Your bills are only <strong>${Math.round(ratio*100)}% of income</strong> — strong position to save and invest the rest.` });
+  // category overspending
+  const byCat = aggregateBillsByCategory(billsList, year, month);
+  const CAT_GUIDELINES = { housing: 30, transport: 15, food: 15, debt: 15, insurance: 10, utilities: 10 };
+  const SUGGESTIONS = {
+    housing: 'Refinancing, downsizing, or finding a roommate could free up significant room.',
+    transport: 'Look at insurance shopping, fuel efficiency, or whether the car payment can be reduced.',
+    insurance: 'Get fresh quotes from competitors annually — rates change a lot.',
+    food: 'Meal planning and cooking at home tend to be the fastest cuts here.',
+    media: 'Audit recurring subscriptions — most people forget at least one or two.',
+    debt: 'Consolidating high-interest debt or following a payoff method (avalanche/snowball) can speed this up.',
+    utilities: 'Energy-efficient adjustments and bundling can chip away at monthly costs.',
+  };
+  for (const c of byCat) {
+    const max = CAT_GUIDELINES[c.cat]; if (!max) continue;
+    const pct = (c.total / income) * 100;
+    if (pct > max * 1.2) recs.push({ type: 'warning', text: `<strong>${c.label}</strong> is ${pct.toFixed(1)}% of income — above the ${max}% guideline. ${SUGGESTIONS[c.cat] || ''}` });
+  }
+  // savings / emergency fund
+  const leftover = income - bills;
+  if (leftover < 0) {
+    recs.push({ type: 'warning', text: `You're spending <strong>${fmtMoney(-leftover, {round: true})}</strong> more than you earn each month. Reduce expenses or grow income to close the gap.` });
+  } else {
+    const target20 = income * 0.2; const targetEF = bills * 3; const targetEFUpper = bills * 6;
+    if (leftover >= target20) recs.push({ type: 'success', text: `You have <strong>${fmtMoney(leftover, {round: true})}</strong> left after bills — enough to hit the 20% savings target (${fmtMoney(target20, {round: true})}/mo).` });
+    else recs.push({ type: 'info', text: `You have <strong>${fmtMoney(leftover, {round: true})}</strong> available after bills. To hit the 20% target (${fmtMoney(target20, {round: true})}/mo), you'd need to trim ${fmtMoney(target20 - leftover, {round: true})}/mo from spending.` });
+    if (target20 > 0) recs.push({ type: 'info', text: `Aim for <strong>${fmtMoney(targetEF, {round: true})}–${fmtMoney(targetEFUpper, {round: true})}</strong> in an emergency fund (3–6 months of bills). At ${fmtMoney(target20, {round: true})}/mo, that's ${Math.ceil(targetEF / target20)}–${Math.ceil(targetEFUpper / target20)} months of saving.` });
+  }
+  return recs;
+}
+
+// Tax setaside estimate for cash tips (default 25% — easily adjustable).
+const TAX_SETASIDE_PCT_KEY = 'ledgeon-tax-pct';
+function getTaxPct() { const v = parseFloat(localStorage.getItem(TAX_SETASIDE_PCT_KEY)); return isNaN(v) ? 25 : v; }
+function setTaxPct(v) { localStorage.setItem(TAX_SETASIDE_PCT_KEY, String(v)); }
 
 function updateBadges() {
   document.querySelectorAll('.badge-income').forEach(el => el.textContent = state.income.length);
@@ -670,49 +934,405 @@ function sortRows(arr, type) {
 }
 
 function renderOverview() {
-  const { year, month } = getViewMonth(); const { income, bills, tips } = getMonthlyStats(year, month); const stats = getIncomeStats();
-  const pettySpent = state.petty.filter(p => p.date && p.date.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)).reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-  const upcIso = isoDate(new Date(Date.now() + 14 * 86400000)); const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
-  return `<div class="month-nav"><button data-action="prev-month">← prev</button><div class="month-label">${new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase()}</div><button data-action="next-month">next →</button>${year!==new Date().getFullYear()||month!==new Date().getMonth()?'<button data-action="curr-month">jump to current</button>':''}</div><div class="out"><h3>summary</h3><div class="kv"><span class="k">monthly income</span><span class="v ok">${fmtMoney(income)}</span><span class="x">${tips > 0 ? `incl. ${fmtMoney(tips,{round:true})} unclaimed tips` : `${state.income.length} sources`}</span></div><div class="kv"><span class="k">fixed expenses</span><span class="v bad">${fmtMoney(bills)}</span><span class="x">${income>0?(bills/income*100).toFixed(1)+'%':''}</span></div><div class="kv"><span class="k">discretionary spent</span><span class="v warn">${fmtMoney(pettySpent)}</span><span class="x">petty entries</span></div><div class="kv"><span class="k">net remaining</span><span class="v ${income-bills-pettySpent>=0?'warm':'err'}">${fmtMoney(income-bills-pettySpent,{sign:true})}</span><span class="x">available</span></div><div style="margin-top:20px;"></div><div class="bar-line ok"><span class="lbl">income</span><span class="bar">${asciiBar(100)}</span><span class="va ok">${fmtMoney(income,{round:true})}</span></div><div class="bar-line bad"><span class="lbl">expenses</span><span class="bar">${asciiBar(income?(bills/income)*100:0)}</span><span class="va bad">${fmtMoney(bills,{round:true})}</span></div></div><div class="out" style="margin-top:32px;"><h3>projections</h3><div class="kv"><span class="k">est. yearly income</span><span class="v ok">${fmtMoney(stats.projAnnual,{round:true})}</span><span class="x">past avg</span></div><div class="kv"><span class="k">est. yearly expenses</span><span class="v bad">${fmtMoney(stats.projAnnualBills,{round:true})}</span><span class="x">${stats.projAnnual>0?(stats.projAnnualBills/stats.projAnnual*100).toFixed(1)+'%':''}</span></div></div><div class="out" style="margin-top:32px;"><h3>trend</h3><div class="chart-box" style="padding:16px 12px 0;">${renderLineChart(getMonthlyHistory(6))}</div></div><div class="out" style="margin-top:32px;"><h3>upcoming</h3>${upcoming.length?`<table class="tbl"><tbody>${upcoming.slice(0,5).map(b=>`<tr class="row"><td><span class="tag ${isOverdue(b.dueDate)?'err':(isTodayDate(b.dueDate)?'warn':'info')}">${formatDate(b.dueDate)}</span></td><td>${escHTML(b.name)}</td><td class="r num bad">${fmtMoney(b.amount)}</td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">none.</div>'}</div>`;
+  const { year, month } = getViewMonth();
+  const cur = getMonthlyStats(year, month); const stats = getIncomeStats();
+  const { income, bills, tips } = cur;
+  const isCurrentMonth = (() => { const n = new Date(); return n.getFullYear() === year && n.getMonth() === month; })();
+  const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthPettyEntries = state.petty.filter(p => p.date && p.date.startsWith(monthKey));
+  const pettySpent = monthPettyEntries.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+  const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
+  const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
+  const net = income - bills - pettySpent;
+  // previous month delta
+  let pMo = month - 1, pYr = year; if (pMo < 0) { pMo = 11; pYr -= 1; }
+  const prev = getMonthlyStats(pYr, pMo);
+  const incDelta = income - prev.income; const billDelta = bills - prev.bills; const netDelta = (income - bills) - (prev.income - prev.bills);
+  const savingsPct = income > 0 ? Math.max(0, (income - bills - pettySpent) / income * 100) : 0;
+  const today = todayStart();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysElapsed = isCurrentMonth ? today.getDate() : daysInMonth;
+  const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
+  const dailyBudget = daysRemaining > 0 && net > 0 ? (net / daysRemaining) : 0;
+  // largest bill / top cat / biggest income
+  const billCats = aggregateBillsByCategory(state.bills, year, month);
+  const topCat = billCats[0] || null;
+  const monthBillsSorted = [...state.bills].map(b => ({ b, mo: (() => {
+    const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
+    const isOnce = !b.recurring || b.recurring === 'once';
+    return isOnce ? ((b.dueDate || b.createdAt || '').startsWith(monthKey) ? amt : 0) : monthlyEq(amt, b.recurring);
+  })() })).filter(x => x.mo > 0).sort((a,b) => b.mo - a.mo);
+  const largestBill = monthBillsSorted[0] || null;
+  let biggestIncome = null; let biggestIncomeMo = 0;
+  for (const i of state.income) {
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    let mo = 0;
+    if (isOnce) {
+      const ds = i.receivedAt || i.createdAt;
+      if (ds && ds.startsWith(monthKey)) mo = amt;
+    } else mo = monthlyEq(amt, i.frequency);
+    if (mo > biggestIncomeMo) { biggestIncomeMo = mo; biggestIncome = { source: i.source, mo }; }
+  }
+  // open tasks for preview
+  const openTasks = state.tasks.filter(t => !t.done).sort((a,b) => {
+    const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
+    return ad.localeCompare(bd);
+  }).slice(0, 5);
+  const yoy = getYoY(year, month);
+
+  const dh = (delta, invertColors = false) => {
+    if (Math.abs(delta) < 0.5) return '';
+    const isUp = delta > 0;
+    const isGood = invertColors ? !isUp : isUp;
+    return ` · <span class="kpi-delta ${isGood ? 'up' : 'down'}">${isUp ? '↑' : '↓'} ${fmtMoney(Math.abs(delta), {round: true})} vs last</span>`;
+  };
+
+  return `
+    <div class="month-nav">
+      <button data-action="prev-month">← prev</button>
+      <div class="month-label">${new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase()}</div>
+      <button data-action="next-month">next →</button>
+      ${(year !== new Date().getFullYear() || month !== new Date().getMonth()) ? '<button data-action="curr-month">jump to current</button>' : ''}
+    </div>
+
+    <div class="out">
+      <h3>summary</h3>
+      <div class="kv"><span class="k">monthly income</span><span class="v ok">${fmtMoney(income)}</span><span class="x">${tips > 0 ? `incl. ${fmtMoney(tips,{round:true})} tips` : `${state.income.length} source${state.income.length === 1 ? '' : 's'}`}${dh(incDelta)}</span></div>
+      <div class="kv"><span class="k">fixed expenses</span><span class="v bad">${fmtMoney(bills)}</span><span class="x">${income>0?(bills/income*100).toFixed(1)+'% of income':''}${dh(billDelta, true)}</span></div>
+      <div class="kv"><span class="k">discretionary spent</span><span class="v warn">${fmtMoney(pettySpent)}</span><span class="x">${monthPettyEntries.length} ${monthPettyEntries.length === 1 ? 'entry' : 'entries'}</span></div>
+      <div class="kv"><span class="k">savings rate</span><span class="v ${savingsPct >= 20 ? 'ok' : 'warn'}">${income > 0 ? savingsPct.toFixed(0) + '%' : '—'}</span><span class="x">${income > 0 ? (savingsPct >= 20 ? 'meets 20% target' : `${(20-savingsPct).toFixed(0)}% under target`) : ''}</span></div>
+      ${isCurrentMonth ? `<div class="kv"><span class="k">daily budget</span><span class="v" style="color:var(--lime);">${dailyBudget > 0 ? fmtMoney(dailyBudget) : '—'}</span><span class="x">${daysRemaining} day${daysRemaining===1?'':'s'} left</span></div>` : ''}
+      <div class="kv"><span class="k">net remaining</span><span class="v ${net>=0?'warm':'err'}">${fmtMoney(net, {sign: true})}</span><span class="x">available${dh(netDelta)}</span></div>
+      <div style="margin-top: 16px;"></div>
+      <div class="bar-line ok"><span class="lbl">income</span><span class="bar">${asciiBar(100)}</span><span class="va ok">${fmtMoney(income, {round:true})}</span></div>
+      <div class="bar-line bad"><span class="lbl">expenses</span><span class="bar">${asciiBar(income ? (bills/income)*100 : 0)}</span><span class="va bad">${fmtMoney(bills, {round:true})}</span></div>
+      ${income > 0 ? `<div class="bar-line warm"><span class="lbl">savings</span><span class="bar">${asciiBar(savingsPct)}</span><span class="va warm">${savingsPct.toFixed(0)}%</span></div>` : ''}
+    </div>
+
+    ${(largestBill || topCat || biggestIncome) ? `
+    <div class="out" style="margin-top:32px;">
+      <h3>highlights</h3>
+      ${biggestIncome ? `<div class="kv"><span class="k">biggest income</span><span class="v ok">${escHTML(biggestIncome.source)}</span><span class="x">${fmtMoney(biggestIncome.mo, {round: true})}/mo · ${income > 0 ? (biggestIncome.mo/income*100).toFixed(0) + '%' : '—'} of total</span></div>` : ''}
+      ${largestBill ? `<div class="kv"><span class="k">largest bill</span><span class="v bad">${escHTML(largestBill.b.name)}</span><span class="x">${fmtMoney(largestBill.mo, {round: true})}/mo · ${income > 0 ? (largestBill.mo/income*100).toFixed(0) + '%' : '—'} of income</span></div>` : ''}
+      ${topCat ? `<div class="kv"><span class="k">top category</span><span class="v" style="color:${topCat.color};">${topCat.label}</span><span class="x">${fmtMoney(topCat.total, {round: true})}/mo · ${bills > 0 ? (topCat.total/bills*100).toFixed(0) + '%' : '—'} of expenses</span></div>` : ''}
+    </div>` : ''}
+
+    <div class="out" style="margin-top:32px;">
+      <h3>projections</h3>
+      <div class="kv"><span class="k">est. yearly income</span><span class="v ok">${fmtMoney(stats.projAnnual,{round:true})}</span><span class="x">past avg</span></div>
+      <div class="kv"><span class="k">est. yearly expenses</span><span class="v bad">${fmtMoney(stats.projAnnualBills,{round:true})}</span><span class="x">${stats.projAnnual>0?(stats.projAnnualBills/stats.projAnnual*100).toFixed(1)+'%':''}</span></div>
+      ${yoy.hasPrev ? `
+        <div class="kv"><span class="k">net yoy</span><span class="v" style="color:${yoy.netDelta >= 0 ? 'var(--ok)' : 'var(--bad)'};">${yoy.netDelta >= 0 ? '+' : ''}${fmtMoney(yoy.netDelta, {round: true})}</span><span class="x">vs ${year - 1}</span></div>
+        <div class="kv"><span class="k">income yoy</span><span class="v" style="color:${yoy.incomeDelta >= 0 ? 'var(--ok)' : 'var(--bad)'};">${yoy.incomeDelta >= 0 ? '+' : ''}${fmtMoney(yoy.incomeDelta, {round: true})}</span><span class="x">${yoy.prev.income > 0 ? ((yoy.incomeDelta/yoy.prev.income*100).toFixed(0) + '%') : '—'}</span></div>
+        <div class="kv"><span class="k">expenses yoy</span><span class="v" style="color:${yoy.billsDelta >= 0 ? 'var(--bad)' : 'var(--ok)'};">${yoy.billsDelta >= 0 ? '+' : ''}${fmtMoney(yoy.billsDelta, {round: true})}</span><span class="x">${yoy.prev.bills > 0 ? ((yoy.billsDelta/yoy.prev.bills*100).toFixed(0) + '%') : '—'}</span></div>
+      ` : ''}
+    </div>
+
+    <div class="out" style="margin-top:32px;">
+      <h3>trend · 6 months</h3>
+      ${chartLegend([{color:'var(--ok)', label:'income'}, {color:'var(--bad)', label:'expenses'}])}
+      <div class="chart-box" style="padding:16px 12px 0;">${renderLineChart(getMonthlyHistory(6))}</div>
+    </div>
+
+    <div class="out" style="margin-top:32px;">
+      <h3>upcoming · 14 days</h3>
+      ${upcoming.length ? `<table class="tbl"><tbody>${upcoming.slice(0,6).map(b=>`<tr class="row"><td><span class="tag ${isOverdue(b.dueDate)?'err':(isTodayDate(b.dueDate)?'warn':'info')}">${formatDate(b.dueDate)}</span></td><td>${escHTML(b.name)}</td><td class="r num bad">${fmtMoney(b.amount)}</td></tr>`).join('')}</tbody></table>${upcoming.length > 6 ? `<div style="margin-top:6px;font-size:11px;color:var(--t-faint);">+ ${upcoming.length - 6} more · <span class="action" data-action="goto" data-tab="expenses" style="cursor:pointer;">view all</span></div>` : ''}` : '<div class="empty-state">none.</div>'}
+    </div>
+
+    ${openTasks.length ? `
+    <div class="out" style="margin-top:32px;">
+      <h3>open tasks <span class="action" data-action="goto" data-tab="tasks">view all →</span></h3>
+      <table class="tbl"><tbody>${openTasks.map(t => {
+        const overdue = t.dueDate && isOverdue(t.dueDate);
+        const isToday = t.dueDate && isTodayDate(t.dueDate);
+        const cls = overdue ? 'err' : isToday ? 'warn' : (t.priority === 'high' ? 'err' : t.priority === 'med' ? 'warn' : 'info');
+        const label = t.dueDate ? formatDate(t.dueDate) : (t.priority || 'none');
+        return `<tr class="row"><td><span class="tag ${cls}">${label}</span></td><td>${escHTML(t.text)}</td><td class="r" style="color:var(--t-faint);font-size:11px;">${t.priority || ''}</td></tr>`;
+      }).join('')}</tbody></table>
+    </div>` : ''}
+  `;
 }
 
 function renderIncome() {
-  const { year, month } = getViewMonth(); const { income: monthInc, tips: monthTips } = getMonthlyStats(year, month); const stats = getIncomeStats();
+  const { year, month } = getViewMonth();
+  const { income: monthInc, tips: monthTips } = getMonthlyStats(year, month);
+  const stats = getIncomeStats();
+  // hourly trend
+  const hourlyHistory = getHourlyTrend(6);
+  const hasHourlyData = hourlyHistory.some(h => h.hourly > 0);
+  // source mix for the displayed month
+  const sourceMix = []; let mixTotal = 0;
+  const SOURCE_COLORS = ['#86c98a', '#7eb6f0', '#d4a574', '#b08bc7', '#f5c890', '#6dd0d0', '#c8a2ff', '#ff8a65'];
+  let colorIdx = 0;
+  for (const i of state.income) {
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    let mo = 0;
+    if (isOnce) {
+      const ds = i.receivedAt || i.createdAt;
+      if (ds && ds.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) mo = amt;
+    } else mo = monthlyEq(amt, i.frequency);
+    if (mo > 0) {
+      sourceMix.push({ label: i.source, value: mo, color: SOURCE_COLORS[colorIdx % SOURCE_COLORS.length] });
+      mixTotal += mo; colorIdx++;
+    }
+  }
+  sourceMix.sort((a,b) => b.value - a.value);
+
+  const taxPct = getTaxPct();
+  const taxSetaside = stats.ytdTips * taxPct / 100;
+
   const rows = sortRows(state.income, 'income').map(i => {
-    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0; const base = i.baseAmount !== undefined ? i.baseAmount : amt;
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+    const base = i.baseAmount !== undefined ? i.baseAmount : amt;
     const hrs = Number(i.hours) || 0; const rate = hrs > 0 ? base / hrs : 0;
     const hoursCell = hrs > 0 ? `${fmtHM(hrs)}<span style="font-size:10px;color:var(--t-faint);margin-left:6px;">$${rate.toFixed(2)}/hr</span>` : '<span style="color:var(--t-mute);">—</span>';
     return `<tr class="row"><td><span class="id">${i.id}</span></td><td>${escHTML(i.source)}</td><td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)}${i.tipsEnabled&&amt>base?`<span style="font-size:10px;color:var(--lime);margin-left:4px;">(+${fmtMoney(amt-base)} tip)</span>`:''}</td><td class="num" style="white-space: nowrap;">${hoursCell}</td><td style="color:var(--t-faint);">${i.frequency||'once'}</td><td class="num">${formatDate(i.receivedAt||i.createdAt)}</td><td class="r num">${i.frequency==='once'?'—':fmtMoney(monthlyEq(amt,i.frequency),{round:true})}</td><td class="r tbl-actions"><button data-action="edit" data-type="income" data-id="${i.id}">edit</button><button class="err" data-action="rm" data-type="income" data-id="${i.id}">rm</button></td></tr>`;
   }).join('');
-  return `<div class="out"><h3>ytd stats</h3><div class="kv"><span class="k">ytd income</span><span class="v ok">${fmtMoney(stats.ytdIncome,{round:true})}</span><span class="x">this year</span></div>${stats.ytdTips>0?`<div class="kv"><span class="k">ytd cash tips</span><span class="v" style="color:var(--lime)">${fmtMoney(stats.ytdTips,{round:true})}</span><span class="x">unclaimed tips</span></div>`:''}<div class="kv"><span class="k">ytd hours</span><span class="v">${fmtHM(stats.ytdHours)}</span><span class="x">logged</span></div><div class="kv"><span class="k">avg hourly</span><span class="v" style="color:var(--cyan)">$${stats.ytdHourly.toFixed(2)}/hr</span><span class="x">effective</span></div></div><div class="out" style="margin-top:32px;"><h3>sources <span class="action" data-action="open-modal" data-type="income">+ add</span></h3><div class="kv"><span class="k">total for ${new Date(year,month).toLocaleString('en-US',{month:'long'}).toLowerCase()}</span><span class="v ok">${fmtMoney(monthInc)}</span><span class="x">${monthTips>0?`incl. ${fmtMoney(monthTips)} tips`:''}</span></div>${rows?`<table class="tbl" style="margin-top:16px;"><thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}${th('income','hours','hours')}<th>freq</th>${th('income','receivedAt','date')}<th class="r">monthly</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:'<div class="empty-state">none.</div>'}</div>`;
+
+  return `
+    <div class="out">
+      <h3>ytd stats</h3>
+      <div class="kv"><span class="k">ytd income</span><span class="v ok">${fmtMoney(stats.ytdIncome,{round:true})}</span><span class="x">this year</span></div>
+      ${stats.ytdTips > 0 ? `
+        <div class="kv"><span class="k">ytd cash tips</span><span class="v" style="color:var(--lime)">${fmtMoney(stats.ytdTips,{round:true})}</span><span class="x">unclaimed tips</span></div>
+        <div class="kv"><span class="k">tax setaside <span style="color:var(--t-mute);font-size:10px;">est.</span></span><span class="v warn">${fmtMoney(taxSetaside, {round: true})}</span><span class="x"><input type="number" id="tax-pct-input" value="${taxPct}" min="0" max="100" step="1" style="width: 50px; background: var(--bg-deep); border: 1px solid var(--line); color: var(--t-bright); padding: 2px 6px; border-radius: 3px; font: inherit; font-size: 11px; text-align: center;" />% of tips</span></div>
+      ` : ''}
+      <div class="kv"><span class="k">ytd hours</span><span class="v">${fmtHM(stats.ytdHours)}</span><span class="x">logged</span></div>
+      <div class="kv"><span class="k">avg hourly</span><span class="v" style="color:var(--cyan)">$${stats.ytdHourly.toFixed(2)}/hr</span><span class="x">effective</span></div>
+    </div>
+
+    ${hasHourlyData ? `
+      <div class="out" style="margin-top:32px;">
+        <h3>hourly rate trend · 6 months</h3>
+        ${chartLegend([{color:'var(--cyan)', label:'effective $/hr (incl. tips)'}, {color:'var(--warm)', label:'base $/hr (paycheck only)'}])}
+        <div class="chart-box" style="padding:16px 12px 0;">${renderLineChart(hourlyHistory, [{ key: 'hourly', color: 'var(--cyan)', label: 'eff $/hr' }, { key: 'baseHourly', color: 'var(--warm)', label: 'base $/hr' }], { format: 'plain', height: 180 })}</div>
+      </div>
+    ` : ''}
+
+    ${sourceMix.length > 1 ? `
+      <div class="out" style="margin-top:32px;">
+        <h3>source mix · ${new Date(year,month).toLocaleString('en-US',{month:'long'}).toLowerCase()}</h3>
+        <div class="chart-box pie-wrap">
+          ${renderDonut(sourceMix, mixTotal, fmtMoney(mixTotal, {round: true}), 'monthly income')}
+          <div class="pie-legend">${sourceMix.map(s => `<div class="pli"><div class="dot" style="background:${s.color}"></div><div style="color:var(--t-bright)">${escHTML(s.label)}</div><div class="num ok">${fmtMoney(s.value, {round: true})}</div><div class="num" style="color:var(--t-faint);">${(s.value/mixTotal*100).toFixed(1)}%</div></div>`).join('')}</div>
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="out" style="margin-top:32px;">
+      <h3>sources <span class="action" data-action="open-modal" data-type="income">+ add</span></h3>
+      <div class="kv"><span class="k">total for ${new Date(year,month).toLocaleString('en-US',{month:'long'}).toLowerCase()}</span><span class="v ok">${fmtMoney(monthInc)}</span><span class="x">${monthTips>0?`incl. ${fmtMoney(monthTips)} tips`:''}</span></div>
+      ${rows ? `<table class="tbl" style="margin-top:16px;"><thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}${th('income','hours','hours')}<th>freq</th>${th('income','receivedAt','date')}<th class="r">monthly</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : '<div class="empty-state">none.</div>'}
+    </div>
+  `;
 }
 
 function renderExpenses() {
-  const { year, month } = getViewMonth(); const { income: incTot, bills: total } = getMonthlyStats(year, month);
-  const catMap = {}; state.bills.forEach(b => {
+  const { year, month } = getViewMonth();
+  const { income: incTot, bills: total } = getMonthlyStats(year, month);
+  const catData = aggregateBillsByCategory(state.bills, year, month);
+  const pieData = catData.map(c => ({ label: c.label, value: c.total, color: c.color }));
+
+  // Subscription audit: every recurring bill, sorted by annualized cost.
+  const recurringBills = state.bills.filter(b => b.recurring && b.recurring !== 'once').map(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const mo = (!b.recurring || b.recurring === 'once') ? (b.dueDate || b.createdAt || isoDate(todayStart())).startsWith(`${year}-${String(month+1).padStart(2,'0')}`) ? amt : 0 : monthlyEq(amt, b.recurring);
-    if (mo > 0) catMap[b.category||'other'] = (catMap[b.category||'other'] || 0) + mo;
-  });
-  const pieData = Object.entries(catMap).map(([k, v]) => ({ label: CATEGORIES[k]?.label || k, value: v, color: CATEGORIES[k]?.color || '#6b7280' })).sort((a,b) => b.value - a.value);
+    const annual = b.recurring === 'weekly' ? amt * 52 : b.recurring === 'biweekly' ? amt * 26 : b.recurring === 'monthly' ? amt * 12 : b.recurring === 'yearly' ? amt : 0;
+    const monthly = monthlyEq(amt, b.recurring);
+    return { ...b, _amt: amt, _annual: annual, _monthly: monthly };
+  }).sort((a, b) => b._annual - a._annual);
+
   const rows = sortRows(state.bills, 'expenses').map(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const mo = (!b.recurring || b.recurring === 'once') ? (b.dueDate || b.createdAt || isoDate(todayStart())).startsWith(`${year}-${String(month+1).padStart(2,'0')}`) ? amt : 0 : monthlyEq(amt, b.recurring);
+    const mo = (!b.recurring || b.recurring === 'once') ? ((b.dueDate || b.createdAt || isoDate(todayStart())).startsWith(`${year}-${String(month+1).padStart(2,'0')}`) ? amt : 0) : monthlyEq(amt, b.recurring);
     return `<tr class="row ${b.paid?'done':''}"><td><span class="id">${b.id}</span></td><td>${escHTML(b.name)} <span class="cat" style="color:${(CATEGORIES[b.category]||CATEGORIES.other).color}">${b.category||'none'}</span></td><td class="num bad">${fmtMoney(b.amount)}</td><td style="color:var(--t-faint);">${b.recurring||'once'}</td><td class="${b.dueDate&&!b.paid&&isOverdue(b.dueDate)?'err':''}">${formatDate(b.dueDate)}</td><td class="r num">${incTot&&mo>0?(mo/incTot*100).toFixed(1)+'%':'—'}</td><td class="r tbl-actions">${!b.paid?`<button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button>`:`<button data-action="unpay-bill" data-id="${b.id}">undo</button>`}<button data-action="edit" data-type="expenses" data-id="${b.id}">edit</button><button class="err" data-action="rm" data-type="expenses" data-id="${b.id}">rm</button></td></tr>`;
   }).join('');
-  return `<div class="out"><h3>breakdown</h3><div class="chart-box pie-wrap">${renderDonut(pieData, total, fmtMoney(total,{round:true}))}<div class="pie-legend">${pieData.map(c=>`<div class="pli"><div class="dot" style="background:${c.color}"></div><div style="color:var(--t-bright)">${c.label}</div><div class="num bad">${fmtMoney(c.value,{round:true})}</div><div class="num" style="color:var(--t-faint);">${(c.value/total*100).toFixed(1)}%</div></div>`).join('')||'<div class="empty-state">none.</div>'}</div></div></div><div class="out"><h3>recurring <div style="display:flex;gap:16px"><span class="action" data-action="open-presets">+ presets</span><span class="action" data-action="open-modal" data-type="expenses">+ add</span></div></h3><div class="kv"><span class="k">total monthly</span><span class="v bad">${fmtMoney(total)}</span><span class="x">${incTot?(total/incTot*100).toFixed(1)+'%':''}</span></div>${rows?`<table class="tbl" style="margin-top:16px;"><thead><tr>${th('expenses','id','id')}${th('expenses','name','name')}${th('expenses','amount','amount')}<th>freq</th>${th('expenses','date','due')}<th class="r">% inc</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty-state">${incTot>0?'<button class="btn-prominent" data-action="auto-fill-budget">auto-generate budget</button>':'add income to start.'}</div>`}</div>`;
+
+  const totalAnnual = recurringBills.reduce((s, b) => s + b._annual, 0);
+
+  return `
+    <div class="out">
+      <h3>breakdown</h3>
+      <div class="chart-box pie-wrap">
+        ${renderDonut(pieData, total, fmtMoney(total, {round: true}))}
+        <div class="pie-legend">${pieData.map(c => `<div class="pli"><div class="dot" style="background:${c.color}"></div><div style="color:var(--t-bright)">${c.label}</div><div class="num bad">${fmtMoney(c.value, {round: true})}</div><div class="num" style="color:var(--t-faint);">${(c.value/total*100).toFixed(1)}%</div></div>`).join('') || '<div class="empty-state">none.</div>'}</div>
+      </div>
+    </div>
+
+    <div class="out">
+      <h3>recurring <div style="display:flex;gap:16px"><span class="action" data-action="open-presets">+ presets</span><span class="action" data-action="open-modal" data-type="expenses">+ add</span></div></h3>
+      <div class="kv"><span class="k">total monthly</span><span class="v bad">${fmtMoney(total)}</span><span class="x">${incTot ? (total/incTot*100).toFixed(1) + '%' : ''}</span></div>
+      ${rows ? `<table class="tbl" style="margin-top:16px;"><thead><tr>${th('expenses','id','id')}${th('expenses','name','name')}${th('expenses','amount','amount')}<th>freq</th>${th('expenses','date','due')}<th class="r">% inc</th><th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty-state">${incTot > 0 ? '<button class="btn-prominent" data-action="auto-fill-budget">auto-generate budget</button>' : 'add income to start.'}</div>`}
+    </div>
+
+    ${recurringBills.length ? `
+    <div class="out" style="margin-top:32px;">
+      <h3>subscription audit</h3>
+      <div class="kv"><span class="k">total recurring · annualized</span><span class="v bad">${fmtMoney(totalAnnual, {round: true})}</span><span class="x">${recurringBills.length} bill${recurringBills.length === 1 ? '' : 's'}</span></div>
+      <table class="tbl" style="margin-top:16px;">
+        <thead><tr><th>name</th><th>freq</th><th class="r">per charge</th><th class="r">monthly</th><th class="r">annual</th></tr></thead>
+        <tbody>${recurringBills.map(b => `<tr class="row"><td>${escHTML(b.name)} <span class="cat" style="color:${(CATEGORIES[b.category]||CATEGORIES.other).color}">${b.category||'none'}</span></td><td style="color:var(--t-faint);">${b.recurring}</td><td class="r num">${fmtMoney(b._amt)}</td><td class="r num">${fmtMoney(b._monthly, {round: true})}</td><td class="r num bad">${fmtMoney(b._annual, {round: true})}</td></tr>`).join('')}</tbody>
+      </table>
+    </div>` : ''}
+  `;
 }
 
 function renderBudget() {
-  const { year, month } = getViewMonth(); let { income: inc, bills: fixed } = getMonthlyStats(year, month);
-  if (inc === 0) { const s = getIncomeStats(); if (s.avgMonthly > 0) inc = s.avgMonthly; }
-  if (inc === 0) return `<div class="out"><div class="empty-state">no data.</div></div>`;
-  let savings = 0; state.goals.forEach(g => {
-    const rem = Math.max(0, (parseFloat(g.targetAmount)||0) - (parseFloat(g.currentAmount)||0));
-    if (rem > 0 && g.targetDate) { const td = new Date(g.targetDate); if (td > todayStart()) { g._reqMo = rem / Math.max(1, (td - todayStart()) / (30.44 * 86400000)); savings += g._reqMo; } }
+  let { year, month } = getViewMonth();
+  let cur = getMonthlyStats(year, month);
+  let inc = cur.income; let fixed = cur.bills;
+
+  let basisLabel = null;
+  if (inc === 0) {
+    const ref = getReferenceMonth();
+    if (ref) {
+      year = ref.year; month = ref.month;
+      inc = ref.income; fixed = ref.bills;
+      basisLabel = ref.label;
+    } else {
+      const s = getIncomeStats();
+      if (s.avgMonthly > 0) { inc = s.avgMonthly; basisLabel = 'past avg'; }
+    }
+  }
+
+  if (inc === 0) {
+    return `
+      <div class="out">
+        <div class="empty-state" style="padding: 60px 20px;">
+          <div style="font-size: 14px; color: var(--t-dim); margin-bottom: 12px;">no income data yet.</div>
+          <button class="btn-prominent" data-action="open-modal" data-type="income">+ add income</button>
+        </div>
+      </div>`;
+  }
+
+  // savings target
+  const savingsInfo = getSavingsTarget();
+  const savings = savingsInfo.total;
+  state.goals.forEach(g => {
+    const rem = Math.max(0, (parseFloat(g.targetAmount) || 0) - (parseFloat(g.currentAmount) || 0));
+    if (rem > 0 && g.targetDate) {
+      const td = new Date(g.targetDate + 'T00:00:00');
+      if (td > todayStart()) g._reqMo = rem / Math.max(1, (td - todayStart()) / (30.44 * 86400000));
+      else g._reqMo = 0;
+    } else g._reqMo = 0;
   });
-  const spent = state.petty.filter(p => p.date && p.date.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)).reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-  return `<div class="out"><h3>allowance</h3><div class="kv"><span class="k">weekly</span><span class="v" style="color:var(--lime);font-size:16px;">${fmtMoney(Math.max(0, (inc-fixed-savings)/4.333))} / wk</span><span class="x">${fmtMoney(Math.max(0,(inc-fixed-savings)/30))} / day</span></div><div style="margin-top:16px;"></div><div class="kv"><span class="k">income</span><span class="v ok">${fmtMoney(inc)}</span><span class="x">base</span></div><div class="kv"><span class="k">fixed</span><span class="v bad">−${fmtMoney(fixed)}</span><span class="x">liability</span></div>${savings>0?`<div class="kv"><span class="k">savings</span><span class="v bad">−${fmtMoney(savings)}</span><span class="x">reserved</span></div>`:''}<div class="kv"><span class="k">net</span><span class="v warm">${fmtMoney(inc-fixed-savings)}</span><span class="x">discretionary</span></div></div><div class="out"><h3>petty spending <span class="action" data-action="open-modal" data-type="petty">+ log</span></h3><div class="kv"><span class="k">spent this month</span><span class="v warn">${fmtMoney(spent)}</span><span class="x">deducted</span></div>${state.petty.length?`<table class="tbl" style="margin-top:16px;"><thead><tr><th>id</th><th>date</th><th>desc</th><th class="r">amount</th><th></th></tr></thead><tbody>${[...state.petty].sort((a,b)=>b.date.localeCompare(a.date)).map(p=>`<tr class="row"><td><span class="id">${p.id}</span></td><td>${formatDate(p.date)}</td><td>${escHTML(p.note||'—')} <span class="cat" style="color:${(CATEGORIES[p.category]||CATEGORIES.other).color}">${p.category||'other'}</span></td><td class="num bad r">${fmtMoney(p.amount)}</td><td class="r tbl-actions"><button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">none.</div>'}</div><div class="out" style="margin-top:32px;"><h3>goals <span class="action" data-action="open-modal" data-type="goals">+ add</span></h3>${state.goals.length?state.goals.map(g=>{const p=g.targetAmount>0?(g.currentAmount/g.targetAmount)*100:0;return `<div style="margin-bottom:16px;"><div class="kv" style="grid-template-columns:1fr auto;"><span class="v" style="color:var(--t-bright)">${escHTML(g.name)}</span><span class="v">${fmtMoney(g.currentAmount,{round:true})} / ${fmtMoney(g.targetAmount,{round:true})}</span></div><div class="bar-line ${p>=100?'ok':''}"><span class="bar" style="font-size:16px;">${asciiBar(p,40)}</span><span class="x">${p.toFixed(1)}%</span></div>${g._reqMo?`<div class="x" style="color:var(--warn);margin-top:4px;">req ${fmtMoney(g._reqMo)} / mo</div>`:''}<div class="tbl-actions" style="margin-top:4px;text-align:right;"><button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button><button data-action="edit" data-type="goals" data-id="${g.id}">edit</button><button class="err" data-action="rm" data-type="goals" data-id="${g.id}">rm</button></div></div>`;}).join(''):'<div class="empty-state">none.</div>'}</div>`;
+
+  const monthlyAllowance = Math.max(0, inc - fixed - savings);
+  const weeklyAllowance = monthlyAllowance / 4.333;
+  const dailyAllowance = monthlyAllowance / 30;
+
+  // weekly category breakdown
+  const billsByCat = aggregateBillsByCategory(state.bills, year, month);
+
+  // petty: this week
+  const weekEntries = getPettyThisWeek();
+  const weekSpent = weekEntries.reduce((s, e) => s + (parseFloat(String(e.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+  const weekPct = weeklyAllowance > 0 ? (weekSpent / weeklyAllowance) * 100 : 0;
+  const weekClass = weekPct >= 100 ? 'bad' : weekPct >= 75 ? 'warn' : 'ok';
+
+  // petty: this month total + entries
+  const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
+  const monthPettyAll = state.petty.filter(p => p.date && p.date.startsWith(monthKey)).sort((a,b) => b.date.localeCompare(a.date));
+  const monthPetty = monthPettyAll.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+
+  const now = new Date();
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+  const burn = isCurrentMonth ? getBurnDown(year, month, monthlyAllowance) : null;
+
+  const recs = generateRecommendations(inc, fixed, state.bills, year, month);
+
+  return `
+    <div class="month-nav">
+      <button data-action="prev-month">← prev</button>
+      <div class="month-label">${new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase()}${basisLabel ? ` <span style="color:var(--t-mute);font-size:11px;">· basis: ${basisLabel}</span>` : ''}</div>
+      <button data-action="next-month">next →</button>
+      ${(year !== now.getFullYear() || month !== now.getMonth()) ? '<button data-action="curr-month">jump to current</button>' : ''}
+    </div>
+
+    <div class="out">
+      <h3>allowance</h3>
+      <div class="kv"><span class="k">income</span><span class="v ok">${fmtMoney(inc)}</span><span class="x">base</span></div>
+      <div class="kv"><span class="k">− fixed</span><span class="v bad">−${fmtMoney(fixed)}</span><span class="x">${(fixed/inc*100).toFixed(1)}% of income</span></div>
+      ${savings > 0 ? `<div class="kv"><span class="k">− savings target</span><span class="v bad">−${fmtMoney(savings)}</span><span class="x">${savingsInfo.breakdown.length} goal${savingsInfo.breakdown.length===1?'':'s'}</span></div>` : ''}
+      <div class="kv"><span class="k">= available</span><span class="v warm">${fmtMoney(monthlyAllowance)}</span><span class="x">discretionary / mo</span></div>
+      <div style="margin-top: 12px;"></div>
+      <div class="kv"><span class="k">weekly</span><span class="v" style="color:var(--lime);">${fmtMoney(weeklyAllowance)}</span><span class="x">÷ 4.33 weeks</span></div>
+      <div class="kv"><span class="k">daily</span><span class="v" style="color:var(--lime);">${fmtMoney(dailyAllowance)}</span><span class="x">÷ 30 days</span></div>
+    </div>
+
+    ${billsByCat.length ? `
+      <div class="out" style="margin-top:32px;">
+        <h3>weekly budget by category</h3>
+        ${billsByCat.map(c => `<div class="kv"><span class="k" style="color:${c.color};">${c.label}</span><span class="v bad">${fmtMoney(c.total/4.333, {round: true})} / wk</span><span class="x">${fmtMoney(c.total, {round: true})}/mo · ${c.names.length === 1 ? escHTML(c.names[0]) : c.names.length + ' bills'}</span></div>`).join('')}
+        <div style="margin-top:8px; padding-top:8px; border-top: 1px solid var(--line);"></div>
+        <div class="kv"><span class="k">bills total</span><span class="v bad">${fmtMoney(fixed/4.333, {round: true})} / wk</span><span class="x">${fmtMoney(fixed, {round: true})}/mo</span></div>
+        ${savings > 0 ? `<div class="kv"><span class="k" style="color:var(--cyan);">savings</span><span class="v" style="color:var(--cyan);">${fmtMoney(savings/4.333, {round: true})} / wk</span><span class="x">${fmtMoney(savings, {round: true})}/mo · reserved</span></div>` : ''}
+        <div class="kv"><span class="k" style="color:var(--lime);">free to spend</span><span class="v" style="color:var(--lime);">${fmtMoney(weeklyAllowance, {round: true})} / wk</span><span class="x">${fmtMoney(monthlyAllowance, {round: true})}/mo · discretionary</span></div>
+      </div>
+    ` : ''}
+
+    <div class="out" style="margin-top:32px;">
+      <h3>petty spending <span class="action" data-action="open-modal" data-type="petty">+ log</span></h3>
+      <div class="kv"><span class="k">this week</span><span class="v ${weekClass}">${fmtMoney(weekSpent)}</span><span class="x">${weekEntries.length} ${weekEntries.length === 1 ? 'entry' : 'entries'}${weeklyAllowance > 0 ? ` · ${weekPct.toFixed(0)}% of weekly allowance` : ''}</span></div>
+      <div class="kv"><span class="k">this month</span><span class="v warn">${fmtMoney(monthPetty)}</span><span class="x">${monthPettyAll.length} ${monthPettyAll.length === 1 ? 'entry' : 'entries'}</span></div>
+      ${weeklyAllowance > 0 ? `
+        <div style="margin-top: 12px;"></div>
+        <div class="bar-line ${weekClass === 'bad' ? 'bad' : weekClass === 'warn' ? 'warm' : 'ok'}"><span class="lbl">week used</span><span class="bar">${asciiBar(Math.min(100, weekPct))}</span><span class="va">${weekPct.toFixed(0)}%</span></div>
+      ` : ''}
+      ${monthPettyAll.length ? `
+        <table class="tbl" style="margin-top:16px;">
+          <thead><tr><th>id</th><th>date</th><th>desc</th><th class="r">amount</th><th></th></tr></thead>
+          <tbody>${monthPettyAll.map(p => `<tr class="row"><td><span class="id">${p.id}</span></td><td>${formatDate(p.date)}</td><td>${escHTML(p.note || '—')} <span class="cat" style="color:${(CATEGORIES[p.category]||CATEGORIES.other).color}">${p.category || 'other'}</span></td><td class="num bad r">${fmtMoney(p.amount)}</td><td class="r tbl-actions"><button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button></td></tr>`).join('')}</tbody>
+        </table>
+      ` : '<div class="empty-state" style="margin-top: 12px;">none yet this month.</div>'}
+    </div>
+
+    ${burn && monthlyAllowance > 0 ? `
+      <div class="out" style="margin-top:32px;">
+        <h3>discretionary burn-down</h3>
+        ${chartLegend([{color:'var(--lime)', label:'actual'}, {color:'var(--t-faint)', label:'ideal pace'}])}
+        <div class="chart-box" style="padding:16px 12px 0;">${renderBurnDown(burn)}</div>
+        ${(() => {
+          const today = todayStart(); const dayNum = today.getDate();
+          const idealToday = (monthlyAllowance / new Date(year, month + 1, 0).getDate()) * dayNum;
+          const actual = burn.points[dayNum - 1]?.actual || 0;
+          const diff = actual - idealToday;
+          if (Math.abs(diff) < 5) return `<div class="kv"><span class="k">pace</span><span class="v">on track</span><span class="x">tracking right at ideal</span></div>`;
+          return diff > 0
+            ? `<div class="kv"><span class="k">pace</span><span class="v bad">over by ${fmtMoney(diff, {round: true})}</span><span class="x">slow down to stay on budget</span></div>`
+            : `<div class="kv"><span class="k">pace</span><span class="v ok">under by ${fmtMoney(-diff, {round: true})}</span><span class="x">room to spend</span></div>`;
+        })()}
+      </div>
+    ` : ''}
+
+    <div class="out" style="margin-top:32px;">
+      <h3>goals <span class="action" data-action="open-modal" data-type="goals">+ add</span></h3>
+      ${state.goals.length
+        ? state.goals.map(g => {
+            const target = parseFloat(g.targetAmount) || 0; const saved = parseFloat(g.currentAmount) || 0;
+            const p = target > 0 ? (saved / target) * 100 : 0;
+            return `<div style="margin-bottom:16px;">
+              <div class="kv" style="grid-template-columns:1fr auto;"><span class="v" style="color:var(--t-bright)">${escHTML(g.name)}${g.targetDate ? `<span style="color:var(--t-faint);font-size:11px;margin-left:8px;">by ${formatDate(g.targetDate)}</span>` : ''}</span><span class="v">${fmtMoney(saved, {round:true})} / ${fmtMoney(target, {round:true})}</span></div>
+              <div class="bar-line ${p>=100?'ok':''}"><span class="bar" style="font-size:16px;">${asciiBar(p, 40)}</span><span class="x">${p.toFixed(1)}%</span></div>
+              ${g._reqMo > 0 ? `<div class="x" style="color:var(--warn);margin-top:4px;">req ${fmtMoney(g._reqMo, {round: true})}/mo to hit target</div>` : ''}
+              <div class="tbl-actions" style="margin-top:4px;text-align:right;"><button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button><button data-action="edit" data-type="goals" data-id="${g.id}">edit</button><button class="err" data-action="rm" data-type="goals" data-id="${g.id}">rm</button></div>
+            </div>`;
+          }).join('')
+        : '<div class="empty-state">none.</div>'}
+    </div>
+
+    ${recs.length ? `
+      <div class="out" style="margin-top:32px;">
+        <h3>recommendations</h3>
+        ${recs.map(r => {
+          const tagCls = r.type === 'warning' ? 'err' : r.type === 'success' ? 'ok' : 'info';
+          const tagLabel = r.type === 'warning' ? 'warning' : r.type === 'success' ? 'good' : 'info';
+          return `<div class="kv" style="grid-template-columns: 80px 1fr; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line-soft);"><span class="tag ${tagCls}" style="height: fit-content;">${tagLabel}</span><span style="color: var(--t); font-size: 12.5px; line-height: 1.5;">${r.text}</span></div>`;
+        }).join('')}
+      </div>
+    ` : ''}
+  `;
 }
 
 function renderTasks() {
@@ -741,6 +1361,14 @@ document.addEventListener('click', e => {
   else if (act === 'export') { const b = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'}); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = 'ledgeon.json'; a.click(); URL.revokeObjectURL(u); }
   else if (act === 'import') document.getElementById('file-import').click();
   else if (act === 'reset') { if(confirm('Wipe all data?')) { state = {tasks:[], bills:[], events:[], income:[], goals:[], petty:[]}; saveState(); render(); } }
+});
+
+// tax % control (lives in income tab) — fires on blur/enter so we don't kill focus mid-type
+document.addEventListener('change', e => {
+  if (e.target.id === 'tax-pct-input') {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
+  }
 });
 
 document.getElementById('file-import').addEventListener('change', e => {
