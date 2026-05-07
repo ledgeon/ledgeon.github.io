@@ -193,6 +193,7 @@
   .kv .v.ok   { color: var(--ok); }
   .kv .v.bad  { color: var(--bad); }
   .kv .v.warm { color: var(--warm); }
+  .kv .v.warn { color: var(--warn); }
   .kv .x { color: var(--t-faint); font-size: 12px; text-align: right; }
 
   /* ascii bars */
@@ -368,17 +369,32 @@
     <form data-type="income">
       <div class="form-row">
         <div class="form-col"><label class="form-label">source</label><input type="text" class="input" name="source" required></div>
+        <div class="form-col" style="min-width: 100px;"><label class="form-label">base amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
       </div>
       <div class="form-row">
-        <div class="form-col"><label class="form-label">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
         <div class="form-col"><label class="form-label">frequency</label>
           <select class="select" name="frequency">
             <option value="monthly" selected>monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="yearly">yearly</option><option value="once">one-time</option>
           </select>
         </div>
+        <div class="form-col"><label class="form-label">hours worked (optional)</label><input type="number" step="0.1" class="input" name="hours" placeholder="e.g. 40"></div>
       </div>
       <div class="form-row">
         <div class="form-col"><label class="form-label">date received (optional)</label><input type="date" class="input" name="receivedAt"></div>
+      </div>
+      <div class="form-row" style="align-items: center; background: var(--bg-deep); padding: 10px 12px; border-radius: 4px; border: 1px dashed var(--line);">
+        <div class="form-col" style="flex:0 0 auto;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--t-bright); cursor:pointer;">
+            <input type="checkbox" name="tipsEnabled" id="tipsEnabled"> + assumed cash tips
+          </label>
+        </div>
+        <div class="form-col" id="tipsInputGroup" style="display:none; gap:8px; align-items:center; opacity: 0; transition: opacity 0.2s;">
+          <input type="number" step="0.1" class="input" name="tipsValue" value="6" style="width:70px; padding: 4px 8px;">
+          <select class="select" name="tipsType" style="width:60px; padding: 4px;">
+            <option value="percent">%</option>
+            <option value="amount">$</option>
+          </select>
+        </div>
       </div>
       <div class="form-actions">
         <button type="button" data-action="close-modal">cancel</button>
@@ -656,6 +672,22 @@ function getMonthlyHistory(monthsBack = 6) {
   return out;
 }
 
+// Calculates true average of past active months for more accurate annual projection
+function getProjectedAnnual() {
+  const d = new Date();
+  let validMonths = [];
+  for (let i = 0; i < 12; i++) {
+    let m = d.getMonth() - i;
+    let y = d.getFullYear();
+    if (m < 0) { m += 12; y -= 1; }
+    const st = getMonthlyStats(y, m);
+    if (st.income > 0) validMonths.push(st.income);
+  }
+  if (!validMonths.length) return 0;
+  const avg = validMonths.reduce((a, b) => a + b, 0) / validMonths.length;
+  return avg * 12;
+}
+
 function asciiBar(pct, width = 24) {
   const f = Math.max(0, Math.min(width, Math.round(width * (pct / 100))));
   return `<span class="f">${'█'.repeat(f)}</span><span class="e">${'░'.repeat(width - f)}</span>`;
@@ -771,7 +803,7 @@ function renderOverview() {
   const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
   const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
 
-  const annIncome = income * 12;
+  const annIncome = getProjectedAnnual();
   const annBills = bills * 12;
 
   return `
@@ -796,7 +828,7 @@ function renderOverview() {
 
     <div class="out" style="margin-top: 32px;">
       <h3>annual projections</h3>
-      <div class="kv"><span class="k">estimated yearly income</span><span class="v ok">${fmtMoney(annIncome, {round:true})}</span><span class="x">based on reported freq</span></div>
+      <div class="kv"><span class="k">estimated yearly income</span><span class="v ok">${fmtMoney(annIncome, {round:true})}</span><span class="x">based on tracked monthly avg</span></div>
       <div class="kv"><span class="k">estimated yearly expenses</span><span class="v bad">${fmtMoney(annBills, {round:true})}</span><span class="x">${annIncome > 0 ? (annBills/annIncome*100).toFixed(1) + '% of annual inc' : ''}</span></div>
       <div class="kv"><span class="k">annual discretionary</span><span class="v warm">${fmtMoney(annIncome - annBills, {round:true})}</span><span class="x">before petty spending</span></div>
     </div>
@@ -835,6 +867,7 @@ function renderIncome() {
   const rows = sortRows(state.income, 'income').map(i => {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = i.frequency === 'once' || !i.frequency;
+    const hourlyText = i.hoursWorked ? `<span style="font-size:10px; color:var(--t-faint);">(${fmtMoney(amt / i.hoursWorked)}/hr)</span>` : '';
     
     const moText = isOnce ? '—' : fmtMoney(monthlyEq(amt, i.frequency), {round:true});
     const dateStr = i.receivedAt || (isOnce ? i.createdAt || isoDate(todayStart()) : '');
@@ -842,7 +875,7 @@ function renderIncome() {
     return `<tr class="row">
       <td><span class="id">${i.id}</span></td>
       <td>${escHTML(i.source)}</td>
-      <td class="num ok">${fmtMoney(amt)}</td>
+      <td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)} ${hourlyText}</td>
       <td style="color:var(--t-faint);">${i.frequency || 'once'}</td>
       <td class="num">${dateStr ? formatDate(dateStr) : '—'}</td>
       <td class="r num">${moText}</td>
@@ -853,7 +886,7 @@ function renderIncome() {
   return `
     <div class="out">
       <h3>income sources <span class="action" data-action="open-modal" data-type="income">+ add income</span></h3>
-      <div class="kv"><span class="k">total for viewed month</span><span class="v ok">${fmtMoney(totalMonthIncome)}</span><span class="x">projected annual: ${fmtMoney(totalMonthIncome*12, {round:true})}</span></div>
+      <div class="kv"><span class="k">total for viewed month</span><span class="v ok">${fmtMoney(totalMonthIncome)}</span><span class="x">projected annual: ${fmtMoney(getProjectedAnnual(), {round:true})}</span></div>
       ${rows ? `
         <table class="tbl" style="margin-top: 16px;">
           <thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}<th>freq</th>${th('income','receivedAt','date')}<th class="r">monthly</th><th></th></tr></thead>
@@ -956,9 +989,9 @@ function renderBudget() {
   if (inc === 0) return `<div class="out"><div class="empty-state">no income recorded for this month to build a budget against.</div></div>`;
   
   const net = inc - fixedBills;
-  const weekly = net / 4.333;
+  const weekly = Math.max(0, net / 4.333);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daily = net / daysInMonth;
+  const daily = Math.max(0, net / daysInMonth);
 
   const byCat = {};
   state.bills.forEach(b => {
@@ -1009,7 +1042,7 @@ function renderBudget() {
     <div class="out">
       <div class="weekly-card">
         <div class="headline">
-           <span class="label">weekly allowance</span>
+           <span class="label">weekly discretionary allowance</span>
            <span class="value">${fmtMoney(weekly)}<span class="unit">/wk</span></span>
            <span class="daily">${fmtMoney(daily)} / day</span>
         </div>
@@ -1137,6 +1170,20 @@ document.addEventListener('click', e => {
   else if (action === 'open-presets') { openPresetPicker(); }
 });
 
+// Manage Income Form Tips Toggle
+document.addEventListener('change', e => {
+  if (e.target.id === 'tipsEnabled') {
+    const grp = document.getElementById('tipsInputGroup');
+    if (e.target.checked) {
+      grp.style.display = 'flex';
+      setTimeout(() => grp.style.opacity = '1', 10);
+    } else {
+      grp.style.opacity = '0';
+      setTimeout(() => grp.style.display = 'none', 200);
+    }
+  }
+});
+
 // Modals
 function openModal(type, id = null) {
   document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
@@ -1153,6 +1200,16 @@ function openModal(type, id = null) {
         if (form.elements[k]) form.elements[k].value = item[k];
       });
       if (type==='goals') { form.elements.targetAmount.value=item.targetAmount; form.elements.currentAmount.value=item.currentAmount; }
+      if (type==='income') {
+        form.elements['amount'].value = item.baseAmount !== undefined ? item.baseAmount : item.amount;
+        form.elements['hours'].value = item.hoursWorked || '';
+        if(form.elements['tipsEnabled']) {
+            form.elements['tipsEnabled'].checked = !!item.tipsEnabled;
+            form.elements['tipsValue'].value = item.tipsValue !== undefined ? item.tipsValue : 6;
+            form.elements['tipsType'].value = item.tipsType || 'percent';
+            form.elements['tipsEnabled'].dispatchEvent(new Event('change', {bubbles: true}));
+        }
+      }
     }
   }
   document.getElementById('modal-'+type).classList.add('open');
@@ -1170,8 +1227,24 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     const parseAmt = v => { const n = parseFloat(String(v).replace(/[$,\s]/g,'')); return isNaN(n)?0:n; };
 
     if (type === 'income') {
-      item.source = fd.get('source'); item.amount = parseAmt(fd.get('amount'));
-      item.frequency = fd.get('frequency') || 'monthly'; item.receivedAt = fd.get('receivedAt') || null;
+      item.source = fd.get('source'); 
+      const baseAmt = parseAmt(fd.get('amount'));
+      item.baseAmount = baseAmt;
+      item.hoursWorked = parseAmt(fd.get('hours')) || null;
+      item.tipsEnabled = fd.get('tipsEnabled') === 'on';
+      item.tipsType = fd.get('tipsType') || 'percent';
+      item.tipsValue = parseAmt(fd.get('tipsValue')) || 6;
+      
+      let finalAmt = baseAmt;
+      if (item.tipsEnabled) {
+        if (item.tipsType === 'percent') finalAmt += baseAmt * (item.tipsValue / 100);
+        else finalAmt += item.tipsValue;
+      }
+      
+      item.amount = finalAmt;
+      item.frequency = fd.get('frequency') || 'monthly'; 
+      item.receivedAt = fd.get('receivedAt') || null;
+      
     } else if (type === 'expenses') {
       item.name = fd.get('name'); item.amount = parseAmt(fd.get('amount'));
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly'; item.dueDate = fd.get('date') || null;
