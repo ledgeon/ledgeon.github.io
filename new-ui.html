@@ -616,22 +616,28 @@ function getMonthlyHistory(monthsBack = 6) {
   return out;
 }
 
-// Calculates true average of past active months and accurate YTD
+// Strict Income Engine for YTD, Projections, and Averages
 function getIncomeStats() {
   const now = new Date();
   const curY = now.getFullYear();
   const curM = now.getMonth();
 
-  // 1. Strict Average Monthly & Projected Annual
-  // Look backwards 12 months. Skip the current month to prevent partial-month drag.
-  let validMonths = [];
+  // 1. Average Monthly & Projected Annual (Ignores current month)
+  let rawMonths = [];
   for (let i = 1; i <= 12; i++) {
      let m = curM - i;
      let y = curY;
      if (m < 0) { m += 12; y -= 1; }
      const st = getMonthlyStats(y, m);
-     // Because of the strict boundary fix, months before the user started will safely evaluate to 0 and be ignored
-     if (st.income > 0) validMonths.push(st.income);
+     if (st.income > 0) rawMonths.push(st.income);
+  }
+  
+  let validMonths = rawMonths;
+  if (rawMonths.length > 1) {
+      // Filter out partial/incomplete tracking months (e.g., the month the app was downloaded)
+      // by only including months that reach at least 50% of your maximum month.
+      const maxMonth = Math.max(...rawMonths);
+      validMonths = rawMonths.filter(inc => inc >= maxMonth * 0.5);
   }
   
   if (validMonths.length === 0) {
@@ -651,21 +657,22 @@ function getIncomeStats() {
   const monthsElapsedThisYear = curM + (daysElapsed / daysInCurMonth);
 
   for (const i of state.income) {
-     const effective = effectiveIncomeAmount(i);
+     const effective = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
      const h = Number(i.hours) || 0;
      const isOnce = i.frequency === 'once' || !i.frequency;
 
-     const dtStr = i.receivedAt || i.createdAt || isoDate(todayStart());
-     const dt = new Date(dtStr + (dtStr.includes('T') ? '' : 'T00:00:00'));
-     const startY = dt.getFullYear();
-     const startM = dt.getMonth();
-
      if (isOnce) {
-       if (startY === curY) {
+       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
+       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
+       if (d.getFullYear() === curY) {
            ytdIncome += effective;
            ytdHours += h;
        }
      } else {
+       const dt = i.createdAt ? new Date(i.createdAt) : now;
+       const startY = dt.getFullYear();
+       const startM = dt.getMonth();
+
        let startMonthsElapsed = 0;
        if (startY < curY) {
            startMonthsElapsed = 0; 
@@ -689,7 +696,6 @@ function getIncomeStats() {
 
   return { ytdIncome, ytdHours, ytdHourly, avgMonthly, projAnnual };
 }
-
 function asciiBar(pct, width = 24) {
   const f = Math.max(0, Math.min(width, Math.round(width * (pct / 100))));
   return `<span class="f">${'█'.repeat(f)}</span><span class="e">${'░'.repeat(width - f)}</span>`;
@@ -872,50 +878,38 @@ function renderIncome() {
   const { income: totalMonthIncome, tips: totalMonthTips } = getMonthlyStats(year, month);
   const stats = getIncomeStats();
 
-  const rawRows = state.income.map(i => {
+  const rows = sortRows(state.income, 'income').map(i => {
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = i.frequency === 'once' || !i.frequency;
-    const effective = effectiveIncomeAmount(i);
-    const tipNote = cashTipNote(i);
     
-    let base = Number(i.baseAmount);
-    if(isNaN(base)) base = Number(i.amount) || 0;
+    // Explicitly show base and tip info
+    const base = i.baseAmount !== undefined ? i.baseAmount : amt;
+    const hourlyText = i.hours ? `<span style="font-size:10px; color:var(--t-faint); margin-left:4px;">(${fmtMoney(base / i.hours)}/hr)</span>` : '';
+    const tipText = (i.tipsEnabled && amt > base) ? `<span style="font-size:10px; color:var(--lime); margin-left:4px;">(+${fmtMoney(amt-base)} tip)</span>` : '';
     
-    const moText = isOnce ? '—' : fmtMoney(monthlyEq(effective, i.frequency), {round:true});
+    const moText = isOnce ? '—' : fmtMoney(monthlyEq(amt, i.frequency), {round:true});
     const dateStr = i.receivedAt || (isOnce ? i.createdAt || isoDate(todayStart()) : '');
-    
-    return {
-      id: i.id, source: i.source, amount: effective, base: base, frequency: i.frequency,
-      dateStr, moText, hours: Number(i.hours) || 0, tipNote, raw: i
-    };
-  });
 
-  const sorted = sortRows(rawRows, 'income');
-
-  const rows = sorted.map(i => {
-    const hourlyText = i.hours > 0 ? `<span style="font-size:10px; color:var(--t-faint); margin-left:4px;">(${fmtMoney(i.base / i.hours)}/hr)</span>` : '';
-    const tipText = i.tipNote ? `<span style="font-size:10px; color:var(--lime); margin-left:4px;">(${i.tipNote})</span>` : '';
-    
     return `<tr class="row">
       <td><span class="id">${i.id}</span></td>
       <td>${escHTML(i.source)}</td>
-      <td class="num ok" style="white-space: nowrap;">${fmtMoney(i.amount)} ${hourlyText} ${tipText}</td>
+      <td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)} ${hourlyText} ${tipText}</td>
       <td style="color:var(--t-faint);">${i.frequency || 'once'}</td>
-      <td class="num">${i.dateStr ? formatDate(i.dateStr) : '—'}</td>
-      <td class="r num">${i.moText}</td>
+      <td class="num">${dateStr ? formatDate(dateStr) : '—'}</td>
+      <td class="r num">${moText}</td>
       <td class="r tbl-actions"><button data-action="edit" data-type="income" data-id="${i.id}">edit</button><button class="err" data-action="rm" data-type="income" data-id="${i.id}">rm</button></td>
     </tr>`;
   }).join('');
 
   return `
     <div class="out" style="margin-bottom: 32px;">
-      <h3>Year-to-date stats</h3>
-      <div class="stats-grid">
-        <div class="group"><span class="label">YTD Income</span><span class="value" style="color:var(--ok)">${fmtMoney(stats.ytdIncome, {round:true})}</span></div>
-        <div class="group"><span class="label">YTD Hours</span><span class="value">${stats.ytdHours > 0 ? fmtHM(stats.ytdHours) : '0h'}</span></div>
-        <div class="group"><span class="label">Avg $/hr</span><span class="value">${stats.ytdHourly > 0 ? '$' + stats.ytdHourly.toFixed(2) : '—'}</span></div>
-        <div class="group"><span class="label">Avg Monthly</span><span class="value" style="color:var(--ok)">${fmtMoney(stats.avgMonthly, {round:true})}</span></div>
-        <div class="group"><span class="label">Proj. Annual</span><span class="value" style="color:var(--warm)">${fmtMoney(stats.projAnnual, {round:true})}</span></div>
-      </div>
+      <h3>year-to-date stats</h3>
+      <div class="kv"><span class="k">ytd income</span><span class="v ok">${fmtMoney(stats.ytdIncome, {round:true})}</span><span class="x">earned this year</span></div>
+      <div class="kv"><span class="k">ytd hours</span><span class="v">${stats.ytdHours > 0 ? fmtHM(stats.ytdHours) : '0h'}</span><span class="x">logged this year</span></div>
+      <div class="kv"><span class="k">average hourly</span><span class="v" style="color:var(--cyan)">${stats.ytdHourly > 0 ? '$' + stats.ytdHourly.toFixed(2) + '/hr' : '—'}</span><span class="x">effective rate</span></div>
+      <div style="margin-top:20px;"></div>
+      <div class="kv"><span class="k">average monthly</span><span class="v ok">${fmtMoney(stats.avgMonthly, {round:true})}</span><span class="x">based on complete months</span></div>
+      <div class="kv"><span class="k">projected annual</span><span class="v warm">${fmtMoney(stats.projAnnual, {round:true})}</span><span class="x">estimated 12-month</span></div>
     </div>
 
     <div class="out">
@@ -931,7 +925,6 @@ function renderIncome() {
     </div>
   `;
 }
-
 // ── Expenses ──
 function renderExpenses() {
   const { year, month } = getViewMonth();
