@@ -157,6 +157,8 @@
   .tbl-actions button:hover { color: var(--lime); border-color: var(--lime); }
   .tbl-actions button.err:hover { color: var(--err); border-color: var(--err); }
   .tbl-actions button.ok:hover { color: var(--ok); border-color: var(--ok); }
+  .btn-prominent { display: inline-block; padding: 8px 16px; background: rgba(179,221,68,0.1); border: 1px solid var(--lime); color: var(--lime); border-radius: 4px; font-weight: 500; transition: 0.15s; }
+  .btn-prominent:hover { background: var(--lime); color: var(--bg-deep); }
 
   /* tags */
   .tag { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; }
@@ -376,7 +378,7 @@
 <div class="modal" id="modal-presets">
   <div class="modal-backdrop" data-action="close-modal"></div>
   <div class="modal-card" style="max-width: 540px; max-height: 85vh; display: flex; flex-direction: column;">
-    <div class="modal-title">add preset expenses</div>
+    <div class="modal-title">add starter expenses</div>
     <div style="font-size: 12px; color: var(--t-faint); margin-bottom: 12px; line-height: 1.5;">
       select common expenses to add. these calculate typical rule-of-thumb amounts based on your reported income for the current month.
     </div>
@@ -417,6 +419,21 @@ for (const k of possibleKeys) {
   } catch {}
 }
 
+// Backwards compatibility migration
+state.income.forEach(i => {
+  if (i.hoursWorked !== undefined && i.hours === undefined) {
+    i.hours = i.hoursWorked;
+    delete i.hoursWorked;
+  }
+  if (i.cashTipPct || i.cashTipAmount) {
+    i.tipsEnabled = true;
+    if (i.cashTipPct) { i.tipsType = 'percent'; i.tipsValue = i.cashTipPct; }
+    else if (i.cashTipAmount) { i.tipsType = 'amount'; i.tipsValue = i.cashTipAmount; }
+    delete i.cashTipPct; 
+    delete i.cashTipAmount;
+  }
+});
+
 const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
 
@@ -445,13 +462,15 @@ const CATEGORIES = {
   other: { label: 'other', color: '#6b7280' }
 };
 
+// Comprehensive Rule of Thumb Budget Starter
 const PRESET_BILLS = [
-  { name: 'Rent / Mortgage', recurring: 'monthly', category: 'housing', pct: 28 },
-  { name: 'Electricity', recurring: 'monthly', category: 'utilities', pct: 3 },
-  { name: 'Internet', recurring: 'monthly', category: 'utilities', pct: 1.5 },
-  { name: 'Car Insurance', recurring: 'monthly', category: 'transport', pct: 3 },
-  { name: 'Groceries', recurring: 'monthly', category: 'food', pct: 10 },
-  { name: 'Streaming', recurring: 'monthly', category: 'media', pct: 1 }
+  { name: 'Housing (Rent/Mortgage)', recurring: 'monthly', category: 'housing', pct: 30 },
+  { name: 'Utilities & Internet', recurring: 'monthly', category: 'utilities', pct: 5 },
+  { name: 'Groceries', recurring: 'monthly', category: 'food', pct: 15 },
+  { name: 'Transportation (Gas/Transit)', recurring: 'monthly', category: 'transport', pct: 10 },
+  { name: 'Car/Health Insurance', recurring: 'monthly', category: 'insurance', pct: 5 },
+  { name: 'Subscriptions & Media', recurring: 'monthly', category: 'media', pct: 2 },
+  { name: 'Debt Repayment (Loans/Cards)', recurring: 'monthly', category: 'debt', pct: 10 }
 ];
 
 function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {} }
@@ -498,12 +517,12 @@ function fmtHM(decimal) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// Math Engine - Date Bounded
+// Math Engine
 // ════════════════════════════════════════════════════════════════
-
 function monthlyEq(amount, freq) {
   const val = parseFloat(String(amount).replace(/[^\d.-]/g, '')) || 0;
   if (!val) return 0;
+  
   const f = freq || 'monthly';
   switch (f) {
     case 'weekly': return val * 4.333;
@@ -515,71 +534,26 @@ function monthlyEq(amount, freq) {
   }
 }
 
-// Safely evaluates base amount vs total amount with tips 
-function effectiveIncomeAmount(i) {
-  let base = Number(i.baseAmount);
-  if (isNaN(base)) base = Number(i.amount) || 0;
-  
-  if (i.tipsEnabled) {
-      const val = Number(i.tipsValue) || 0;
-      if (i.tipsType === 'percent') return base + (base * val / 100);
-      if (i.tipsType === 'amount') return base + val;
-  }
-  
-  const amt = Number(i.cashTipAmount);
-  if (!isNaN(amt) && amt > 0) return base + amt;
-  const pct = Number(i.cashTipPct);
-  if (!isNaN(pct) && pct > 0) return base + (base * pct / 100);
-  
-  return base;
-}
-
-function getTipAmount(i) {
-  let base = Number(i.baseAmount);
-  if (isNaN(base)) base = Number(i.amount) || 0;
-  return Math.max(0, effectiveIncomeAmount(i) - base);
-}
-
-function cashTipNote(i) {
-  if (i.tipsEnabled) {
-     if (i.tipsType === 'percent') return `+${i.tipsValue}% cash tips`;
-     if (i.tipsType === 'amount') return `+${fmtMoney(Number(i.tipsValue))} cash`;
-  }
-  if (i.cashTipAmount) return `+${fmtMoney(Number(i.cashTipAmount))} cash`;
-  if (i.cashTipPct) return `+${i.cashTipPct}% cash tips`;
-  return '';
-}
-
 function getViewMonth() {
   if (viewMonth) return viewMonth;
   const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() };
 }
 
 function getMonthlyStats(year, month) {
-  let income = 0;
-  let bills = 0;
-  let tips = 0;
+  let income = 0; let bills = 0; let tips = 0;
 
   for (const i of state.income) {
     const isOnce = i.frequency === 'once' || !i.frequency;
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-    
-    let base = amt;
-    if (i.baseAmount !== undefined) {
-      base = parseFloat(String(i.baseAmount).replace(/[^\d.-]/g, '')) || 0;
-    }
+    let base = i.baseAmount !== undefined ? parseFloat(String(i.baseAmount).replace(/[^\d.-]/g, '')) || 0 : amt;
     const tipAmt = Math.max(0, amt - base);
 
     if (isOnce) {
       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-      if (d.getFullYear() === year && d.getMonth() === month) {
-          income += amt;
-          tips += tipAmt;
-      }
+      if (d.getFullYear() === year && d.getMonth() === month) { income += amt; tips += tipAmt; }
     } else {
-      income += monthlyEq(amt, i.frequency);
-      tips += monthlyEq(tipAmt, i.frequency);
+      income += monthlyEq(amt, i.frequency); tips += monthlyEq(tipAmt, i.frequency);
     }
   }
 
@@ -589,7 +563,6 @@ function getMonthlyStats(year, month) {
     if (!isOnce) {
       bills += monthlyEq(amt, b.recurring);
     } else {
-      // Fix: Fall back to createdAt or today if dueDate is left blank
       const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
       if (d.getFullYear() === year && d.getMonth() === month) bills += amt;
@@ -599,13 +572,22 @@ function getMonthlyStats(year, month) {
   return { income, bills, net: income - bills, tips };
 }
 
-// Strict Engine for YTD, Projections, and Averages
+function getMonthlyHistory(monthsBack = 6) {
+  const now = new Date(); const out = [];
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const stats = getMonthlyStats(d.getFullYear(), d.getMonth());
+    out.push({ label: d.toLocaleString('en-US', { month: 'short' }).toLowerCase(), income: stats.income, bills: stats.bills });
+  }
+  return out;
+}
+
+// Strict Income Engine for YTD, Projections, and Averages
 function getIncomeStats() {
   const now = new Date();
   const curY = now.getFullYear();
   const curM = now.getMonth();
 
-  // 1. Average Monthly & Projected Annual (Ignores current month)
   let rawInc = [];
   let rawBills = [];
   for (let i = 1; i <= 12; i++) {
@@ -625,7 +607,6 @@ function getIncomeStats() {
   const avgMonthly = validInc.length ? validInc.reduce((a,b)=>a+b,0) / validInc.length : 0;
   const projAnnual = avgMonthly * 12;
 
-  // New: Calculate strict averages for bills to prevent 0*12 errors
   let validBills = rawBills;
   if (validBills.length === 0) {
       const cur = getMonthlyStats(curY, curM);
@@ -634,10 +615,7 @@ function getIncomeStats() {
   const avgMonthlyBills = validBills.length ? validBills.reduce((a,b)=>a+b,0) / validBills.length : 0;
   const projAnnualBills = avgMonthlyBills * 12;
 
-  // 2. YTD Calculations
-  let ytdIncome = 0;
-  let ytdHours = 0;
-
+  let ytdIncome = 0; let ytdHours = 0;
   const daysInCurMonth = new Date(curY, curM + 1, 0).getDate();
   const daysElapsed = now.getDate();
   const monthsElapsedThisYear = curM + (daysElapsed / daysInCurMonth);
@@ -650,19 +628,14 @@ function getIncomeStats() {
      if (isOnce) {
        const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
        const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-       if (d.getFullYear() === curY) {
-           ytdIncome += effective;
-           ytdHours += h;
-       }
+       if (d.getFullYear() === curY) { ytdIncome += effective; ytdHours += h; }
      } else {
        const dt = i.createdAt ? new Date(i.createdAt) : now;
-       const startY = dt.getFullYear();
-       const startM = dt.getMonth();
+       const startY = dt.getFullYear(); const startM = dt.getMonth();
 
        let startMonthsElapsed = 0;
-       if (startY < curY) {
-           startMonthsElapsed = 0; 
-       } else if (startY === curY) {
+       if (startY < curY) startMonthsElapsed = 0; 
+       else if (startY === curY) {
            const daysInStartMonth = new Date(startY, startM + 1, 0).getDate();
            const startFraction = (daysInStartMonth - dt.getDate() + 1) / daysInStartMonth;
            startMonthsElapsed = startM + (1 - startFraction);
@@ -682,96 +655,7 @@ function getIncomeStats() {
 
   return { ytdIncome, ytdHours, ytdHourly, avgMonthly, projAnnual, avgMonthlyBills, projAnnualBills };
 }
-function getMonthlyHistory(monthsBack = 6) {
-  const now = new Date(); const out = [];
-  for (let i = monthsBack - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const stats = getMonthlyStats(d.getFullYear(), d.getMonth());
-    out.push({ label: d.toLocaleString('en-US', { month: 'short' }).toLowerCase(), income: stats.income, bills: stats.bills });
-  }
-  return out;
-}
 
-// Strict Income Engine for YTD, Projections, and Averages
-function getIncomeStats() {
-  const now = new Date();
-  const curY = now.getFullYear();
-  const curM = now.getMonth();
-
-  // 1. Average Monthly & Projected Annual (Ignores current month)
-  let rawMonths = [];
-  for (let i = 1; i <= 12; i++) {
-     let m = curM - i;
-     let y = curY;
-     if (m < 0) { m += 12; y -= 1; }
-     const st = getMonthlyStats(y, m);
-     if (st.income > 0) rawMonths.push(st.income);
-  }
-  
-  let validMonths = rawMonths;
-  if (rawMonths.length > 1) {
-      // Filter out partial/incomplete tracking months (e.g., the month the app was downloaded)
-      // by only including months that reach at least 50% of your maximum month.
-      const maxMonth = Math.max(...rawMonths);
-      validMonths = rawMonths.filter(inc => inc >= maxMonth * 0.5);
-  }
-  
-  if (validMonths.length === 0) {
-      const cur = getMonthlyStats(curY, curM);
-      if (cur.income > 0) validMonths.push(cur.income);
-  }
-  
-  const avgMonthly = validMonths.length ? validMonths.reduce((a,b)=>a+b,0) / validMonths.length : 0;
-  const projAnnual = avgMonthly * 12;
-
-  // 2. YTD Calculations
-  let ytdIncome = 0;
-  let ytdHours = 0;
-
-  const daysInCurMonth = new Date(curY, curM + 1, 0).getDate();
-  const daysElapsed = now.getDate();
-  const monthsElapsedThisYear = curM + (daysElapsed / daysInCurMonth);
-
-  for (const i of state.income) {
-     const effective = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-     const h = Number(i.hours) || 0;
-     const isOnce = i.frequency === 'once' || !i.frequency;
-
-     if (isOnce) {
-       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
-       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-       if (d.getFullYear() === curY) {
-           ytdIncome += effective;
-           ytdHours += h;
-       }
-     } else {
-       const dt = i.createdAt ? new Date(i.createdAt) : now;
-       const startY = dt.getFullYear();
-       const startM = dt.getMonth();
-
-       let startMonthsElapsed = 0;
-       if (startY < curY) {
-           startMonthsElapsed = 0; 
-       } else if (startY === curY) {
-           const daysInStartMonth = new Date(startY, startM + 1, 0).getDate();
-           const startFraction = (daysInStartMonth - dt.getDate() + 1) / daysInStartMonth;
-           startMonthsElapsed = startM + (1 - startFraction);
-       } else continue; 
-
-       const activeMonthsThisYear = Math.max(0, monthsElapsedThisYear - startMonthsElapsed);
-       const monthlyInc = monthlyEq(effective, i.frequency);
-       const f = i.frequency === 'weekly' ? 4.33333 : i.frequency === 'biweekly' ? 2.16667 : i.frequency === 'monthly' ? 1 : i.frequency === 'yearly' ? (1/12) : 0;
-       const monthlyHrs = h * f;
-
-       ytdIncome += monthlyInc * activeMonthsThisYear;
-       ytdHours += monthlyHrs * activeMonthsThisYear;
-     }
-  }
-
-  const ytdHourly = ytdHours > 0 ? ytdIncome / ytdHours : 0;
-
-  return { ytdIncome, ytdHours, ytdHourly, avgMonthly, projAnnual };
-}
 function asciiBar(pct, width = 24) {
   const f = Math.max(0, Math.min(width, Math.round(width * (pct / 100))));
   return `<span class="f">${'█'.repeat(f)}</span><span class="e">${'░'.repeat(width - f)}</span>`;
@@ -860,13 +744,8 @@ function sortRows(arr, type) {
       vb = vb || b.createdAt || '9999'; 
     }
     if (col === 'amount') {
-      if (type === 'income' && a.raw && b.raw) {
-         va = effectiveIncomeAmount(a.raw);
-         vb = effectiveIncomeAmount(b.raw);
-      } else {
-         va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
-         vb = parseFloat(String(vb).replace(/[^\d.-]/g, '')) || 0;
-      }
+      va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
+      vb = parseFloat(String(vb).replace(/[^\d.-]/g, '')) || 0;
     }
     if (typeof va === 'number') return (va - vb) * mult;
     return String(va || '').localeCompare(String(vb || '')) * mult;
@@ -944,6 +823,7 @@ function renderOverview() {
     </div>
   `;
 }
+
 // ── Income ──
 function renderIncome() {
   const { year, month } = getViewMonth();
@@ -957,7 +837,6 @@ function renderIncome() {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = i.frequency === 'once' || !i.frequency;
     
-    // Explicitly show base and tip info
     const base = i.baseAmount !== undefined ? i.baseAmount : amt;
     const hourlyText = i.hours ? `<span style="font-size:10px; color:var(--t-faint); margin-left:4px;">(${fmtMoney(base / i.hours)}/hr)</span>` : '';
     const tipText = (i.tipsEnabled && amt > base) ? `<span style="font-size:10px; color:var(--lime); margin-left:4px;">(+${fmtMoney(amt-base)} tip)</span>` : '';
@@ -1000,6 +879,7 @@ function renderIncome() {
     </div>
   `;
 }
+
 // ── Expenses ──
 function renderExpenses() {
   const { year, month } = getViewMonth();
@@ -1030,14 +910,10 @@ function renderExpenses() {
     const isOnce = !b.recurring || b.recurring === 'once';
     
     let mo = 0;
-    if (!isOnce) {
-        const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
-        const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-        if (year > d.getFullYear() || (year === d.getFullYear() && month >= d.getMonth())) {
-           mo = monthlyEq(amt, b.recurring);
-        }
-    } else if (b.dueDate) {
-         const d = new Date(b.dueDate + (b.dueDate.includes('T') ? '' : 'T00:00:00'));
+    if (!isOnce) mo = monthlyEq(amt, b.recurring);
+    else {
+         const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
+         const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
          if (d.getFullYear() === year && d.getMonth() === month) mo = amt;
     }
     
@@ -1054,7 +930,7 @@ function renderExpenses() {
       <td class="r tbl-actions">
         ${!b.paid ? `<button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button>` : `<button data-action="unpay-bill" data-id="${b.id}">undo</button>`}
         <button data-action="edit" data-type="expenses" data-id="${b.id}">edit</button>
-        <button class="err" data-action="rm" data-type="bills" data-id="${b.id}">rm</button>
+        <button class="err" data-action="rm" data-type="expenses" data-id="${b.id}">rm</button>
       </td>
     </tr>`;
   }).join('');
@@ -1085,7 +961,12 @@ function renderExpenses() {
           <thead><tr>${th('expenses','id','id')}${th('expenses','name','name')}${th('expenses','amount','amount')}<th>freq</th>${th('expenses','date','due')}<th class="r">% inc</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-      ` : `<div class="empty-state" style="margin-top: 16px;">no expenses tracked yet.</div>`}
+      ` : `
+        <div class="empty-state" style="margin-top: 16px;">
+          <div style="margin-bottom: 8px;">no expenses tracked yet.</div>
+          ${incomeTotal > 0 ? `<button class="btn-prominent" data-action="auto-fill-budget">Auto-Generate Starter Budget</button>` : `<div style="font-size:11.5px;">add income first to auto-generate a budget.</div>`}
+        </div>
+      `}
     </div>
   `;
 }
@@ -1134,14 +1015,10 @@ function renderBudget() {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = !b.recurring || b.recurring === 'once';
     let bMo = 0;
-    if (!isOnce) {
+    if (!isOnce) bMo = monthlyEq(amt, b.recurring);
+    else {
         const dateStr = b.dueDate || b.createdAt || isoDate(todayStart());
         const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-        if (year > d.getFullYear() || (year === d.getFullYear() && month >= d.getMonth())) {
-           bMo = monthlyEq(amt, b.recurring);
-        }
-    } else if (b.dueDate) {
-        const d = new Date(b.dueDate + (b.dueDate.includes('T') ? '' : 'T00:00:00'));
         if (d.getFullYear() === year && d.getMonth() === month) bMo = amt;
     }
     if (bMo > 0) {
@@ -1275,7 +1152,9 @@ document.addEventListener('click', e => {
   }
   else if (action === 'rm') {
     if (confirm('Delete this item?')) {
-      state[btn.dataset.type] = state[btn.dataset.type].filter(x => x.id !== btn.dataset.id);
+      // Fix: Check if type is 'expenses' to properly delete from state.bills
+      const targetType = btn.dataset.type === 'expenses' ? 'bills' : btn.dataset.type;
+      state[targetType] = state[targetType].filter(x => x.id !== btn.dataset.id);
       saveState(); render();
     }
   }
@@ -1304,6 +1183,16 @@ document.addEventListener('click', e => {
   else if (action === 'next-month') { const v=getViewMonth(); viewMonth={year:v.month===11?v.year+1:v.year, month:v.month===11?0:v.month+1}; render(); }
   else if (action === 'curr-month') { viewMonth = null; render(); }
   else if (action === 'open-presets') { openPresetPicker(); }
+  else if (action === 'auto-fill-budget') {
+    const { year, month } = getViewMonth();
+    const { income: inc } = getMonthlyStats(year, month);
+    if (inc > 0) {
+      PRESET_BILLS.forEach(p => {
+        state.bills.push({ id: nextId('bills'), name: p.name, amount: Math.round(inc*(p.pct/100)), category: p.category, recurring: p.recurring, paid: false, createdAt: isoDate(todayStart()) });
+      });
+      saveState(); render();
+    }
+  }
   
   // Data actions
   else if (action === 'export') {
@@ -1320,7 +1209,6 @@ document.addEventListener('click', e => {
   }
 });
 
-// Import File Handler
 const fileInput = document.getElementById('file-import');
 if (fileInput) {
   fileInput.addEventListener('change', (e) => {
@@ -1348,7 +1236,6 @@ if (fileInput) {
   });
 }
 
-// Manage Income Form Tips Toggle
 document.addEventListener('change', e => {
   if (e.target.id === 'tipsEnabled') {
     const grp = document.getElementById('tipsInputGroup');
@@ -1372,7 +1259,9 @@ function openModal(type, id = null) {
   if(title) title.textContent = (id ? 'edit ' : 'add ') + type.replace('bills','expense').replace('petty','spending');
 
   if (id) {
-    const item = state[type].find(x => x.id === id);
+    // FIX: Pull from state.bills if type is 'expenses'
+    const targetArr = type === 'expenses' ? state.bills : state[type];
+    const item = targetArr.find(x => x.id === id);
     if (item) {
       Object.keys(item).forEach(k => {
         if (form.elements[k]) form.elements[k].value = item[k];
@@ -1400,44 +1289,41 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     const fd = new FormData(f);
     const type = f.dataset.type;
     const isEdit = editingItem && editingItem.type === type;
-    const item = isEdit ? state[type].find(x => x.id === editingItem.id) : { id: nextId(type), createdAt: isoDate(todayStart()) };
+    
+    // FIX: Send data to correct array
+    const targetArr = type === 'expenses' ? state.bills : state[type];
+    const targetIdPrefix = type === 'expenses' ? 'bills' : type;
+    const item = isEdit ? targetArr.find(x => x.id === editingItem.id) : { id: nextId(targetIdPrefix), createdAt: isoDate(todayStart()) };
 
     const parseAmt = v => { const n = parseFloat(String(v).replace(/[$,\s]/g,'')); return isNaN(n)?0:n; };
 
     if (type === 'income') {
-      item.source = (fd.get('source') || '').trim();
-      const amount = parseAmt(fd.get('amount'));
-      if (isNaN(amount)) { alert('Please enter a valid amount.'); return; }
+      item.source = fd.get('source'); 
+      const baseAmt = parseAmt(fd.get('amount'));
+      item.baseAmount = baseAmt;
+      item.hours = parseAmt(fd.get('hours')) || null;
+      item.tipsEnabled = fd.get('tipsEnabled') === 'on';
+      item.tipsType = fd.get('tipsType') || 'percent';
       
-      item.baseAmount = amount;
-      item.amount = amount; // kept as fallback 
-      item.frequency = fd.get('frequency') || 'monthly'; 
-      item.receivedAt = fd.get('receivedAt') || null;
-      
-      const hoursStr = fd.get('hours');
-      item.hours = hoursStr ? parseAmt(hoursStr) : null;
-      
-      const tipsEnabled = fd.get('tipsEnabled') === 'on';
-      item.tipsEnabled = tipsEnabled;
-      
-      if (tipsEnabled) {
-          item.tipsType = fd.get('tipsType') || 'percent';
-          let tVal = parseAmt(fd.get('tipsValue'));
-          if (!tVal || tVal <= 0) tVal = 6;
-          item.tipsValue = tVal;
-      } else {
-          item.tipsType = null;
-          item.tipsValue = null;
+      let finalAmt = baseAmt;
+      if (item.tipsEnabled) {
+        let tipVStr = fd.get('tipsValue');
+        let tipV = parseAmt(tipVStr);
+        if (!tipVStr || tipV === 0) tipV = 6; 
+        item.tipsValue = tipV;
+
+        if (item.tipsType === 'percent') finalAmt += baseAmt * (tipV / 100);
+        else finalAmt += tipV;
       }
       
-      item.cashTipPct = null;
-      item.cashTipAmount = null;
+      item.amount = finalAmt;
+      item.frequency = fd.get('frequency') || 'monthly'; 
+      item.receivedAt = fd.get('receivedAt') || null;
       
     } else if (type === 'expenses') {
       item.name = fd.get('name'); item.amount = parseAmt(fd.get('amount'));
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly'; item.dueDate = fd.get('date') || null;
       if (!isEdit) item.paid = false;
-      if (!isEdit) state.bills.push(item);
     } else if (type === 'tasks') {
       item.text = fd.get('text'); item.priority = fd.get('priority'); item.dueDate = fd.get('date') || null;
       if (!isEdit) item.done = false;
@@ -1449,7 +1335,23 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.note = fd.get('note'); item.date = fd.get('date');
     }
 
-    if (!isEdit && type !== 'expenses') state[type].push(item);
+    if (!isEdit) targetArr.push(item);
+    
+    // NEW FEATURE: Auto-Prompt Starter Budget
+    if (!isEdit && type === 'income' && state.bills.length === 0) {
+       setTimeout(() => {
+           if(confirm("Income saved! Would you like to auto-generate a starter budget (rule-of-thumb expenses) based on this income?")) {
+               const incAmt = monthlyEq(item.amount, item.frequency);
+               PRESET_BILLS.forEach(p => {
+                   state.bills.push({ id: nextId('bills'), name: p.name, amount: Math.round(incAmt*(p.pct/100)), category: p.category, recurring: p.recurring, paid: false, createdAt: isoDate(todayStart()) });
+               });
+               currentTab = 'expenses';
+               localStorage.setItem(TAB_KEY, currentTab);
+           }
+           saveState(); render();
+       }, 100);
+    }
+
     saveState(); document.querySelectorAll('.modal').forEach(m => m.classList.remove('open')); render();
   });
 });
