@@ -1,3 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ledgeon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0b0e13;
+    --bg-deep: #070a0f;
+    --bg-soft: #11151c;
+    --bg-input: #1a1f28;
+
+    --line: #1e242e;
+    --line-soft: #161b23;
+    --line-strong: #2c3340;
+
+    --t: #d6d9de;
+    --t-bright: #fafafa;
+    --t-dim: #a1a8b3;
+    --t-faint: #6e7480;
+    --t-mute: #4a4f5a;
+
+    --warm: #d4a574;
+    --warm-soft: rgba(212,165,116,0.12);
+
+    --lime: #b3dd44;
+    --lime-soft: rgba(179,221,68,0.12);
+
+    --ok: #86c98a;
+    --bad: #e09f7c;
+    --warn: #e0c46c;
+    --err: #e57373;
+
+    --cyan: #6dd0d0;
+    --sky: #7aaef0;
+    --rose: #e09fb4;
+    --plum: #b89cd4;
+
+    --r: 4px;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--t);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at 12% -10%, rgba(212,165,116,0.04), transparent 50%),
+      radial-gradient(ellipse at 90% 110%, rgba(179,221,68,0.025), transparent 50%),
+      var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; }
+  input, select, textarea { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ───────── header & tabs ───────── */
+  header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(11,14,19,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    overflow-x: auto;
+  }
+  header .brand {
+    color: var(--t-bright);
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  header .brand b { color: var(--warm); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    flex: 1;
+  }
+  .tab {
+    color: var(--t-faint);
+    font-size: 12.5px;
+    padding: 4px 12px;
+    border-radius: var(--r);
+    transition: all 0.15s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: lowercase;
+  }
+  .tab:hover { color: var(--t-bright); background: var(--bg-soft); }
+  .tab.active {
+    color: var(--lime);
+    background: var(--lime-soft);
+  }
+  .tab .badge {
+    font-size: 10px;
+    color: var(--bg);
+    background: var(--t-mute);
+    padding: 0 5px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .tab.active .badge { background: var(--lime); color: var(--bg); }
+
+  .right-actions { display: flex; gap: 10px; }
+  .right-actions button {
+    color: var(--t-faint);
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: var(--r);
+    font-size: 11.5px;
+    transition: all 0.15s;
+    text-transform: lowercase;
+  }
+  .right-actions button:hover { color: var(--lime); border-color: var(--lime); }
+
+  /* ───────── main layout ───────── */
+  main {
+    flex: 1;
+    max-width: 1000px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 24px 60px;
+  }
+
+  /* ───────── terminal blocks ───────── */
+  .out {
+    margin-bottom: 24px;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  .out h3 {
+    color: var(--warm);
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .out h3 .action {
+    color: var(--cyan);
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    text-transform: lowercase;
+    font-weight: 400;
+    cursor: pointer;
+  }
+  .out h3 .action:hover { color: var(--t-bright); text-decoration: underline; }
+
+  /* key-value rows */
+  .kv {
+    display: grid;
+    grid-template-columns: 220px 1fr auto;
+    gap: 14px;
+    align-items: baseline;
+    padding: 4px 0;
+  }
+  .kv .k { color: var(--t-faint); font-size: 12.5px; text-transform: lowercase; }
+  .kv .v { color: var(--t-bright); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .kv .v.ok   { color: var(--ok); }
+  .kv .v.bad  { color: var(--bad); }
+  .kv .v.warm { color: var(--warm); }
+  .kv .v.warn { color: var(--warn); }
+  .kv .x { color: var(--t-faint); font-size: 12px; text-align: right; }
+
+  /* ascii bars */
+  .bar-line {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+  }
+  .bar-line .lbl { color: var(--t-dim); width: 140px; flex-shrink: 0; text-transform: lowercase; font-size: 12.5px; }
+  .bar-line .bar { flex: 1; letter-spacing: -1px; line-height: 1; font-size: 14px; }
+  .bar-line .bar .f { color: var(--cyan); }
+  .bar-line .bar .e { color: var(--line-strong); }
+  .bar-line.ok .bar .f { color: var(--ok); }
+  .bar-line.bad .bar .f { color: var(--bad); }
+  .bar-line.warm .bar .f { color: var(--warm); }
+  .bar-line .va { color: var(--t-bright); font-weight: 500; min-width: 110px; text-align: right; font-variant-numeric: tabular-nums;}
+  .bar-line .x { color: var(--t-faint); font-size: 11px; margin-left: 8px; }
+
+  /* tables */
+  table.tbl { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 12.5px; }
+  table.tbl th {
+    text-align: left; color: var(--t-faint); font-weight: 400; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 1.5px; padding: 6px 12px 10px 0;
+    border-bottom: 1px solid var(--line); cursor: pointer; user-select: none;
+  }
+  table.tbl th:hover { color: var(--lime); }
+  table.tbl th.sorted { color: var(--lime); }
+  table.tbl th.sorted::after { content: ' ↓'; }
+  table.tbl th.sorted.asc::after { content: ' ↑'; }
+  table.tbl th.r { text-align: right; }
+  table.tbl td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line-soft); }
+  table.tbl td.r { text-align: right; }
+  table.tbl tr.row:hover { background: var(--bg-soft); }
+  table.tbl tr.row td:first-child { padding-left: 8px; }
+  table.tbl tr.done td { opacity: 0.5; text-decoration: line-through; }
+  table.tbl td .id { color: var(--t-mute); font-size: 11px; background: var(--bg-deep); padding: 1px 6px; border-radius: 3px; border: 1px solid var(--line); }
+  table.tbl td .cat { color: var(--t-mute); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.6px; margin-left: 10px; }
+  
+  .tbl-actions button {
+    color: var(--t-faint); border: 1px solid var(--line); padding: 2px 8px;
+    border-radius: 3px; font-size: 11px; margin-left: 6px; transition: all 0.15s;
+  }
+  .tbl-actions button:hover { color: var(--lime); border-color: var(--lime); }
+  .tbl-actions button.err:hover { color: var(--err); border-color: var(--err); }
+  .tbl-actions button.ok:hover { color: var(--ok); border-color: var(--ok); }
+
+  /* tags & status */
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .tag.ok { background: rgba(134,201,138,0.13); color: var(--ok); }
+  .tag.warn { background: rgba(224,196,108,0.13); color: var(--warn); }
+  .tag.err { background: rgba(229,115,115,0.13); color: var(--err); }
+  .tag.info { background: rgba(109,208,208,0.13); color: var(--cyan); }
+
+  /* charts & visual stats */
+  .chart-box {
+    background: var(--bg-deep); border: 1px dashed var(--line); border-radius: var(--r);
+    padding: 24px; margin-bottom: 24px;
+  }
+  
+  .trend-svg { width: 100%; height: 180px; display: block; }
+  .pie-wrap { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .pie-wrap svg.pie { width: 160px; height: 160px; flex-shrink: 0; }
+  .pie-wrap .pie-center-label { fill: var(--t-bright); font-size: 24px; font-weight: 600; text-anchor: middle; font-family: 'JetBrains Mono', monospace; }
+  .pie-wrap .pie-center-sub { fill: var(--t-faint); font-size: 10px; text-anchor: middle; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+  .pie-legend { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 200px; }
+  .pie-legend .pli { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 12px; align-items: baseline; font-size: 12.5px; }
+  .pie-legend .pli .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* weekly calculator card */
+  .weekly-card {
+    display: grid; grid-template-columns: auto 1fr; gap: 32px;
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 24px 32px; margin-bottom: 32px; align-items: center;
+  }
+  .weekly-card .headline { display: flex; flex-direction: column; }
+  .weekly-card .headline .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--t-faint); margin-bottom: 8px; }
+  .weekly-card .headline .value { font-size: 36px; font-weight: 600; color: var(--lime); font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -1px; }
+  .weekly-card .headline .unit { font-size: 14px; color: var(--t-dim); font-weight: 400; letter-spacing: 0; }
+  .weekly-card .headline .daily { font-size: 13px; color: var(--t-dim); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .weekly-math { border-left: 1px dashed var(--line); padding-left: 32px; font-size: 13px; }
+  .weekly-math .row { display: flex; justify-content: space-between; margin-bottom: 4px; gap: 32px; }
+  .weekly-math .row.total { padding-top: 8px; margin-top: 8px; border-top: 1px dashed var(--line-soft); font-weight: 500; color: var(--t-bright); }
+  .weekly-math .label { color: var(--t-faint); }
+  .weekly-math .value { font-variant-numeric: tabular-nums; }
+  .weekly-math .value.income { color: var(--ok); }
+  .weekly-math .value.expense { color: var(--bad); }
+  .weekly-math .formula { font-size: 11px; color: var(--t-mute); margin-top: 8px; font-style: italic; }
+
+  @media (max-width: 600px) {
+    .weekly-card { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
+    .weekly-math { border-left: none; padding-left: 0; border-top: 1px dashed var(--line); padding-top: 16px; }
+  }
+
+  /* month nav */
+  .month-nav {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
+    padding: 8px 12px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+  }
+  .month-nav .month-label { flex: 1; text-align: center; font-size: 13px; color: var(--t-bright); font-weight: 500; text-transform: lowercase; }
+  .month-nav button { color: var(--t-dim); padding: 4px 12px; border: 1px solid var(--line); border-radius: 3px; font-size: 11.5px; transition: 0.15s; }
+  .month-nav button:hover { color: var(--lime); border-color: var(--lime); background: var(--bg-input); }
+
+  /* modals */
+  .modal {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal.open { display: flex; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(7, 10, 15, 0.85); backdrop-filter: blur(4px); }
+  .modal-card {
+    position: relative; background: var(--bg-soft); border: 1px solid var(--line-strong);
+    border-radius: var(--r); width: 100%; max-width: 480px; padding: 24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  }
+  .modal-title { color: var(--warm); font-size: 11.5px; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+
+  .form-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+  .form-col { flex: 1; min-width: 140px; }
+  .form-label { display: block; color: var(--t-faint); font-size: 11px; text-transform: lowercase; margin-bottom: 6px; }
+  .input, .select, textarea {
+    width: 100%; background: var(--bg-deep); border: 1px solid var(--line); color: var(--t-bright);
+    font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 3px; outline: none;
+  }
+  .input:focus, .select:focus, textarea:focus { border-color: var(--lime); }
+  .input::placeholder, textarea::placeholder { color: var(--t-mute); }
+  .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; border-top: 1px solid var(--line); padding-top: 16px; }
+  .form-actions button { padding: 6px 16px; border: 1px solid var(--line); color: var(--t-dim); border-radius: 3px; font-size: 12.5px; transition: 0.15s; text-transform: lowercase; }
+  .form-actions button:hover { color: var(--t-bright); border-color: var(--t-dim); }
+  .form-actions button.primary { color: var(--lime); border-color: var(--lime); }
+  .form-actions button.primary:hover { background: var(--lime-soft); }
+
+  .empty-state { padding: 40px 20px; text-align: center; color: var(--t-mute); font-style: italic; border: 1px dashed var(--line); border-radius: var(--r); }
+
+  /* preset picker */
+  .preset-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid transparent; border-radius: 3px; cursor: pointer; transition: 0.15s; }
+  .preset-row:hover { background: var(--bg-deep); border-color: var(--line); }
+  .preset-row .box { width: 14px; height: 14px; border: 1px solid var(--t-faint); border-radius: 2px; display: flex; align-items: center; justify-content: center; }
+  .preset-row.sel .box { background: var(--lime); border-color: var(--lime); }
+  .preset-row.sel .box::after { content: ''; width: 7px; height: 4px; border-left: 2px solid var(--bg-deep); border-bottom: 2px solid var(--bg-deep); transform: rotate(-45deg) translate(0,-1px); }
+  .preset-row.exists { opacity: 0.4; pointer-events: none; }
+  .preset-row .nm { flex: 1; color: var(--t); font-size: 13px; }
+  .preset-row .pct { color: var(--t-faint); font-size: 11px; text-align: right;}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><b>ledgeon</b></div>
+  <nav class="tabs" id="tabs">
+    <button class="tab" data-tab="overview">overview</button>
+    <button class="tab" data-tab="income">income <span class="badge badge-income">0</span></button>
+    <button class="tab" data-tab="expenses">expenses <span class="badge badge-expenses">0</span></button>
+    <button class="tab" data-tab="budget">budget</button>
+    <button class="tab" data-tab="tasks">tasks <span class="badge badge-tasks">0</span></button>
+  </nav>
+  <div class="right-actions">
+    <button id="btn-export">export</button>
+    <button id="btn-reset" style="color: var(--err); border-color: var(--line);">reset</button>
+  </div>
+</header>
+
+<main id="content"></main>
+
+<div class="modal" id="modal-income">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add income</div>
+    <form data-type="income">
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">source</label><input type="text" class="input" name="source" required></div>
+        <div class="form-col" style="min-width: 100px;"><label class="form-label">base amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">frequency</label>
+          <select class="select" name="frequency">
+            <option value="monthly" selected>monthly</option><option value="biweekly">biweekly</option><option value="weekly">weekly</option><option value="yearly">yearly</option><option value="once">one-time</option>
+          </select>
+        </div>
+        <div class="form-col"><label class="form-label">hours worked (optional)</label><input type="number" step="0.1" class="input" name="hours" placeholder="e.g. 40"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">date received (optional)</label><input type="date" class="input" name="receivedAt"></div>
+      </div>
+      <div class="form-row" style="align-items: center; background: var(--bg-deep); padding: 10px 12px; border-radius: 4px; border: 1px dashed var(--line);">
+        <div class="form-col" style="flex:0 0 auto;">
+          <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--t-bright); cursor:pointer;">
+            <input type="checkbox" name="tipsEnabled" id="tipsEnabled"> + assumed cash tips
+          </label>
+        </div>
+        <div class="form-col" id="tipsInputGroup" style="display:none; gap:8px; align-items:center; opacity: 0; transition: opacity 0.2s;">
+          <input type="number" step="0.1" class="input" name="tipsValue" value="6" style="width:70px; padding: 4px 8px;">
+          <select class="select" name="tipsType" style="width:60px; padding: 4px;">
+            <option value="percent">%</option>
+            <option value="amount">$</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="close-modal">cancel</button>
+        <button type="submit" class="primary">save income</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-expenses">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add expense</div>
+    <form data-type="expenses">
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">name</label><input type="text" class="input" name="name" required></div>
+        <div class="form-col" style="min-width: 100px;"><label class="form-label">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">category</label>
+          <select class="select" name="category">
+            <option value="housing">housing</option><option value="utilities">utilities</option><option value="transport">transport</option>
+            <option value="insurance">insurance</option><option value="food">food</option><option value="media">media</option>
+            <option value="debt">debt</option><option value="health">health</option><option value="other">other</option>
+          </select>
+        </div>
+        <div class="form-col"><label class="form-label">recurrence</label>
+          <select class="select" name="recurring">
+            <option value="monthly" selected>monthly</option><option value="weekly">weekly</option><option value="yearly">yearly</option><option value="once">one-time</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">due date (optional)</label><input type="date" class="input" name="date"></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="close-modal">cancel</button>
+        <button type="submit" class="primary">save expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-petty">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">log spending</div>
+    <form data-type="petty">
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+        <div class="form-col"><label class="form-label">category</label>
+          <select class="select" name="category">
+            <option value="food">food / dining</option><option value="transport">transport</option><option value="media">entertainment</option><option value="other" selected>other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">note / description (optional)</label><input type="text" class="input" name="note"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">date</label><input type="date" class="input" name="date" id="petty-date-input" required></div>
+      </div>
+      <div class="form-actions">
+        <button type="button" data-action="close-modal">cancel</button>
+        <button type="submit" class="primary">log purchase</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-tasks">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add task</div>
+    <form data-type="tasks">
+      <div class="form-row"><div class="form-col"><label class="form-label">task description</label><input type="text" class="input" name="text" required></div></div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">priority</label>
+          <select class="select" name="priority"><option value="">none</option><option value="low">low</option><option value="med">medium</option><option value="high">high</option></select>
+        </div>
+        <div class="form-col"><label class="form-label">due date (optional)</label><input type="date" class="input" name="date"></div>
+      </div>
+      <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save task</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-goals">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card">
+    <div class="modal-title">add savings goal</div>
+    <form data-type="goals">
+      <div class="form-row"><div class="form-col"><label class="form-label">goal name</label><input type="text" class="input" name="name" required></div></div>
+      <div class="form-row">
+        <div class="form-col"><label class="form-label">target amount</label><input type="text" class="input" name="targetAmount" required></div>
+        <div class="form-col"><label class="form-label">currently saved</label><input type="text" class="input" name="currentAmount" value="0"></div>
+      </div>
+      <div class="form-row"><div class="form-col"><label class="form-label">target date (optional)</label><input type="date" class="input" name="targetDate"></div></div>
+      <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save goal</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="modal-presets">
+  <div class="modal-backdrop" data-action="close-modal"></div>
+  <div class="modal-card" style="max-width: 540px; max-height: 85vh; display: flex; flex-direction: column;">
+    <div class="modal-title">add preset expenses</div>
+    <div style="font-size: 12px; color: var(--t-faint); margin-bottom: 12px; line-height: 1.5;">
+      select common expenses to add. these calculate typical rule-of-thumb amounts based on your reported income for the current month.
+    </div>
+    <div id="preset-list" style="overflow-y: auto; flex: 1; padding-right: 8px;"></div>
+    <div class="form-actions">
+      <button type="button" data-action="close-modal">cancel</button>
+      <button type="button" class="primary" id="preset-apply-btn" data-action="apply-presets" disabled>add selected</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -879,3 +1394,5 @@ document.getElementById('btn-reset').addEventListener('click', () => {
 render();
 
 </script>
+</body>
+</html>
