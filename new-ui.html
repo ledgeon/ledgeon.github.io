@@ -492,10 +492,7 @@
         <div class="form-col"><label class="form-label">target amount</label><input type="text" class="input" name="targetAmount" required></div>
         <div class="form-col"><label class="form-label">currently saved</label><input type="text" class="input" name="currentAmount" value="0"></div>
       </div>
-      <div class="form-row">
-        <div class="form-col"><label class="form-label">target date (optional)</label><input type="date" class="input" name="targetDate"></div>
-        <div class="form-col"><label class="form-label">monthly contribution (optional)</label><input type="text" class="input" name="monthlyContribution" placeholder="0.00" title="Amount to set aside each month"></div>
-      </div>
+      <div class="form-row"><div class="form-col"><label class="form-label">target date (optional)</label><input type="date" class="input" name="targetDate"></div></div>
       <div class="form-actions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save goal</button></div>
     </form>
   </div>
@@ -506,7 +503,7 @@
   <div class="modal-card" style="max-width: 540px; max-height: 85vh; display: flex; flex-direction: column;">
     <div class="modal-title">add preset expenses</div>
     <div style="font-size: 12px; color: var(--t-faint); margin-bottom: 12px; line-height: 1.5;">
-      select common expenses to add. these calculate typical rule-of-thumb amounts based on your reported income.
+      select common expenses to add. these calculate typical rule-of-thumb amounts based on your reported income for the current month.
     </div>
     <div id="preset-list" style="overflow-y: auto; flex: 1; padding-right: 8px;"></div>
     <div class="form-actions">
@@ -545,12 +542,34 @@ for (const k of possibleKeys) {
   } catch {}
 }
 
+// Backwards compatibility migration for old data structures
+state.income.forEach(i => {
+  // Fix hours key mismatch from index.html
+  if (i.hoursWorked !== undefined && i.hours === undefined) {
+    i.hours = i.hoursWorked;
+    delete i.hoursWorked;
+  }
+  // Migrate legacy cash tips to new format
+  if (i.cashTipPct || i.cashTipAmount) {
+    i.tipsEnabled = true;
+    if (i.cashTipPct) { i.tipsType = 'percent'; i.tipsValue = i.cashTipPct; }
+    else if (i.cashTipAmount) { i.tipsType = 'amount'; i.tipsValue = i.cashTipAmount; }
+    delete i.cashTipPct; 
+    delete i.cashTipAmount;
+  }
+});
+
 const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
 
 let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
 if (currentTab === 'bills') currentTab = 'expenses'; 
 if (currentTab === 'spending') currentTab = 'budget';
+
+// Fallback to prevent blank screens if stored tab no longer exists in the new UI
+if (!['overview', 'income', 'expenses', 'budget', 'tasks'].includes(currentTab)) {
+  currentTab = 'overview';
+}
 
 let sortState = { 
   income: { col: 'amount', dir: 'desc' }, 
@@ -640,7 +659,7 @@ function getMonthlyStats(year, month) {
   let bills = 0;
 
   for (const i of state.income) {
-    const isOnce = i.frequency === 'once'; // Fixed legacy mapping
+    const isOnce = i.frequency === 'once' || !i.frequency;
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     if (isOnce) {
       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
@@ -653,7 +672,7 @@ function getMonthlyStats(year, month) {
 
   for (const b of state.bills) {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const isOnce = b.recurring === 'once'; // Fixed legacy mapping
+    const isOnce = !b.recurring || b.recurring === 'once';
     if (!isOnce) {
       bills += monthlyEq(amt, b.recurring);
     } else if (b.dueDate) {
@@ -684,6 +703,7 @@ function getProjectedAnnual() {
     let y = d.getFullYear();
     if (m < 0) { m += 12; y -= 1; }
     const st = getMonthlyStats(y, m);
+    // Ignore months with zero income to prevent skewing the average
     if (st.income > 0) validMonths.push(st.income);
   }
   if (!validMonths.length) return 0;
@@ -775,10 +795,9 @@ function sortRows(arr, type) {
   const mult = dir === 'asc' ? 1 : -1;
   return [...arr].sort((a,b) => {
     let va = a[col], vb = b[col];
-    // Intelligently fallback to any valid date field for chronological sorting
     if (col === 'date' || col === 'dueDate' || col === 'receivedAt') { 
-      va = va || a.date || a.dueDate || a.receivedAt || a.createdAt || '9999'; 
-      vb = vb || b.date || b.dueDate || b.receivedAt || b.createdAt || '9999'; 
+      va = va || a.createdAt || '9999'; 
+      vb = vb || b.createdAt || '9999'; 
     }
     if (col === 'amount') {
       va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
@@ -870,8 +889,8 @@ function renderIncome() {
 
   const rows = sortRows(state.income, 'income').map(i => {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-    const isOnce = i.frequency === 'once';
-    const hourlyText = i.hoursWorked ? `<br><span style="font-size:10px; color:var(--t-faint);">(${fmtMoney(amt / i.hoursWorked)}/hr)</span>` : '';
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    const hourlyText = i.hours ? `<span style="font-size:10px; color:var(--t-faint);">(${fmtMoney(amt / i.hours)}/hr)</span>` : '';
     
     const moText = isOnce ? '—' : fmtMoney(monthlyEq(amt, i.frequency), {round:true});
     const dateStr = i.receivedAt || (isOnce ? i.createdAt || isoDate(todayStart()) : '');
@@ -880,7 +899,7 @@ function renderIncome() {
       <td><span class="id">${i.id}</span></td>
       <td>${escHTML(i.source)}</td>
       <td class="num ok" style="white-space: nowrap;">${fmtMoney(amt)} ${hourlyText}</td>
-      <td style="color:var(--t-faint);">${i.frequency || 'monthly'}</td>
+      <td style="color:var(--t-faint);">${i.frequency || 'once'}</td>
       <td class="num">${dateStr ? formatDate(dateStr) : '—'}</td>
       <td class="r num">${moText}</td>
       <td class="r tbl-actions"><button data-action="edit" data-type="income" data-id="${i.id}">edit</button><button class="err" data-action="rm" data-type="income" data-id="${i.id}">rm</button></td>
@@ -909,7 +928,7 @@ function renderExpenses() {
   const catMap = {};
   state.bills.forEach(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const isOnce = b.recurring === 'once';
+    const isOnce = !b.recurring || b.recurring === 'once';
     let bMo = 0;
     if (!isOnce) {
         bMo = monthlyEq(amt, b.recurring);
@@ -927,7 +946,7 @@ function renderExpenses() {
 
   const rows = sortRows(state.bills, 'expenses').map(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const isOnce = b.recurring === 'once';
+    const isOnce = !b.recurring || b.recurring === 'once';
     
     let mo = 0;
     if (!isOnce) mo = monthlyEq(amt, b.recurring);
@@ -943,7 +962,7 @@ function renderExpenses() {
       <td><span class="id">${b.id}</span></td>
       <td>${escHTML(b.name)} <span class="cat" style="color:${(CATEGORIES[b.category]||CATEGORIES.other).color}">${b.category||'none'}</span></td>
       <td class="num bad">${fmtMoney(b.amount)}</td>
-      <td style="color:var(--t-faint);">${b.recurring || 'monthly'}</td>
+      <td style="color:var(--t-faint);">${b.recurring || 'once'}</td>
       <td class="${isDue ? 'err' : ''}">${formatDate(b.dueDate)}</td>
       <td class="r num">${p > 0 ? p.toFixed(1)+'%' : '—'}</td>
       <td class="r tbl-actions">
@@ -989,19 +1008,43 @@ function renderExpenses() {
 function renderBudget() {
   const { year, month } = getViewMonth();
   let { income: inc, bills: fixedBills } = getMonthlyStats(year, month);
-  let usingProjected = false;
-
-  // Fallback to average monthly income if current month has no income entries yet
+  
+  let fallbackMsg = '';
   if (inc === 0) {
-      inc = getProjectedAnnual() / 12;
-      usingProjected = true;
+    // Loop backwards up to 6 months to find a baseline income
+    for (let i = 1; i <= 6; i++) {
+      let m = month - i, y = year;
+      if (m < 0) { m += 12; y -= 1; }
+      let pastStats = getMonthlyStats(y, m);
+      if (pastStats.income > 0) {
+        inc = pastStats.income;
+        const pastDate = new Date(y, m, 1);
+        const pastLabel = pastDate.toLocaleString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
+        fallbackMsg = `<div class="kv" style="margin-bottom:16px;"><span class="k">note</span><span class="v warn">using ${pastLabel} income (${fmtMoney(inc)}) as baseline</span><span class="x">no income logged for viewed month</span></div>`;
+        break;
+      }
+    }
   }
+
+  if (inc === 0) return `<div class="out"><div class="empty-state">no income recorded recently to build a budget against.</div></div>`;
+
+  // Calculate Savings Goals Requirements
+  let savingsTarget = 0;
+  const today = todayStart();
+  state.goals.forEach(g => {
+    const target = parseFloat(g.targetAmount) || 0;
+    const saved = parseFloat(g.currentAmount) || 0;
+    const remaining = Math.max(0, target - saved);
+    if (remaining > 0 && g.targetDate) {
+      const td = new Date(g.targetDate + (g.targetDate.includes('T') ? '' : 'T00:00:00'));
+      if (td > today) {
+        const monthsLeft = Math.max(1, Math.round((td - today) / (30 * 86400000)));
+        savingsTarget += remaining / monthsLeft;
+      }
+    }
+  });
   
-  if (inc === 0) return `<div class="out"><div class="empty-state">no income recorded yet to build a budget against.</div></div>`;
-  
-  const savingsTotal = state.goals.reduce((s, g) => s + (parseFloat(String(g.monthlyContribution).replace(/[^\d.-]/g, '')) || 0), 0);
-  
-  const net = inc - fixedBills - savingsTotal;
+  const net = inc - fixedBills - savingsTarget;
   const weekly = Math.max(0, net / 4.333);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daily = Math.max(0, net / daysInMonth);
@@ -1009,7 +1052,7 @@ function renderBudget() {
   const byCat = {};
   state.bills.forEach(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    const isOnce = b.recurring === 'once';
+    const isOnce = !b.recurring || b.recurring === 'once';
     let bMo = 0;
     if (!isOnce) {
         bMo = monthlyEq(amt, b.recurring);
@@ -1053,6 +1096,7 @@ function renderBudget() {
 
   return `
     <div class="out">
+      ${fallbackMsg}
       <div class="weekly-card">
         <div class="headline">
            <span class="label">weekly discretionary allowance</span>
@@ -1060,9 +1104,9 @@ function renderBudget() {
            <span class="daily">${fmtMoney(daily)} / day</span>
         </div>
         <div class="weekly-math">
-           <div class="row"><span class="label">monthly income ${usingProjected ? '(projected)' : ''}</span><span class="value income">${fmtMoney(inc)}</span></div>
+           <div class="row"><span class="label">monthly income</span><span class="value income">${fmtMoney(inc)}</span></div>
            <div class="row"><span class="label">fixed expenses</span><span class="value expense">−${fmtMoney(fixedBills)}</span></div>
-           ${savingsTotal > 0 ? `<div class="row"><span class="label">savings commitments</span><span class="value expense">−${fmtMoney(savingsTotal)}</span></div>` : ''}
+           ${savingsTarget > 0 ? `<div class="row"><span class="label">savings goals target</span><span class="value expense">−${fmtMoney(savingsTarget)}</span></div>` : ''}
            <div class="row total"><span class="label">discretionary (net)</span><span class="value">${fmtMoney(net)}</span></div>
            <div class="formula">net ÷ 4.33 weeks</div>
         </div>
@@ -1093,7 +1137,6 @@ function renderBudget() {
           <div style="margin-bottom: 16px;">
             <div class="kv" style="grid-template-columns: 1fr auto;"><span class="v" style="color:var(--t-bright)">${escHTML(g.name)}</span><span class="v">${fmtMoney(g.currentAmount, {round:true})} / ${fmtMoney(g.targetAmount, {round:true})}</span></div>
             <div class="bar-line ${p>=100?'ok':''}"><span class="bar" style="font-size:16px;">${asciiBar(p, 40)}</span><span class="x">${p.toFixed(1)}%</span></div>
-            <div style="font-size: 11px; color: var(--t-faint); margin-top: 2px;">${g.monthlyContribution ? `contributing ${fmtMoney(g.monthlyContribution)} / mo` : ''}</div>
             <div class="tbl-actions" style="margin-top:4px; text-align:right;">
               <button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button>
               <button data-action="edit" data-type="goals" data-id="${g.id}">edit</button>
@@ -1214,14 +1257,10 @@ function openModal(type, id = null) {
       Object.keys(item).forEach(k => {
         if (form.elements[k]) form.elements[k].value = item[k];
       });
-      if (type==='goals') { 
-          form.elements.targetAmount.value=item.targetAmount; 
-          form.elements.currentAmount.value=item.currentAmount;
-          form.elements.monthlyContribution.value=item.monthlyContribution || ''; 
-      }
+      if (type==='goals') { form.elements.targetAmount.value=item.targetAmount; form.elements.currentAmount.value=item.currentAmount; }
       if (type==='income') {
         form.elements['amount'].value = item.baseAmount !== undefined ? item.baseAmount : item.amount;
-        form.elements['hours'].value = item.hoursWorked || '';
+        form.elements['hours'].value = item.hours || '';
         if(form.elements['tipsEnabled']) {
             form.elements['tipsEnabled'].checked = !!item.tipsEnabled;
             form.elements['tipsValue'].value = item.tipsValue !== undefined ? item.tipsValue : 6;
@@ -1249,7 +1288,7 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.source = fd.get('source'); 
       const baseAmt = parseAmt(fd.get('amount'));
       item.baseAmount = baseAmt;
-      item.hoursWorked = parseAmt(fd.get('hours')) || null;
+      item.hours = parseAmt(fd.get('hours')) || null;
       item.tipsEnabled = fd.get('tipsEnabled') === 'on';
       item.tipsType = fd.get('tipsType') || 'percent';
       item.tipsValue = parseAmt(fd.get('tipsValue')) || 6;
@@ -1275,7 +1314,6 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     } else if (type === 'goals') {
       item.name = fd.get('name'); item.targetAmount = parseAmt(fd.get('targetAmount')); 
       item.currentAmount = parseAmt(fd.get('currentAmount')); item.targetDate = fd.get('targetDate') || null;
-      item.monthlyContribution = parseAmt(fd.get('monthlyContribution')) || null;
     } else if (type === 'petty') {
       item.amount = parseAmt(fd.get('amount')); item.category = fd.get('category');
       item.note = fd.get('note'); item.date = fd.get('date');
@@ -1290,7 +1328,8 @@ document.querySelectorAll('form[data-type]').forEach(f => {
 let presetSel = new Set();
 function openPresetPicker() {
   presetSel.clear();
-  const inc = getProjectedAnnual() / 12;
+  const { year, month } = getViewMonth();
+  const { income: inc } = getMonthlyStats(year, month);
   const list = document.getElementById('preset-list');
   if (inc===0) { list.innerHTML = `<div class="empty-state">add income first to compute preset limits based on your monthly income.</div>`; }
   else {
@@ -1313,7 +1352,8 @@ function openPresetPicker() {
 }
 
 document.getElementById('preset-apply-btn').addEventListener('click', () => {
-  const inc = getProjectedAnnual() / 12;
+  const { year, month } = getViewMonth();
+  const { income: inc } = getMonthlyStats(year, month);
   presetSel.forEach(idx => {
     const p = PRESET_BILLS[idx];
     state.bills.push({ id: nextId('bills'), name: p.name, amount: Math.round(inc*(p.pct/100)), category: p.category, recurring: p.recurring, paid: false, createdAt: isoDate(todayStart()) });
