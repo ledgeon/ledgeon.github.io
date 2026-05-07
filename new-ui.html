@@ -651,16 +651,29 @@ function getViewMonth() {
 function getMonthlyStats(year, month) {
   let income = 0;
   let bills = 0;
+  let tips = 0;
 
   for (const i of state.income) {
     const isOnce = i.frequency === 'once' || !i.frequency;
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+    
+    // Extract base to find the tip portion
+    let base = amt;
+    if (i.baseAmount !== undefined) {
+      base = parseFloat(String(i.baseAmount).replace(/[^\d.-]/g, '')) || 0;
+    }
+    const tipAmt = Math.max(0, amt - base);
+
     if (isOnce) {
       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
-      if (d.getFullYear() === year && d.getMonth() === month) income += amt;
+      if (d.getFullYear() === year && d.getMonth() === month) {
+          income += amt;
+          tips += tipAmt;
+      }
     } else {
       income += monthlyEq(amt, i.frequency);
+      tips += monthlyEq(tipAmt, i.frequency);
     }
   }
 
@@ -675,7 +688,7 @@ function getMonthlyStats(year, month) {
     }
   }
 
-  return { income, bills, net: income - bills };
+  return { income, bills, net: income - bills, tips };
 }
 
 function getMonthlyHistory(monthsBack = 6) {
@@ -887,7 +900,10 @@ function renderOverview() {
 // ── Income ──
 function renderIncome() {
   const { year, month } = getViewMonth();
-  const { income: totalMonthIncome } = getMonthlyStats(year, month);
+  const d = new Date(year, month, 1);
+  const mLabel = d.toLocaleString('en-US', { month: 'long', year: 'numeric' }).toLowerCase();
+  
+  const { income: totalMonthIncome, tips: totalMonthTips } = getMonthlyStats(year, month);
 
   const rows = sortRows(state.income, 'income').map(i => {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -915,7 +931,8 @@ function renderIncome() {
   return `
     <div class="out">
       <h3>income sources <span class="action" data-action="open-modal" data-type="income">+ add income</span></h3>
-      <div class="kv"><span class="k">total for viewed month</span><span class="v ok">${fmtMoney(totalMonthIncome)}</span><span class="x">projected annual: ${fmtMoney(getProjectedAnnual(), {round:true})}</span></div>
+      <div class="kv"><span class="k">total for ${mLabel}</span><span class="v ok">${fmtMoney(totalMonthIncome)}</span><span class="x">projected annual: ${fmtMoney(getProjectedAnnual(), {round:true})}</span></div>
+      ${totalMonthTips > 0 ? `<div class="kv"><span class="k">unreported cash tips</span><span class="v" style="color:var(--lime);">${fmtMoney(totalMonthTips)}</span><span class="x">included in above total</span></div>` : ''}
       ${rows ? `
         <table class="tbl" style="margin-top: 16px;">
           <thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}<th>freq</th>${th('income','receivedAt','date')}<th class="r">monthly</th><th></th></tr></thead>
