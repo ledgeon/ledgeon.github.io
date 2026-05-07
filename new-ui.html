@@ -265,6 +265,31 @@
   .pie-legend .pli { display: grid; grid-template-columns: 14px 1fr auto auto; gap: 12px; align-items: baseline; font-size: 12.5px; }
   .pie-legend .pli .dot { width: 10px; height: 10px; border-radius: 2px; }
 
+  /* weekly calculator card */
+  .weekly-card {
+    display: grid; grid-template-columns: auto 1fr; gap: 32px;
+    background: var(--bg-soft); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 24px 32px; margin-bottom: 32px; align-items: center;
+  }
+  .weekly-card .headline { display: flex; flex-direction: column; }
+  .weekly-card .headline .label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--t-faint); margin-bottom: 8px; }
+  .weekly-card .headline .value { font-size: 36px; font-weight: 600; color: var(--lime); font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -1px; }
+  .weekly-card .headline .unit { font-size: 14px; color: var(--t-dim); font-weight: 400; letter-spacing: 0; }
+  .weekly-card .headline .daily { font-size: 13px; color: var(--t-dim); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .weekly-math { border-left: 1px dashed var(--line); padding-left: 32px; font-size: 13px; }
+  .weekly-math .row { display: flex; justify-content: space-between; margin-bottom: 4px; gap: 32px; }
+  .weekly-math .row.total { padding-top: 8px; margin-top: 8px; border-top: 1px dashed var(--line-soft); font-weight: 500; color: var(--t-bright); }
+  .weekly-math .label { color: var(--t-faint); }
+  .weekly-math .value { font-variant-numeric: tabular-nums; }
+  .weekly-math .value.income { color: var(--ok); }
+  .weekly-math .value.expense { color: var(--bad); }
+  .weekly-math .formula { font-size: 11px; color: var(--t-mute); margin-top: 8px; font-style: italic; }
+
+  @media (max-width: 600px) {
+    .weekly-card { grid-template-columns: 1fr; gap: 16px; padding: 20px; }
+    .weekly-math { border-left: none; padding-left: 0; border-top: 1px dashed var(--line); padding-top: 16px; }
+  }
+
   /* month nav */
   .month-nav {
     display: flex; align-items: center; gap: 12px; margin-bottom: 24px;
@@ -325,7 +350,6 @@
     <button class="tab" data-tab="overview">overview</button>
     <button class="tab" data-tab="income">income <span class="badge badge-income">0</span></button>
     <button class="tab" data-tab="expenses">expenses <span class="badge badge-expenses">0</span></button>
-    <button class="tab" data-tab="spending">spending</button>
     <button class="tab" data-tab="budget">budget</button>
     <button class="tab" data-tab="tasks">tasks <span class="badge badge-tasks">0</span></button>
   </nav>
@@ -479,7 +503,6 @@
 // ════════════════════════════════════════════════════════════════
 // Core State & Migration Logic
 // ════════════════════════════════════════════════════════════════
-// Search for old saves, prioritizing your old terminal prompt app data.
 let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [] };
 const possibleKeys = ['ledgeon-state-v5', 'ledgeon-state-v4', 'ledgeon-prompt-v1', 'ledgeon-state-v3'];
 
@@ -508,6 +531,7 @@ const TAB_KEY = 'ledgeon-tab';
 
 let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
 if (currentTab === 'bills') currentTab = 'expenses'; 
+if (currentTab === 'spending') currentTab = 'budget';
 
 let sortState = { 
   income: { col: 'amount', dir: 'desc' }, 
@@ -592,8 +616,6 @@ function getViewMonth() {
   const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() };
 }
 
-// ════════════════════════════════════════════════════════════════
-// FIXED: This now properly aggregates "once" items for the exact month viewed
 function getMonthlyStats(year, month) {
   let income = 0;
   let bills = 0;
@@ -602,7 +624,6 @@ function getMonthlyStats(year, month) {
     const isOnce = i.frequency === 'once' || !i.frequency;
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     if (isOnce) {
-      // Fall back to createdAt or today if they forgot to pick a received date
       const dateStr = i.receivedAt || i.createdAt || isoDate(todayStart());
       const d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'));
       if (d.getFullYear() === year && d.getMonth() === month) income += amt;
@@ -624,7 +645,6 @@ function getMonthlyStats(year, month) {
 
   return { income, bills, net: income - bills };
 }
-// ════════════════════════════════════════════════════════════════
 
 function getMonthlyHistory(monthsBack = 6) {
   const now = new Date(); const out = [];
@@ -643,7 +663,7 @@ function asciiBar(pct, width = 24) {
 
 function escHTML(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-// SVG Chart Renderers adapted for terminal aesthetic
+// SVG Chart Renderers
 function renderLineChart(data) {
   const W = 700, H = 180, pad = { top: 10, right: 20, bottom: 20, left: 50 };
   const allValues = []; data.forEach(d => { allValues.push(d.income); allValues.push(d.bills); });
@@ -679,7 +699,6 @@ function renderDonut(slices, total, label) {
     cum += pct; return seg;
   }).join('');
   
-  // Fixed label text scaling
   return `
     <svg class="pie" viewBox="0 0 200 200">
       ${segs}
@@ -687,7 +706,6 @@ function renderDonut(slices, total, label) {
       <text x="100" y="125" class="pie-center-sub">total / mo</text>
     </svg>`;
 }
-
 
 // ════════════════════════════════════════════════════════════════
 // Rendering
@@ -706,9 +724,33 @@ function render() {
   if (currentTab === 'overview') main.innerHTML = renderOverview();
   else if (currentTab === 'income') main.innerHTML = renderIncome();
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
-  else if (currentTab === 'spending') main.innerHTML = renderSpending();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
   else if (currentTab === 'tasks') main.innerHTML = renderTasks();
+}
+
+// Sorting helpers
+function th(type, key, label) {
+  const s = sortState[type];
+  const cls = s.col === key ? `sorted ${s.dir}` : '';
+  return `<th class="${cls}" data-action="sort" data-type="${type}" data-col="${key}">${label}</th>`;
+}
+
+function sortRows(arr, type) {
+  const { col, dir } = sortState[type];
+  const mult = dir === 'asc' ? 1 : -1;
+  return [...arr].sort((a,b) => {
+    let va = a[col], vb = b[col];
+    if (col === 'date' || col === 'dueDate' || col === 'receivedAt') { 
+      va = va || a.createdAt || '9999'; 
+      vb = vb || b.createdAt || '9999'; 
+    }
+    if (col === 'amount') {
+      va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
+      vb = parseFloat(String(vb).replace(/[^\d.-]/g, '')) || 0;
+    }
+    if (typeof va === 'number') return (va - vb) * mult;
+    return String(va || '').localeCompare(String(vb || '')) * mult;
+  });
 }
 
 // ── Overview ──
@@ -741,7 +783,7 @@ function renderOverview() {
     </div>
 
     <div class="out">
-      <h3>${mLabel} · monthly summary <span class="action" data-tab="spending" data-action="goto">log spending →</span></h3>
+      <h3>${mLabel} · monthly summary <span class="action" data-tab="budget" data-action="goto">log spending →</span></h3>
       <div class="kv"><span class="k">monthly income</span><span class="v ok">${fmtMoney(income)}</span><span class="x">${state.income.length} sources</span></div>
       <div class="kv"><span class="k">fixed expenses</span><span class="v bad">${fmtMoney(bills)}</span><span class="x">${income > 0 ? (bills/income*100).toFixed(1) + '% of income' : ''}</span></div>
       <div class="kv"><span class="k">discretionary spent</span><span class="v warn">${fmtMoney(pettySpent)}</span><span class="x">logged out-of-pocket</span></div>
@@ -794,7 +836,6 @@ function renderIncome() {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const isOnce = i.frequency === 'once' || !i.frequency;
     
-    // Instead of saying $0 for one-time payments, we use a dash since they don't have a recurring equivalent
     const moText = isOnce ? '—' : fmtMoney(monthlyEq(amt, i.frequency), {round:true});
     const dateStr = i.receivedAt || (isOnce ? i.createdAt || isoDate(todayStart()) : '');
 
@@ -815,7 +856,7 @@ function renderIncome() {
       <div class="kv"><span class="k">total for viewed month</span><span class="v ok">${fmtMoney(totalMonthIncome)}</span><span class="x">projected annual: ${fmtMoney(totalMonthIncome*12, {round:true})}</span></div>
       ${rows ? `
         <table class="tbl" style="margin-top: 16px;">
-          <thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}<th>freq</th><th>date</th><th class="r">monthly</th><th></th></tr></thead>
+          <thead><tr>${th('income','id','id')}${th('income','source','source')}${th('income','amount','amount')}<th>freq</th>${th('income','receivedAt','date')}<th class="r">monthly</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       ` : `<div class="empty-state" style="margin-top: 16px;">no income sources added.</div>`}
@@ -828,7 +869,6 @@ function renderExpenses() {
   const { year, month } = getViewMonth();
   const { income: incomeTotal, bills: total } = getMonthlyStats(year, month);
   
-  // Aggregate pie chart specific to the viewed month
   const catMap = {};
   state.bills.forEach(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -908,43 +948,18 @@ function renderExpenses() {
   `;
 }
 
-// ── Spending ──
-function renderSpending() {
-  const mStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`;
-  const thisMonth = state.petty.filter(p => p.date && p.date.startsWith(mStr));
-  const mTotal = thisMonth.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-
-  const rows = [...state.petty].sort((a,b) => b.date.localeCompare(a.date)).map(p => `
-    <tr class="row">
-      <td><span class="id">${p.id}</span></td>
-      <td>${formatDate(p.date)}</td>
-      <td>${escHTML(p.note || '—')} <span class="cat" style="color:${(CATEGORIES[p.category]||CATEGORIES.other).color}">${p.category||'other'}</span></td>
-      <td class="num bad r">${fmtMoney(p.amount)}</td>
-      <td class="r tbl-actions"><button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button></td>
-    </tr>
-  `).join('');
-
-  return `
-    <div class="out">
-      <h3>discretionary spending <span class="action" data-action="open-modal" data-type="petty">+ log purchase</span></h3>
-      <div class="kv"><span class="k">spent this month</span><span class="v warn">${fmtMoney(mTotal)}</span><span class="x">deducted from net</span></div>
-      ${rows ? `
-        <table class="tbl" style="margin-top:16px;">
-          <thead><tr><th>id</th><th>date</th><th>description & cat</th><th class="r">amount</th><th></th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      ` : `<div class="empty-state">no spending logged.</div>`}
-    </div>
-  `;
-}
-
-// ── Budget ──
+// ── Budget (Includes Spending Log & Weekly Allowance) ──
 function renderBudget() {
   const { year, month } = getViewMonth();
-  const { income: inc } = getMonthlyStats(year, month);
+  const { income: inc, bills: fixedBills } = getMonthlyStats(year, month);
   
   if (inc === 0) return `<div class="out"><div class="empty-state">no income recorded for this month to build a budget against.</div></div>`;
   
+  const net = inc - fixedBills;
+  const weekly = net / 4.333;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daily = net / daysInMonth;
+
   const byCat = {};
   state.bills.forEach(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -975,11 +990,54 @@ function renderBudget() {
     `;
   }).join('');
 
+  // Integrated Spending Log
+  const mStr = `${year}-${String(month+1).padStart(2,'0')}`;
+  const thisMonth = state.petty.filter(p => p.date && p.date.startsWith(mStr));
+  const mTotal = thisMonth.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+
+  const spendingRows = [...state.petty].sort((a,b) => b.date.localeCompare(a.date)).map(p => `
+    <tr class="row">
+      <td><span class="id">${p.id}</span></td>
+      <td>${formatDate(p.date)}</td>
+      <td>${escHTML(p.note || '—')} <span class="cat" style="color:${(CATEGORIES[p.category]||CATEGORIES.other).color}">${p.category||'other'}</span></td>
+      <td class="num bad r">${fmtMoney(p.amount)}</td>
+      <td class="r tbl-actions"><button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button></td>
+    </tr>
+  `).join('');
+
   return `
     <div class="out">
-      <h3>category breakdown <span class="action" data-tab="expenses" data-action="goto">edit expenses →</span></h3>
+      <div class="weekly-card">
+        <div class="headline">
+           <span class="label">weekly allowance</span>
+           <span class="value">${fmtMoney(weekly)}<span class="unit">/wk</span></span>
+           <span class="daily">${fmtMoney(daily)} / day</span>
+        </div>
+        <div class="weekly-math">
+           <div class="row"><span class="label">monthly income</span><span class="value income">${fmtMoney(inc)}</span></div>
+           <div class="row"><span class="label">fixed expenses</span><span class="value expense">−${fmtMoney(fixedBills)}</span></div>
+           <div class="row total"><span class="label">discretionary (net)</span><span class="value">${fmtMoney(net)}</span></div>
+           <div class="formula">net ÷ 4.33 weeks</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="out">
+      <h3>discretionary spending <span class="action" data-action="open-modal" data-type="petty">+ log purchase</span></h3>
+      <div class="kv"><span class="k">spent this month</span><span class="v warn">${fmtMoney(mTotal)}</span><span class="x">deducted from net</span></div>
+      ${spendingRows ? `
+        <table class="tbl" style="margin-top:16px;">
+          <thead><tr><th>id</th><th>date</th><th>description & cat</th><th class="r">amount</th><th></th></tr></thead>
+          <tbody>${spendingRows}</tbody>
+        </table>
+      ` : `<div class="empty-state">no spending logged.</div>`}
+    </div>
+
+    <div class="out" style="margin-top:32px;">
+      <h3>fixed expense breakdown <span class="action" data-tab="expenses" data-action="goto">edit expenses →</span></h3>
       ${catRows || '<div class="empty-state" style="margin-top:10px;">no categorized expenses yet.</div>'}
     </div>
+
     <div class="out" style="margin-top:32px;">
       <h3>savings goals <span class="action" data-action="open-modal" data-type="goals">+ add goal</span></h3>
       ${state.goals.length ? state.goals.map(g => {
@@ -1021,27 +1079,6 @@ function renderTasks() {
       ${rows ? `<table class="tbl"><thead><tr>${th('tasks','id','id')}${th('tasks','text','task')}<th>priority</th>${th('tasks','date','due')}<th></th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty-state">no tasks.</div>`}
     </div>
   `;
-}
-
-// Sorting helpers
-function th(type, key, label) {
-  const s = sortState[type];
-  const cls = s.col === key ? `sorted ${s.dir}` : '';
-  return `<th class="${cls}" data-action="sort" data-type="${type}" data-col="${key}">${label}</th>`;
-}
-function sortRows(arr, type) {
-  const { col, dir } = sortState[type];
-  const mult = dir === 'asc' ? 1 : -1;
-  return [...arr].sort((a,b) => {
-    let va = a[col], vb = b[col];
-    if (col==='date' || col==='dueDate' || col==='receivedAt') { va = va||'9999'; vb = vb||'9999'; }
-    if (col==='amount') {
-      va = parseFloat(String(va).replace(/[^\d.-]/g, '')) || 0;
-      vb = parseFloat(String(vb).replace(/[^\d.-]/g, '')) || 0;
-    }
-    if (typeof va==='number') return (va - vb)*mult;
-    return String(va||'').localeCompare(String(vb||''))*mult;
-  });
 }
 
 // ════════════════════════════════════════════════════════════════
