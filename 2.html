@@ -3,399 +3,371 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b0e13">
-<title>ledgeon</title>
+<meta name="theme-color" content="#0d1117">
+<title>ledgeon · htop</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0b0e13; --bg-soft: #11151c; --bg-deep: #070a0f; --bg-input: #1a1f28;
-    --line: #1e242e; --line-soft: #161b23; --line-strong: #2c3340;
-    --t: #d6d9de; --t-bright: #fafafa; --t-dim: #a1a8b3; --t-faint: #6e7480; --t-mute: #4a4f5a;
-    --warm: #d4a574; --lime: #b3dd44; --lime-soft: rgba(179,221,68,0.12);
-    --ok: #86c98a; --bad: #e09f7c; --warn: #e0c46c; --err: #e57373; --cyan: #6dd0d0;
-  }
-  html, body {
-    background: var(--bg); color: var(--t);
-    font-family: 'JetBrains Mono', ui-monospace, monospace;
-    font-size: 13px; line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100%;
-  }
-  body {
-    display: flex; flex-direction: column;
-    min-height: 100vh; min-height: 100dvh;
-    padding-bottom: calc(58px + env(safe-area-inset-bottom));
-  }
-  button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; }
-  input, select, textarea { font: inherit; color: inherit; }
+/* ── htop/btop palette + base ──────────────────────────── */
+:root {
+  --bg: #0d1117; --bg-soft: #131a22; --bg-deep: #08090d; --bg-input: #1a1f28;
+  --line: #1c2330; --line-soft: #131a22; --line-strong: #2c3340;
+  --t: #c9d1d9; --t-bright: #fafafa; --t-dim: #9aa3b1; --t-faint: #6e7480; --t-mute: #4a4f5a;
+  --warm: #d4a574; --lime: #b3dd44; --lime-soft: rgba(179,221,68,0.12);
+  --ok: #56d364; --bad: #f08c64; --warn: #e3b341; --err: #f85149; --cyan: #79c0ff;
+  --bar: #2c3340;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg); color: var(--t);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+}
+body {
+  display: flex; flex-direction: column;
+  min-height: 100vh; min-height: 100dvh;
+  padding-bottom: calc(48px + env(safe-area-inset-bottom));
+}
+button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; }
+input, select, textarea { font: inherit; color: inherit; }
 
-  /* sticky header */
-  header.app-h {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
-    background: rgba(11,14,19,0.92); backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  header.app-h .brand { color: var(--warm); font-weight: 600; font-size: 14px; letter-spacing: 0.5px; }
-  header.app-h .brand .prompt { color: var(--lime); margin-right: 4px; }
-  header.app-h .actions { display: flex; gap: 6px; }
-  header.app-h .actions button {
-    border: 1px solid var(--line); color: var(--t-faint);
-    font-size: 10.5px; padding: 4px 8px; border-radius: 3px;
-    text-transform: lowercase; transition: 0.15s;
-  }
-  header.app-h .actions button:hover { color: var(--lime); border-color: var(--lime); }
-  header.app-h .actions button.danger:hover { color: var(--err); border-color: var(--err); }
+/* ── top status bar (htop-style) ──────────────────────── */
+header.status-bar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: 14px;
+  padding: 6px 12px; padding-top: calc(6px + env(safe-area-inset-top));
+  background: var(--bg-deep); border-bottom: 1px solid var(--line-strong);
+  font-size: 11px; flex-wrap: wrap;
+}
+header.status-bar .seg { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
+header.status-bar .seg .lab { color: var(--cyan); }
+header.status-bar .seg .val { color: var(--t-bright); font-weight: 500; }
+header.status-bar .seg .val.ok { color: var(--ok); }
+header.status-bar .seg .val.bad { color: var(--bad); }
+header.status-bar .seg .val.warm { color: var(--warm); }
+header.status-bar .brand { color: var(--warm); font-weight: 700; letter-spacing: 0.5px; font-size: 12px; }
+header.status-bar .spacer { flex: 1; min-width: 12px; }
+header.status-bar .actions { display: flex; gap: 4px; }
+header.status-bar .actions button {
+  border: 1px solid var(--line); color: var(--t-faint);
+  font-size: 10px; padding: 2px 6px; border-radius: 2px;
+}
+header.status-bar .actions button:hover { color: var(--lime); border-color: var(--lime); }
+header.status-bar .actions button.danger:hover { color: var(--err); border-color: var(--err); }
 
-  /* main content */
-  main { flex: 1; padding: 16px; max-width: 720px; margin: 0 auto; width: 100%; }
+/* ── main content ─────────────────────────────────────── */
+main { flex: 1; padding: 8px; max-width: 900px; margin: 0 auto; width: 100%; }
 
-  /* month nav */
-  .month-nav {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-bottom: 16px; font-size: 11px; flex-wrap: wrap;
-  }
-  .month-nav button {
-    border: 1px solid var(--line); color: var(--t-faint);
-    font-size: 11px; padding: 3px 10px; border-radius: 3px;
-    transition: 0.15s; text-transform: lowercase;
-  }
-  .month-nav button:hover { color: var(--lime); border-color: var(--lime); }
-  .month-nav .label { color: var(--t-bright); font-weight: 500; min-width: 110px; text-align: center; font-size: 12px; }
+/* ── month nav ────────────────────────────────────────── */
+.month-nav {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 0 4px 8px; font-size: 10.5px; flex-wrap: wrap;
+}
+.month-nav button {
+  border: 1px solid var(--line); color: var(--t-faint);
+  font-size: 10.5px; padding: 2px 8px; border-radius: 2px;
+}
+.month-nav button:hover { color: var(--lime); border-color: var(--lime); }
+.month-nav .label { color: var(--t-bright); font-weight: 500; min-width: 100px; text-align: center; font-size: 11px; }
 
-  /* banner */
-  .banner {
-    display: grid; grid-template-columns: auto 1fr;
-    gap: 14px; margin-bottom: 24px;
-  }
-  .banner .art {
-    margin: 0; color: var(--warm); font-size: 11px;
-    line-height: 1.2; white-space: pre; font-family: inherit;
-  }
-  .banner .info { min-width: 0; }
-  .banner .handle {
-    color: var(--cyan); font-size: 12.5px; font-weight: 500; letter-spacing: 0.5px;
-    margin-bottom: 4px;
-  }
-  .banner .handle .at { color: var(--t-bright); }
-  .banner .handle .ctx { color: var(--t-faint); font-weight: 400; font-size: 11px; margin-left: 4px; }
-  .banner .div {
-    color: var(--line-strong); font-size: 11px;
-    letter-spacing: 1px; line-height: 1; user-select: none; margin: 6px 0 8px;
-    overflow: hidden; white-space: nowrap;
-  }
-  .banner .rows { display: flex; flex-direction: column; gap: 4px; }
-  .banner .summary { font-size: 11.5px; color: var(--t-dim); margin-top: 2px; }
-  .banner .summary .pos { color: var(--ok); font-weight: 500; }
-  .banner .summary .neg { color: var(--bad); font-weight: 500; }
+/* ── boxed panel with title in border ─────────────────── */
+.panel {
+  position: relative;
+  margin: 14px 4px 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 14px 12px 10px;
+  background: var(--bg-soft);
+}
+.panel-t {
+  position: absolute; top: -8px; left: 10px;
+  background: var(--bg);
+  padding: 0 8px;
+  color: var(--warm);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+.panel-t .key { color: var(--lime); margin-right: 4px; font-weight: 700; }
+.panel-r {
+  position: absolute; top: -8px; right: 10px;
+  background: var(--bg);
+  padding: 0 8px;
+  font-size: 9.5px;
+  color: var(--cyan);
+  text-transform: lowercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: 0;
+}
+.panel-r:hover { color: var(--lime); }
 
-  /* stat row inside banner */
-  .stat {
-    display: grid; grid-template-columns: 64px 1fr auto;
-    gap: 10px; align-items: baseline; min-width: 0;
-  }
-  .stat .lbl { color: var(--cyan); font-size: 12px; }
-  .stat .spark {
-    letter-spacing: -2px; line-height: 1; font-size: 16px;
-    overflow: hidden; white-space: nowrap;
-    font-variant-numeric: tabular-nums; min-width: 0;
-  }
-  .stat .spark.ok { color: var(--ok); }
-  .stat .spark.bad { color: var(--bad); }
-  .stat .spark.warm { color: var(--warm); }
-  .stat .spark.lime { color: var(--lime); }
-  .stat .spark.cyan { color: var(--cyan); }
-  .stat .spark.warn { color: var(--warn); }
-  .stat .val {
-    color: var(--t-bright); font-weight: 500; font-size: 12.5px;
-    font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap;
-  }
-  .stat .val.ok { color: var(--ok); }
-  .stat .val.bad { color: var(--bad); }
-  .stat .val.warm { color: var(--warm); }
-  .stat .val.lime { color: var(--lime); }
-  .stat .val.cyan { color: var(--cyan); }
-  .stat .val.warn { color: var(--warn); }
+/* ── stat bar (overview-style) ────────────────────────── */
+.sbar {
+  display: grid;
+  grid-template-columns: 76px 1fr auto auto;
+  gap: 10px; align-items: baseline;
+  padding: 3px 0; font-size: 11.5px;
+  min-width: 0;
+}
+.sbar .lab { color: var(--cyan); font-size: 11px; white-space: nowrap; }
+.sbar .bar {
+  font-family: inherit; letter-spacing: -1px;
+  line-height: 1; font-size: 13px; min-width: 0;
+  overflow: hidden; white-space: nowrap;
+}
+.sbar .bar .f { color: var(--cyan); }
+.sbar .bar.ok .f { color: var(--ok); }
+.sbar .bar.bad .f { color: var(--bad); }
+.sbar .bar.warm .f { color: var(--warm); }
+.sbar .bar.lime .f { color: var(--lime); }
+.sbar .bar.warn .f { color: var(--warn); }
+.sbar .bar .e { color: var(--bar); }
+.sbar .val {
+  font-variant-numeric: tabular-nums;
+  color: var(--t-bright); font-weight: 500;
+  font-size: 11.5px; text-align: right; white-space: nowrap;
+}
+.sbar .val.ok { color: var(--ok); }
+.sbar .val.bad { color: var(--bad); }
+.sbar .val.warm { color: var(--warm); }
+.sbar .val.lime { color: var(--lime); }
+.sbar .val.warn { color: var(--warn); }
+.sbar .delta { font-size: 10px; font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+.sbar .delta.up { color: var(--ok); }
+.sbar .delta.down { color: var(--bad); }
+.sbar .delta.flat { color: var(--t-mute); }
 
-  /* section dividers */
-  .sec-h {
-    display: flex; align-items: center; gap: 8px;
-    margin: 24px 0 10px; font-size: 11px;
-    color: var(--warm); text-transform: uppercase;
-    letter-spacing: 2px; font-weight: 500;
-  }
-  .sec-h::before { content: '──'; color: var(--line-strong); letter-spacing: 0; flex-shrink: 0; }
-  .sec-h .title { flex-shrink: 0; }
-  .sec-h::after { content: ''; flex: 1; border-bottom: 1px dotted var(--line-strong); align-self: center; margin-left: 4px; }
-  .sec-h .act {
-    color: var(--cyan); font-size: 10px; letter-spacing: 1px;
-    font-weight: 400; cursor: pointer; text-transform: lowercase;
-    border: 1px solid var(--line); padding: 2px 8px; border-radius: 3px;
-    transition: 0.15s; flex-shrink: 0;
-  }
-  .sec-h .act:hover { color: var(--lime); border-color: var(--lime); }
+/* ── process row (list items) ─────────────────────────── */
+.proc-hdr {
+  display: grid; grid-template-columns: 36px 1fr auto auto auto;
+  gap: 8px; align-items: baseline;
+  padding: 4px 4px 6px; margin-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 9.5px; color: var(--t-faint);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+.proc-hdr .r { text-align: right; }
+.proc {
+  display: grid; grid-template-columns: 36px 1fr auto auto auto;
+  gap: 8px; align-items: baseline;
+  padding: 4px; font-size: 11px;
+  border-bottom: 1px solid var(--line-soft);
+  position: relative;
+}
+.proc:last-child { border-bottom: none; }
+.proc:hover { background: var(--bg-deep); }
+.proc.dim { opacity: 0.5; }
+.proc.dim .nm { text-decoration: line-through; }
+.proc .id {
+  color: var(--t-mute); font-size: 10px;
+  background: var(--bg-deep); padding: 1px 4px;
+  border-radius: 2px; border: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.proc .nm { color: var(--t-bright); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proc .nm .cat {
+  font-size: 9.5px; color: var(--t-mute);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+.proc .col {
+  font-variant-numeric: tabular-nums; text-align: right;
+  font-size: 11px; white-space: nowrap;
+}
+.proc .col.amt { color: var(--bad); }
+.proc .col.amt.ok { color: var(--ok); }
+.proc .col.due { color: var(--t-faint); font-size: 10px; }
+.proc .col.due.over { color: var(--err); }
+.proc .col.due.today { color: var(--warn); }
+.proc .col.pct { color: var(--cyan); font-size: 10px; }
 
-  /* compact list item */
-  .item {
-    padding: 8px 0; border-bottom: 1px solid var(--line-soft);
-    font-size: 12.5px;
-  }
-  .item:last-child { border-bottom: none; }
-  .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
-  .item .r1 .nm { color: var(--t-bright); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .item .r1 .amt { color: var(--bad); font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
-  .item .r1 .amt.ok { color: var(--ok); }
-  .item .r1 .amt.warn { color: var(--warn); }
-  .item .r1 .amt.warm { color: var(--warm); }
-  .item .r1 .amt.cyan { color: var(--cyan); }
-  .item .r2 {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 3px; font-size: 11px; color: var(--t-faint); gap: 8px;
-  }
-  .item .r2 .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
-  .item .r2 .meta .cat { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .item .r2 .acts { display: flex; gap: 4px; flex-shrink: 0; }
-  .item .r2 .acts button {
-    border: 1px solid var(--line); color: var(--t-faint);
-    font-size: 10px; padding: 2px 7px; border-radius: 3px; transition: 0.15s;
-  }
-  .item .r2 .acts button:hover { color: var(--lime); border-color: var(--lime); }
-  .item .r2 .acts button.err:hover { color: var(--err); border-color: var(--err); }
-  .item .r2 .acts button.ok:hover { color: var(--ok); border-color: var(--ok); }
-  .item.done { opacity: 0.5; }
-  .item.done .r1 .nm { text-decoration: line-through; }
+/* ── proc actions (slide-out) ─────────────────────────── */
+.proc .acts {
+  display: flex; gap: 2px; flex-shrink: 0;
+}
+.proc .acts button {
+  border: 1px solid var(--line); color: var(--t-faint);
+  font-size: 9.5px; padding: 1px 5px; border-radius: 2px;
+}
+.proc .acts button:hover { color: var(--lime); border-color: var(--lime); }
+.proc .acts button.err:hover { color: var(--err); border-color: var(--err); }
+.proc .acts button.ok:hover { color: var(--ok); border-color: var(--ok); }
 
-  /* tag pill */
-  .tag {
-    display: inline-block; padding: 1px 6px; border-radius: 2px;
-    font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;
-    line-height: 1.4;
-  }
-  .tag.ok { background: rgba(134,201,138,0.13); color: var(--ok); }
-  .tag.warn { background: rgba(224,196,108,0.13); color: var(--warn); }
-  .tag.err { background: rgba(229,115,115,0.13); color: var(--err); }
-  .tag.info { background: rgba(109,208,208,0.13); color: var(--cyan); }
+/* ── small bar viz (pct-style line) ───────────────────── */
+.bline {
+  display: grid; grid-template-columns: 84px 1fr auto;
+  gap: 10px; align-items: baseline;
+  padding: 3px 0; font-size: 11px;
+}
+.bline .lb { color: var(--t-faint); font-size: 10.5px; }
+.bline .b {
+  letter-spacing: -1px; line-height: 1; font-size: 13px;
+  overflow: hidden; white-space: nowrap;
+}
+.bline .b .f { color: var(--lime); }
+.bline .b .e { color: var(--bar); }
+.bline .b.ok .f { color: var(--ok); }
+.bline .b.bad .f { color: var(--bad); }
+.bline .b.warm .f { color: var(--warm); }
+.bline .b.warn .f { color: var(--warn); }
+.bline .v { font-variant-numeric: tabular-nums; color: var(--t-bright); white-space: nowrap; }
 
-  /* empty state */
-  .empty {
-    padding: 16px; text-align: center; color: var(--t-mute);
-    font-size: 11.5px; font-style: italic;
-  }
-  .empty.left { text-align: left; padding: 6px 0; }
-  .empty .lnk { color: var(--cyan); cursor: pointer; }
-  .empty .lnk:hover { text-decoration: underline; }
+/* ── tag pill ─────────────────────────────────────────── */
+.tag {
+  display: inline-block; padding: 0 5px; border-radius: 2px;
+  font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;
+  line-height: 1.5;
+}
+.tag.ok { background: rgba(86,211,100,0.15); color: var(--ok); }
+.tag.warn { background: rgba(227,179,65,0.15); color: var(--warn); }
+.tag.err { background: rgba(248,81,73,0.15); color: var(--err); }
+.tag.info { background: rgba(121,192,255,0.15); color: var(--cyan); }
 
-  /* asciibar */
-  .asciibar {
-    letter-spacing: -1px; line-height: 1; font-size: 14px;
-    font-family: inherit;
-  }
-  .asciibar .f { color: var(--lime); }
-  .asciibar .e { color: var(--line-strong); }
-  .asciibar.ok .f { color: var(--ok); }
-  .asciibar.bad .f { color: var(--bad); }
-  .asciibar.warn .f { color: var(--warn); }
+/* ── empty state ──────────────────────────────────────── */
+.empty {
+  padding: 20px 12px; text-align: center; color: var(--t-mute);
+  font-size: 11px; font-style: italic;
+}
+.empty .lnk { color: var(--cyan); cursor: pointer; }
+.empty .lnk:hover { text-decoration: underline; }
 
-  /* category breakdown bar (text-based) */
-  .catbar {
-    display: grid; grid-template-columns: 70px 1fr auto auto;
-    gap: 10px; align-items: baseline; padding: 4px 0;
-    font-size: 11.5px;
-  }
-  .catbar .nm { color: var(--t-bright); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .catbar .b {
-    letter-spacing: -1px; line-height: 1; font-size: 14px;
-    overflow: hidden; white-space: nowrap;
-  }
-  .catbar .amt { font-variant-numeric: tabular-nums; color: var(--t-bright); font-size: 11px; white-space: nowrap; }
-  .catbar .pct { font-variant-numeric: tabular-nums; color: var(--t-faint); font-size: 10.5px; min-width: 28px; text-align: right; }
+/* ── goal item ────────────────────────────────────────── */
+.goal { padding: 8px 4px; border-bottom: 1px solid var(--line-soft); }
+.goal:last-child { border-bottom: none; }
+.goal .h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 8px; margin-bottom: 4px;
+}
+.goal .h .nm { color: var(--t-bright); font-size: 11.5px; }
+.goal .h .nm .by { color: var(--t-faint); font-size: 10px; margin-left: 6px; }
+.goal .h .pct { color: var(--lime); font-size: 11px; font-variant-numeric: tabular-nums; }
+.goal .b { letter-spacing: -1px; line-height: 1; font-size: 13px; margin: 4px 0; }
+.goal .b .f { color: var(--lime); }
+.goal .b .e { color: var(--bar); }
+.goal .m {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; color: var(--t-faint); flex-wrap: wrap; gap: 4px;
+}
+.goal .m .req { color: var(--warn); }
+.goal .m .acts { display: flex; gap: 3px; }
+.goal .m .acts button {
+  border: 1px solid var(--line); color: var(--t-faint);
+  font-size: 9.5px; padding: 1px 5px; border-radius: 2px;
+}
+.goal .m .acts button:hover { color: var(--lime); border-color: var(--lime); }
+.goal .m .acts button.err:hover { color: var(--err); border-color: var(--err); }
+.goal .m .acts button.ok:hover { color: var(--ok); border-color: var(--ok); }
 
-  /* goal */
-  .goal { padding: 10px 0; border-bottom: 1px solid var(--line-soft); }
-  .goal:last-child { border-bottom: none; }
-  .goal .gh {
-    display: flex; justify-content: space-between; align-items: baseline;
-    gap: 8px; margin-bottom: 4px;
-  }
-  .goal .gh .nm { color: var(--t-bright); font-size: 12.5px; }
-  .goal .gh .nm .by { color: var(--t-faint); font-size: 10.5px; margin-left: 6px; }
-  .goal .gh .pct { color: var(--lime); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-  .goal .meta {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-top: 4px; font-size: 10.5px; color: var(--t-faint);
-    flex-wrap: wrap; gap: 6px;
-  }
-  .goal .meta .req { color: var(--warn); }
-  .goal .meta .acts { display: flex; gap: 4px; }
-  .goal .meta .acts button {
-    border: 1px solid var(--line); color: var(--t-faint);
-    font-size: 10px; padding: 2px 7px; border-radius: 3px; transition: 0.15s;
-  }
-  .goal .meta .acts button:hover { color: var(--lime); border-color: var(--lime); }
-  .goal .meta .acts button.err:hover { color: var(--err); border-color: var(--err); }
-  .goal .meta .acts button.ok:hover { color: var(--ok); border-color: var(--ok); }
+/* ── tax pct input ────────────────────────────────────── */
+.tax-pct-input {
+  width: 38px; background: var(--bg-deep); border: 1px solid var(--line);
+  color: var(--t-bright); padding: 1px 3px; border-radius: 2px;
+  font: inherit; font-size: 10.5px; text-align: center; outline: none;
+}
+.tax-pct-input:focus { border-color: var(--lime); }
 
-  /* tax setaside inline input */
-  .tax-pct-input {
-    width: 44px; background: var(--bg-deep); border: 1px solid var(--line);
-    color: var(--t-bright); padding: 2px 4px; border-radius: 3px;
-    font: inherit; font-size: 11px; text-align: center;
-    outline: none;
-  }
-  .tax-pct-input:focus { border-color: var(--lime); }
+/* ── footer F-key bar ─────────────────────────────────── */
+nav.fkey-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  display: flex; padding-bottom: env(safe-area-inset-bottom);
+  background: var(--bg-deep); border-top: 1px solid var(--line-strong);
+}
+nav.fkey-bar button {
+  flex: 1; padding: 8px 2px;
+  color: var(--t-faint); font-size: 10px;
+  border-right: 1px solid var(--line-soft);
+  text-transform: lowercase; transition: 0.15s;
+  white-space: nowrap; overflow: hidden;
+}
+nav.fkey-bar button:last-child { border-right: none; }
+nav.fkey-bar button .key {
+  display: inline-block; color: var(--warm); font-weight: 700;
+  margin-right: 3px; font-size: 9.5px;
+}
+nav.fkey-bar button.active {
+  background: var(--lime-soft); color: var(--lime);
+}
+nav.fkey-bar button.active .key { color: var(--lime); }
+nav.fkey-bar button:hover { color: var(--lime); }
+nav.fkey-bar button .badge {
+  display: inline-block; min-width: 14px;
+  background: var(--err); color: var(--bg-deep);
+  font-size: 9px; font-weight: 600;
+  padding: 0 4px; border-radius: 999px;
+  margin-left: 2px; line-height: 1.3;
+}
 
-  /* bottom navigation */
-  nav.btm {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
-    display: flex; padding-bottom: env(safe-area-inset-bottom);
-    background: rgba(11,14,19,0.96); backdrop-filter: blur(8px);
-    border-top: 1px solid var(--line);
-  }
-  nav.btm button {
-    flex: 1;
-    padding: 8px 4px; font-size: 10px;
-    color: var(--t-faint); text-transform: lowercase;
-    transition: color 0.15s; position: relative;
-    letter-spacing: 0.3px;
-  }
-  nav.btm button .ic {
-    display: block; font-size: 13px; margin-bottom: 3px;
-    line-height: 1; font-weight: 500;
-  }
-  nav.btm button.active { color: var(--lime); }
-  nav.btm button.active::after {
-    content: ''; position: absolute; top: 0; left: 25%; right: 25%;
-    height: 2px; background: var(--lime);
-  }
-  nav.btm button .badge {
-    display: inline-block; min-width: 14px;
-    background: var(--err); color: var(--bg-deep);
-    font-size: 8.5px; font-weight: 600;
-    padding: 0 4px; border-radius: 999px;
-    margin-left: 2px; vertical-align: 1px;
-    line-height: 1.4;
-  }
+/* ── modals (kept simple) ─────────────────────────────── */
+.modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 14px; }
+.modal.open { display: flex; }
+.modal-bd { position: absolute; inset: 0; background: rgba(8,9,13,0.85); backdrop-filter: blur(4px); }
+.modal-c {
+  position: relative; background: var(--bg-soft);
+  border: 1px solid var(--line-strong); border-radius: 3px;
+  width: 100%; max-width: 440px; padding: 16px 18px 18px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto;
+}
+.modal-t {
+  color: var(--warm); font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 2px; font-weight: 600; margin-bottom: 12px;
+  border-bottom: 1px solid var(--line-strong); padding-bottom: 8px;
+}
+.frow { display: flex; gap: 10px; margin-bottom: 11px; flex-wrap: wrap; }
+.fcol { flex: 1; min-width: 130px; }
+.flbl { display: block; color: var(--cyan); font-size: 10px; text-transform: lowercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+.input, .select, textarea {
+  width: 100%; background: var(--bg-deep); border: 1px solid var(--line);
+  color: var(--t-bright); font: inherit; font-size: 12.5px; padding: 6px 9px;
+  border-radius: 2px; outline: none;
+}
+.input:focus, .select:focus, textarea:focus { border-color: var(--lime); }
+.input::placeholder { color: var(--t-mute); }
+.hours-input { display: flex; align-items: center; gap: 6px; background: var(--bg-deep); border: 1px solid var(--line); color: var(--t-bright); border-radius: 2px; padding: 0 9px; height: 31px; }
+.hours-input:focus-within { border-color: var(--lime); }
+.hours-input input { background: transparent; border: none; color: var(--t-bright); font: inherit; font-size: 12.5px; padding: 0; outline: none; width: 30px; text-align: center; font-variant-numeric: tabular-nums; -moz-appearance: textfield; }
+.hours-input input::-webkit-outer-spin-button, .hours-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.hours-input span { color: var(--t-faint); font-size: 11px; }
+.tip-box { background: var(--bg-deep); padding: 10px 12px; border-radius: 3px; border: 1px solid var(--line); margin-bottom: 11px; }
+.tip-toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--t-bright); cursor: pointer; }
+.tip-input-grp { display: none; gap: 8px; align-items: center; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
+.tip-input-grp input { width: 60px; padding: 4px 6px; }
+.tip-input-grp select { width: 56px; padding: 4px; }
+.factions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--line-strong); }
+.factions button { padding: 5px 13px; border: 1px solid var(--line); color: var(--t-dim); border-radius: 2px; font-size: 11.5px; transition: 0.15s; text-transform: lowercase; }
+.factions button:hover { color: var(--t-bright); border-color: var(--t-dim); }
+.factions button.primary { color: var(--lime); border-color: var(--lime); }
+.factions button.primary:hover { background: var(--lime-soft); }
+.preset-row { display: flex; align-items: center; gap: 10px; padding: 6px 9px; border: 1px solid transparent; border-radius: 2px; cursor: pointer; font-size: 11.5px; }
+.preset-row:hover { background: var(--bg-deep); border-color: var(--line); }
+.preset-row .box { width: 13px; height: 13px; border: 1px solid var(--t-faint); border-radius: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.preset-row.sel .box { background: var(--lime); border-color: var(--lime); }
+.preset-row.sel .box::after { content: ''; width: 6px; height: 3px; border-left: 2px solid var(--bg-deep); border-bottom: 2px solid var(--bg-deep); transform: rotate(-45deg) translate(0,-1px); }
+.preset-row.exists { opacity: 0.4; pointer-events: none; }
+.preset-row .nm { flex: 1; color: var(--t); }
+.preset-row .pct { color: var(--t-faint); font-size: 10px; text-align: right; }
+.btn-pri { display: inline-block; padding: 7px 13px; background: var(--lime-soft); border: 1px solid var(--lime); color: var(--lime); border-radius: 3px; font-weight: 500; transition: 0.15s; font-size: 11.5px; }
+.btn-pri:hover { background: var(--lime); color: var(--bg-deep); }
 
-  /* modals */
-  .modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 16px; }
-  .modal.open { display: flex; }
-  .modal-bd { position: absolute; inset: 0; background: rgba(7,10,15,0.85); backdrop-filter: blur(4px); }
-  .modal-c {
-    position: relative; background: var(--bg-soft);
-    border: 1px solid var(--line-strong); border-radius: 6px;
-    width: 100%; max-width: 440px; padding: 18px 20px 20px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-    max-height: 85vh; overflow-y: auto;
-  }
-  .modal-t {
-    color: var(--warm); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 2px; font-weight: 600; margin-bottom: 14px;
-    border-bottom: 1px dotted var(--line-strong); padding-bottom: 8px;
-  }
+main > * { animation: fadeIn 0.2s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* form */
-  .frow { display: flex; gap: 10px; margin-bottom: 11px; flex-wrap: wrap; }
-  .fcol { flex: 1; min-width: 130px; }
-  .flbl { display: block; color: var(--cyan); font-size: 10.5px; text-transform: lowercase; margin-bottom: 4px; letter-spacing: 0.5px; }
-  .input, .select, textarea {
-    width: 100%; background: var(--bg-deep);
-    border: 1px solid var(--line); color: var(--t-bright);
-    font: inherit; font-size: 13px; padding: 7px 10px;
-    border-radius: 3px; outline: none;
-  }
-  .input:focus, .select:focus, textarea:focus { border-color: var(--lime); }
-  .input::placeholder { color: var(--t-mute); }
-
-  .hours-input {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--bg-deep); border: 1px solid var(--line);
-    color: var(--t-bright); border-radius: 3px; padding: 0 10px;
-    height: 33px;
-  }
-  .hours-input:focus-within { border-color: var(--lime); }
-  .hours-input input {
-    background: transparent; border: none; color: var(--t-bright);
-    font: inherit; font-size: 13px; padding: 0; outline: none;
-    width: 32px; text-align: center; font-variant-numeric: tabular-nums;
-    -moz-appearance: textfield;
-  }
-  .hours-input input::-webkit-outer-spin-button,
-  .hours-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-  .hours-input span { color: var(--t-faint); font-size: 11px; }
-
-  .tip-box {
-    background: var(--bg-deep); padding: 10px 12px;
-    border-radius: 4px; border: 1px dashed var(--line);
-    margin-bottom: 11px;
-  }
-  .tip-toggle {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 12px; color: var(--t-bright); cursor: pointer;
-  }
-  .tip-input-grp { display: none; gap: 8px; align-items: center; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
-  .tip-input-grp input { width: 60px; padding: 4px 6px; }
-  .tip-input-grp select { width: 56px; padding: 4px; }
-
-  .factions {
-    display: flex; justify-content: flex-end; gap: 8px;
-    margin-top: 14px; padding-top: 12px;
-    border-top: 1px dotted var(--line-strong);
-  }
-  .factions button {
-    padding: 6px 14px; border: 1px solid var(--line);
-    color: var(--t-dim); border-radius: 3px;
-    font-size: 12px; transition: 0.15s; text-transform: lowercase;
-  }
-  .factions button:hover { color: var(--t-bright); border-color: var(--t-dim); }
-  .factions button.primary { color: var(--lime); border-color: var(--lime); }
-  .factions button.primary:hover { background: var(--lime-soft); }
-
-  /* preset picker */
-  .preset-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 7px 10px; border: 1px solid transparent;
-    border-radius: 3px; cursor: pointer; font-size: 12px;
-  }
-  .preset-row:hover { background: var(--bg-deep); border-color: var(--line); }
-  .preset-row .box {
-    width: 13px; height: 13px; border: 1px solid var(--t-faint);
-    border-radius: 2px; display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .preset-row.sel .box { background: var(--lime); border-color: var(--lime); }
-  .preset-row.sel .box::after {
-    content: ''; width: 6px; height: 3px;
-    border-left: 2px solid var(--bg-deep); border-bottom: 2px solid var(--bg-deep);
-    transform: rotate(-45deg) translate(0, -1px);
-  }
-  .preset-row.exists { opacity: 0.4; pointer-events: none; }
-  .preset-row .nm { flex: 1; color: var(--t); }
-  .preset-row .pct { color: var(--t-faint); font-size: 10.5px; text-align: right; }
-
-  .btn-pri {
-    display: inline-block; padding: 8px 14px;
-    background: var(--lime-soft); border: 1px solid var(--lime);
-    color: var(--lime); border-radius: 4px; font-weight: 500;
-    transition: 0.15s; font-size: 12px;
-  }
-  .btn-pri:hover { background: var(--lime); color: var(--bg-deep); }
-
-  /* fade-in */
-  main > * { animation: fadeIn 0.2s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
 <input type="file" id="file-import" style="display:none" accept=".json">
 
-<header class="app-h">
-  <div class="brand"><span class="prompt">$</span>ledgeon</div>
-  <div class="actions">
+<header class="status-bar">
+  <div class="seg"><span class="brand">$ ledgeon</span></div>
+  <div class="seg"><span class="lab">net:</span> <span class="val ok" id="status-net">—</span></div>
+  <div class="seg"><span class="lab">tab:</span> <span class="val warm" id="status-tab">overview</span></div>
+  <div class="spacer"></div>
+  <div class="seg actions">
     <button data-action="import">imp</button>
     <button data-action="export">exp</button>
     <button class="danger" data-action="reset">rst</button>
@@ -404,12 +376,12 @@
 
 <main id="content"></main>
 
-<nav class="btm" id="tabs">
-  <button data-tab="overview"><span class="ic">~</span>overview</button>
-  <button data-tab="income"><span class="ic">$+</span>income</button>
-  <button data-tab="expenses"><span class="ic">$-</span>expenses<span class="badge badge-e" style="display:none">0</span></button>
-  <button data-tab="budget"><span class="ic">%</span>budget</button>
-  <button data-tab="tasks"><span class="ic">✓</span>tasks<span class="badge badge-t" style="display:none">0</span></button>
+<nav class="btm fkey-bar" id="tabs">
+  <button data-tab="overview"><span class="key">F1</span>over</button>
+  <button data-tab="income"><span class="key">F2</span>inc</button>
+  <button data-tab="expenses"><span class="key">F3</span>exp<span class="badge badge-e" style="display:none">0</span></button>
+  <button data-tab="budget"><span class="key">F4</span>bud</button>
+  <button data-tab="tasks"><span class="key">F5</span>tsk<span class="badge badge-t" style="display:none">0</span></button>
 </nav>
 
 <!-- modals -->
@@ -572,17 +544,17 @@
 
 // ──── Constants ──────────────────────────────────────────────
 const ART = `
-      ▄▄
-     ▒██▒
-    ▒▒██▒▒
-   ▒▒████▒▒
-$$$▒▒████▒▒
-   ▒▒████▒▒
-    ▒▒██▒▒
-     ▒██▒
-      ▀▀
 
-    ledgeon`;
+       ▄▄
+      ████
+     ██████
+$$$  ██████
+     ██████
+     ██████
+      ████
+       ▀▀
+
+     ledgeon`;
 
 const STORAGE_KEY = 'ledgeon-state-v4';
 const TAB_KEY = 'ledgeon-tab';
@@ -909,35 +881,30 @@ function getWeeklyPettyHistory(weeksBack = 6) {
   return out;
 }
 
-// ──── UI helpers ─────────────────────────────────────────────
-function statRow(lbl, sparkVals, sparkColor, val, valColor) {
-  const sp = sparkVals ? sparkline(sparkVals) : '';
-  return `<div class="stat"><span class="lbl">${lbl}</span><span class="spark ${sparkColor||''}">${sp}</span><span class="val ${valColor||''}">${val}</span></div>`;
+// ──── UI helpers (htop) ──────────────────────────────────────
+function statBar(lab, barPct, barColor, val, valColor, delta) {
+  const bar = asciiBar(barPct, 20);
+  const dh = delta !== undefined ? `<span class="delta ${delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat'}">${delta > 0 ? '↑' : delta < 0 ? '↓' : '·'}${delta !== 0 ? Math.abs(delta).toFixed(0) + '%' : ''}</span>` : '<span class="delta flat"></span>';
+  return `<div class="sbar"><span class="lab">${lab}</span><span class="bar ${barColor||''}">${bar}</span><span class="val ${valColor||''}">${val}</span>${dh}</div>`;
 }
-function banner(ctx, rows, summary) {
-  const div = '─'.repeat(28);
-  return `<div class="banner">
-    <pre class="art">${ART}</pre>
-    <div class="info">
-      <div class="handle">user<span class="at">@</span>ledgeon${ctx ? `<span class="ctx">· ${ctx}</span>` : ''}</div>
-      <div class="div">${div}</div>
-      <div class="rows">${rows}</div>
-      ${summary ? `<div class="div">${div}</div><div class="summary">${summary}</div>` : ''}
-    </div>
-  </div>`;
+
+function panel(key, title, contentHTML, rightAction) {
+  const k = key ? `<span class="key">${key}</span>` : '';
+  const r = rightAction ? `<span class="panel-r" data-action="${rightAction.action}"${rightAction.type ? ` data-type="${rightAction.type}"` : ''}${rightAction.tab ? ` data-tab="${rightAction.tab}"` : ''}>${rightAction.label}</span>` : '';
+  return `<div class="panel"><div class="panel-t">${k}${title}</div>${r}${contentHTML}</div>`;
 }
 
 function monthNav(year, month) {
   const isCurr = year === new Date().getFullYear() && month === new Date().getMonth();
   return `<div class="month-nav">
     <button data-action="prev-month">← prev</button>
-    <div class="label">${new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase()}</div>
+    <div class="label">${new Date(year, month).toLocaleString('en-US',{month:'short',year:'numeric'}).toLowerCase()}</div>
     <button data-action="next-month">next →</button>
     ${!isCurr ? '<button data-action="curr-month">today</button>' : ''}
   </div>`;
 }
 
-// ──── Render: overview ───────────────────────────────────────
+// ──── Render: overview (htop) ────────────────────────────────
 function renderOverview() {
   const { year, month } = getViewMonth();
   const cur = getMonthlyStats(year, month);
@@ -946,84 +913,74 @@ function renderOverview() {
     .reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   const net = cur.income - cur.bills - pettySpent;
   const savingsPct = cur.income > 0 ? Math.max(0, (cur.income - cur.bills - pettySpent) / cur.income * 100) : 0;
-  const history = getMonthlyHistory(6);
-  const incSeries = history.map(h => h.income);
-  const billSeries = history.map(h => h.bills);
-  const savSeries = history.map(h => h.income > 0 ? Math.max(0, (h.income - h.bills) / h.income * 100) : 0);
-  const hoursSeries = getMonthlyHoursHistory(year, month, 6);
-  const currentHours = hoursSeries[hoursSeries.length - 1] || 0;
-  const weeklyHours = currentHours / 4.33;
-  const ctx = new Date(year, month).toLocaleString('en-US', { month: 'short', year: 'numeric' }).toLowerCase();
+  const billsPct = cur.income > 0 ? (cur.bills / cur.income) * 100 : 0;
+  const incPct = 100;
+  // delta vs last month
+  let pMo = month - 1, pYr = year; if (pMo < 0) { pMo = 11; pYr -= 1; }
+  const prev = getMonthlyStats(pYr, pMo);
+  const incDelta = prev.income > 0 ? ((cur.income - prev.income) / prev.income * 100) : 0;
+  const billDelta = prev.bills > 0 ? ((cur.bills - prev.bills) / prev.bills * 100) : 0;
 
-  const rows = [
-    statRow('income',   incSeries,    'ok',   fmtMoney(cur.income, {round: true}), 'ok'),
-    statRow('expenses', billSeries,   'bad',  fmtMoney(cur.bills, {round: true}),  'bad'),
-    statRow('savings',  savSeries,    'lime', savingsPct.toFixed(0) + '%',         'lime'),
-    statRow('hours/wk', hoursSeries,  'cyan', fmtHM(weeklyHours),                  'cyan'),
-  ].join('');
-
-  const netCls = net >= 0 ? 'pos' : 'neg';
-  const summaryHTML = `net <span class="${netCls}">${fmtMoney(net, {sign:true, round:true})}</span> · ${state.income.length} inc · ${state.bills.filter(b => !b.paid).length} bills`;
-
-  // upcoming bills
   const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
   const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid)
     .sort((a,b) => a.dueDate.localeCompare(b.dueDate));
 
-  // open tasks
   const openTasks = state.tasks.filter(t => !t.done).sort((a,b) => {
     const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
     return ad.localeCompare(bd);
   });
 
+  const summaryBars = `
+    ${statBar('income',   incPct,    'ok',  fmtMoney(cur.income, {round:true}), 'ok',  Math.round(incDelta))}
+    ${statBar('expenses', billsPct,  'bad', fmtMoney(cur.bills, {round:true}),  'bad', Math.round(billDelta))}
+    ${statBar('savings',  savingsPct,'lime',savingsPct.toFixed(0) + '%',         'lime')}
+    ${statBar('net',      net >= 0 ? Math.min(100, (net/cur.income*100)) : 0, net >= 0 ? 'warm' : 'bad', fmtMoney(net, {round:true, sign:true}), net >= 0 ? 'warm' : 'bad')}
+  `;
+
+  const upcomingHTML = upcoming.length ? `
+    <div class="proc-hdr"><span>id</span><span>name</span><span class="r">amt</span><span class="r">due</span><span></span></div>
+    ${upcoming.slice(0, 6).map(b => {
+      const overdue = isOverdue(b.dueDate); const today = isTodayDate(b.dueDate);
+      return `<div class="proc">
+        <span class="id">${b.id}</span>
+        <span class="nm">${escHTML(b.name)}<span class="cat">${(CATEGORIES[b.category]||CATEGORIES.other).label}</span></span>
+        <span class="col amt">${fmtMoney(b.amount, {round:true})}</span>
+        <span class="col due ${overdue ? 'over' : today ? 'today' : ''}">${formatDate(b.dueDate)}</span>
+        <span class="acts"><button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button></span>
+      </div>`;
+    }).join('')}
+    ${upcoming.length > 6 ? `<div class="empty">+ ${upcoming.length - 6} more · <span class="lnk" data-action="goto" data-tab="expenses">f3</span></div>` : ''}
+  ` : '<div class="empty">no upcoming bills</div>';
+
+  const tasksHTML = openTasks.length ? `
+    <div class="proc-hdr"><span>id</span><span>task</span><span class="r">priority</span><span class="r">due</span><span></span></div>
+    ${openTasks.slice(0, 5).map(t => {
+      const overdue = t.dueDate && isOverdue(t.dueDate);
+      const today = t.dueDate && isTodayDate(t.dueDate);
+      const pri = t.priority || '';
+      const priCls = pri === 'high' ? 'err' : pri === 'med' ? 'warn' : 'info';
+      return `<div class="proc">
+        <span class="id">${t.id}</span>
+        <span class="nm">${escHTML(t.text)}</span>
+        <span class="col">${pri ? `<span class="tag ${priCls}">${pri}</span>` : '—'}</span>
+        <span class="col due ${overdue ? 'over' : today ? 'today' : ''}">${t.dueDate ? formatDate(t.dueDate) : '—'}</span>
+        <span class="acts"><button class="ok" data-action="toggle-task" data-id="${t.id}">done</button></span>
+      </div>`;
+    }).join('')}
+    ${openTasks.length > 5 ? `<div class="empty">+ ${openTasks.length - 5} more · <span class="lnk" data-action="goto" data-tab="tasks">f5</span></div>` : ''}
+  ` : '<div class="empty">no open tasks</div>';
+
   return `
     ${monthNav(year, month)}
-    ${banner(ctx, rows, summaryHTML)}
-
-    ${upcoming.length ? `
-      <div class="sec-h"><span class="title">upcoming · 14d</span></div>
-      ${upcoming.slice(0, 4).map(b => `
-        <div class="item">
-          <div class="r1">
-            <span class="nm">${escHTML(b.name)}</span>
-            <span class="amt">${fmtMoney(b.amount)}</span>
-          </div>
-          <div class="r2">
-            <span class="meta">
-              <span class="tag ${isOverdue(b.dueDate)?'err':(isTodayDate(b.dueDate)?'warn':'info')}">${formatDate(b.dueDate)}</span>
-              <span class="cat" style="color:${(CATEGORIES[b.category]||CATEGORIES.other).color};">${(CATEGORIES[b.category]||CATEGORIES.other).label}</span>
-            </span>
-          </div>
-        </div>
-      `).join('')}
-      ${upcoming.length > 4 ? `<div class="empty left">+ ${upcoming.length - 4} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : ''}
-    ` : ''}
-
-    ${openTasks.length ? `
-      <div class="sec-h"><span class="title">open tasks</span></div>
-      ${openTasks.slice(0, 4).map(t => {
-        const overdue = t.dueDate && isOverdue(t.dueDate);
-        const isToday = t.dueDate && isTodayDate(t.dueDate);
-        const cls = overdue ? 'err' : isToday ? 'warn' : (t.priority === 'high' ? 'err' : t.priority === 'med' ? 'warn' : 'info');
-        const label = t.dueDate ? formatDate(t.dueDate) : (t.priority || 'task');
-        return `<div class="item">
-          <div class="r1">
-            <span class="nm">${escHTML(t.text)}</span>
-            <span class="tag ${cls}">${label}</span>
-          </div>
-        </div>`;
-      }).join('')}
-      ${openTasks.length > 4 ? `<div class="empty left">+ ${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : ''}
-    ` : ''}
+    ${panel('F1', 'system summary', summaryBars)}
+    ${panel('', 'upcoming · 14 days', upcomingHTML)}
+    ${panel('', 'task queue', tasksHTML, { action: 'goto', tab: 'tasks', label: 'view all →' })}
   `;
 }
 
-// ──── Render: income ─────────────────────────────────────────
+// ──── Render: income (htop) ──────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
-  const history = getMonthlyHistory(6);
-  const incSeries = history.map(h => h.income);
-  const hoursHistory = getMonthlyHoursHistory(new Date().getFullYear(), new Date().getMonth(), 6);
   const taxPct = getTaxPct();
   const taxSetaside = stats.ytdTips * taxPct / 100;
 
@@ -1033,87 +990,71 @@ function renderIncome() {
     return mb - ma;
   });
 
-  const rows = [
-    statRow('ytd inc',   incSeries,    'ok',   fmtMoney(stats.ytdIncome, {round: true}), 'ok'),
-    stats.ytdTips > 0 ? statRow('ytd tips', null, '', fmtMoney(stats.ytdTips, {round: true}), 'lime') : '',
-    statRow('hours',     hoursHistory, 'cyan', fmtHM(stats.ytdHours), ''),
-    statRow('avg/hr',    null,         '',     '$' + stats.ytdHourly.toFixed(2), 'cyan'),
-  ].filter(Boolean).join('');
+  // Calculate max so we can use bar widths relative to it
+  const maxYtd = Math.max(stats.ytdIncome, 1);
+  const ytdPct = 100;
+  const tipPct = stats.ytdIncome > 0 ? (stats.ytdTips / stats.ytdIncome) * 100 : 0;
 
-  const summaryHTML = `~${fmtMoney(stats.avgMonthly, {round: true})}/mo avg · ${state.income.length} source${state.income.length===1?'':'s'}`;
+  const summaryBars = `
+    ${statBar('ytd inc',  ytdPct,  'ok',   fmtMoney(stats.ytdIncome, {round:true}), 'ok')}
+    ${stats.ytdTips > 0 ? statBar('ytd tips', tipPct, 'lime', fmtMoney(stats.ytdTips, {round:true}), 'lime') : ''}
+    ${statBar('hours',     stats.ytdHours > 0 ? Math.min(100, stats.ytdHours / 2080 * 100) : 0, 'cyan', fmtHM(stats.ytdHours), 'cyan')}
+    ${statBar('avg/hr',    stats.ytdHourly > 0 ? Math.min(100, stats.ytdHourly * 2) : 0, 'warm', '$' + stats.ytdHourly.toFixed(2), 'warm')}
+    ${statBar('avg/mo',    stats.avgMonthly > 0 ? Math.min(100, stats.avgMonthly / Math.max(stats.avgMonthly, 5000) * 100) : 0, 'cyan', fmtMoney(stats.avgMonthly, {round:true}), 'cyan')}
+  `;
 
-  const sourceList = sources.map(i => {
-    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-    const base = i.baseAmount !== undefined ? i.baseAmount : amt;
-    const hrs = Number(i.hours) || 0;
-    const rate = hrs > 0 ? base / hrs : 0;
-    const monthly = i.frequency === 'once' ? amt : monthlyEq(amt, i.frequency);
-    const freqLabel = i.frequency || 'once';
-    const hoursTxt = hrs > 0 ? `${fmtHM(hrs)} · $${rate.toFixed(2)}/hr` : '';
-    const tipTxt = i.tipsEnabled && amt > base ? ` · <span style="color:var(--lime);">+${fmtMoney(amt-base)} tip</span>` : '';
-    return `<div class="item">
-      <div class="r1">
-        <span class="nm">${escHTML(i.source)}</span>
-        <span class="amt ok">${fmtMoney(amt)}</span>
-      </div>
-      <div class="r2">
-        <span class="meta">${freqLabel} · ${formatDate(i.receivedAt || i.createdAt)}${hoursTxt ? ` · ${hoursTxt}` : ''}${tipTxt}${i.frequency !== 'once' ? ` · <span style="color:var(--t-dim);">${fmtMoney(monthly,{round:true})}/mo</span>` : ''}</span>
+  const sourcesHTML = sources.length ? `
+    <div class="proc-hdr"><span>id</span><span>source</span><span class="r">amt</span><span class="r">freq</span><span></span></div>
+    ${sources.map(i => {
+      const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+      const base = i.baseAmount !== undefined ? i.baseAmount : amt;
+      const hrs = Number(i.hours) || 0;
+      const monthly = i.frequency === 'once' ? amt : monthlyEq(amt, i.frequency);
+      const tipBadge = i.tipsEnabled && amt > base ? ` <span class="tag info">+tip</span>` : '';
+      return `<div class="proc">
+        <span class="id">${i.id}</span>
+        <span class="nm">${escHTML(i.source)}${tipBadge}<span class="cat">${hrs > 0 ? fmtHM(hrs) : ''}</span></span>
+        <span class="col amt ok">${fmtMoney(amt, {round:true})}</span>
+        <span class="col due">${i.frequency || 'once'}</span>
         <span class="acts">
-          <button data-action="edit" data-type="income" data-id="${i.id}">edit</button>
-          <button class="err" data-action="rm" data-type="income" data-id="${i.id}">rm</button>
+          <button data-action="edit" data-type="income" data-id="${i.id}">e</button>
+          <button class="err" data-action="rm" data-type="income" data-id="${i.id}">x</button>
         </span>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('')}
+  ` : `<div class="empty">no income tracked. <button class="btn-pri" data-action="open-modal" data-type="income">+ add income</button></div>`;
+
+  const taxPanel = stats.ytdTips > 0 ? panel('', 'tax setaside · est', `
+    ${statBar('owed', Math.min(100, taxPct), 'warn', fmtMoney(taxSetaside, {round:true}), 'warn')}
+    <div style="font-size:10.5px;color:var(--t-faint);display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap;">
+      <span>set aside</span>
+      <input type="number" class="tax-pct-input" id="tax-pct-input" value="${taxPct}" min="0" max="100" step="1" />
+      <span>% of cash tips</span>
+    </div>
+  `) : '';
 
   return `
-    ${banner('income', rows, summaryHTML)}
-
-    ${stats.ytdTips > 0 ? `
-      <div class="sec-h"><span class="title">tax setaside</span></div>
-      <div class="stat" style="margin-bottom:8px;">
-        <span class="lbl">est. owed</span>
-        <span class="spark"></span>
-        <span class="val warn">${fmtMoney(taxSetaside, {round: true})}</span>
-      </div>
-      <div style="font-size:11px;color:var(--t-faint);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span>set aside</span>
-        <input type="number" class="tax-pct-input" id="tax-pct-input" value="${taxPct}" min="0" max="100" step="1" />
-        <span>% of cash tips for taxes</span>
-      </div>
-    ` : ''}
-
-    <div class="sec-h"><span class="title">sources</span><span class="act" data-action="open-modal" data-type="income">+ add</span></div>
-    ${sources.length ? sourceList : `<div class="empty">no income tracked yet.<br><br><button class="btn-pri" data-action="open-modal" data-type="income">+ add income</button></div>`}
+    ${panel('F2', 'income · ytd stats', summaryBars)}
+    ${taxPanel}
+    ${panel('', 'sources · ' + sources.length, sourcesHTML, { action: 'open-modal', type: 'income', label: '+ add' })}
   `;
 }
 
-// ──── Render: expenses ───────────────────────────────────────
+// ──── Render: expenses (htop) ────────────────────────────────
 function renderExpenses() {
   const { year, month } = getViewMonth();
   const cur = getMonthlyStats(year, month);
   const total = cur.bills; const incTot = cur.income;
   const catData = aggregateBillsByCategory(state.bills, year, month);
-  const billsHistory = getMonthlyHistory(6).map(h => h.bills);
   const paidCount = state.bills.filter(b => b.paid).length;
   const unpaidCount = state.bills.filter(b => !b.paid).length;
 
   const recurring = state.bills.filter(b => b.recurring && b.recurring !== 'once').map(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
     const annual = b.recurring === 'weekly' ? amt * 52 : b.recurring === 'biweekly' ? amt * 26 : b.recurring === 'monthly' ? amt * 12 : amt;
-    return { ...b, _amt: amt, _annual: annual };
+    return { ...b, _annual: annual };
   });
   const totalAnnual = recurring.reduce((s, b) => s + b._annual, 0);
-
-  const ctx = new Date(year, month).toLocaleString('en-US', { month: 'short', year: 'numeric' }).toLowerCase();
-  const rows = [
-    statRow('total/mo', billsHistory, 'bad', fmtMoney(total, {round:true}), 'bad'),
-    statRow('% of inc', null, '', incTot > 0 ? (total/incTot*100).toFixed(0) + '%' : '—', incTot > 0 && total/incTot > 0.6 ? 'warn' : ''),
-    statRow('annual',   null, '', fmtMoney(totalAnnual, {round:true}), 'warm'),
-    statRow('paid',     null, '', `${paidCount}/${paidCount+unpaidCount}`, 'ok'),
-  ].join('');
-  const topCat = catData[0];
-  const summaryHTML = topCat ? `top <span style="color:${topCat.color};">${topCat.label}</span> · ${fmtMoney(topCat.total, {round:true})}/mo · ${unpaidCount} unpaid` : `${unpaidCount} unpaid`;
 
   const billsSorted = state.bills.slice().sort((a, b) => {
     if (a.paid !== b.paid) return a.paid ? 1 : -1;
@@ -1121,55 +1062,47 @@ function renderExpenses() {
     return ad.localeCompare(bd);
   });
 
-  const billsList = billsSorted.map(b => {
-    const isPaid = !!b.paid;
-    const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
-    const cat = (CATEGORIES[b.category] || CATEGORIES.other);
-    return `<div class="item ${isPaid ? 'done' : ''}">
-      <div class="r1">
-        <span class="nm">${escHTML(b.name)}</span>
-        <span class="amt">${fmtMoney(b.amount)}</span>
-      </div>
-      <div class="r2">
-        <span class="meta">
-          <span style="color:${cat.color};">${cat.label}</span>
-          <span>${b.recurring || 'once'}</span>
-          ${b.dueDate ? `<span class="${overdue ? 'tag err' : ''}" style="${!overdue ? `color:var(--t-faint);` : ''}">${formatDate(b.dueDate)}</span>` : ''}
-        </span>
-        <span class="acts">
-          ${!isPaid ? `<button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button>` : `<button data-action="unpay-bill" data-id="${b.id}">undo</button>`}
-          <button data-action="edit" data-type="expenses" data-id="${b.id}">edit</button>
-          <button class="err" data-action="rm" data-type="expenses" data-id="${b.id}">rm</button>
-        </span>
-      </div>
-    </div>`;
-  }).join('');
+  const summaryBars = `
+    ${statBar('total/mo',  incTot > 0 ? Math.min(100, total/incTot*100) : 100, total/incTot > 0.6 ? 'warn' : 'bad', fmtMoney(total, {round:true}), 'bad')}
+    ${statBar('% income',  incTot > 0 ? Math.min(100, total/incTot*100) : 0, total/incTot > 0.6 ? 'warn' : 'cyan', incTot > 0 ? (total/incTot*100).toFixed(0)+'%' : '—', '')}
+    ${statBar('annual',    100, 'warm', fmtMoney(totalAnnual, {round:true}), 'warm')}
+    ${statBar('paid',      paidCount + unpaidCount > 0 ? paidCount/(paidCount+unpaidCount)*100 : 0, 'ok', `${paidCount}/${paidCount+unpaidCount}`, 'ok')}
+  `;
 
   const catBreakdown = catData.length && total > 0 ? catData.map(c => {
     const pct = (c.total / total) * 100;
-    return `<div class="catbar">
-      <span class="nm" style="color:${c.color};">${c.label}</span>
-      <span class="b">${asciiBar(pct, 14)}</span>
-      <span class="amt">${fmtMoney(c.total, {round:true})}</span>
-      <span class="pct">${pct.toFixed(0)}%</span>
-    </div>`;
-  }).join('') : '';
+    return `<div class="bline"><span class="lb" style="color:${c.color};">${c.label}</span><span class="b" style="--f:${c.color};">${asciiBar(pct, 18).replace('class="f"', 'class="f" style="color:'+c.color+';"')}</span><span class="v">${fmtMoney(c.total, {round:true})} · ${pct.toFixed(0)}%</span></div>`;
+  }).join('') : '<div class="empty">no data</div>';
+
+  const billsHTML = state.bills.length ? `
+    <div class="proc-hdr"><span>id</span><span>bill</span><span class="r">amt</span><span class="r">due</span><span></span></div>
+    ${billsSorted.map(b => {
+      const isPaid = !!b.paid;
+      const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
+      const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
+      return `<div class="proc ${isPaid ? 'dim' : ''}">
+        <span class="id">${b.id}</span>
+        <span class="nm">${escHTML(b.name)}<span class="cat">${b.recurring || 'once'} · ${(CATEGORIES[b.category]||CATEGORIES.other).label}</span></span>
+        <span class="col amt">${fmtMoney(b.amount, {round:true})}</span>
+        <span class="col due ${overdue ? 'over' : today ? 'today' : ''}">${b.dueDate ? formatDate(b.dueDate) : '—'}</span>
+        <span class="acts">
+          ${!isPaid ? `<button class="ok" data-action="pay-bill" data-id="${b.id}">pay</button>` : `<button data-action="unpay-bill" data-id="${b.id}">undo</button>`}
+          <button data-action="edit" data-type="expenses" data-id="${b.id}">e</button>
+          <button class="err" data-action="rm" data-type="expenses" data-id="${b.id}">x</button>
+        </span>
+      </div>`;
+    }).join('')}
+  ` : (incTot > 0 ? `<div class="empty"><button class="btn-pri" data-action="open-presets">+ presets</button> <button class="btn-pri" data-action="open-modal" data-type="expenses">+ add</button></div>` : '<div class="empty">add income first</div>');
 
   return `
     ${monthNav(year, month)}
-    ${banner(ctx, rows, summaryHTML)}
-
-    ${catBreakdown ? `
-      <div class="sec-h"><span class="title">by category</span></div>
-      ${catBreakdown}
-    ` : ''}
-
-    <div class="sec-h"><span class="title">bills</span><span class="act" data-action="open-modal" data-type="expenses">+ add</span></div>
-    ${state.bills.length ? billsList : (incTot > 0 ? `<div class="empty"><button class="btn-pri" data-action="open-presets">+ presets</button> <button class="btn-pri" data-action="open-modal" data-type="expenses">+ add</button></div>` : `<div class="empty">add income first</div>`)}
+    ${panel('F3', 'expenses · summary', summaryBars)}
+    ${catData.length ? panel('', 'memory · by category', catBreakdown) : ''}
+    ${panel('', `processes · ${state.bills.length} bills`, billsHTML, { action: 'open-modal', type: 'expenses', label: '+ add' })}
   `;
 }
 
-// ──── Render: budget ─────────────────────────────────────────
+// ──── Render: budget (htop) ──────────────────────────────────
 function renderBudget() {
   let { year, month } = getViewMonth();
   let cur = getMonthlyStats(year, month);
@@ -1183,8 +1116,7 @@ function renderBudget() {
 
   if (inc === 0) {
     return `
-      ${banner('budget · empty', '<div class="stat"><span class="lbl">status</span><span class="spark"></span><span class="val">—</span></div>', 'add income to start')}
-      <div class="empty"><br><button class="btn-pri" data-action="open-modal" data-type="income">+ add income</button></div>
+      ${panel('F4', 'budget · empty', '<div class="empty">no income data. <button class="btn-pri" data-action="open-modal" data-type="income">+ add income</button></div>')}
     `;
   }
 
@@ -1205,76 +1137,67 @@ function renderBudget() {
   const weekEntries = getPettyThisWeek();
   const weekSpent = weekEntries.reduce((s, e) => s + (parseFloat(String(e.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   const weekPct = weeklyAllowance > 0 ? (weekSpent / weeklyAllowance) * 100 : 0;
-  const weekClass = weekPct >= 100 ? 'bad' : weekPct >= 75 ? 'warn' : 'ok';
   const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
   const monthPettyAll = state.petty.filter(p => p.date && p.date.startsWith(monthKey)).sort((a,b) => b.date.localeCompare(a.date));
-  const weeklyPettyHistory = getWeeklyPettyHistory(6);
 
-  const ctx = `budget${basisLabel ? ` · basis: ${basisLabel}` : ` · ${new Date(year, month).toLocaleString('en-US',{month:'short'}).toLowerCase()}`}`;
+  const allocBars = `
+    ${statBar('income',     100, 'ok', fmtMoney(inc, {round:true}), 'ok')}
+    ${statBar('− fixed',    inc > 0 ? fixed/inc*100 : 0, 'bad', fmtMoney(fixed, {round:true}), 'bad')}
+    ${savings > 0 ? statBar('− savings', inc > 0 ? savings/inc*100 : 0, 'cyan', fmtMoney(savings, {round:true}), 'cyan') : ''}
+    ${statBar('= allowance', inc > 0 ? monthlyAllowance/inc*100 : 0, 'warm', fmtMoney(monthlyAllowance, {round:true}), 'warm')}
+  `;
 
-  const rows = [
-    statRow('week',   null,                'lime', fmtMoney(weeklyAllowance, {round:true}), 'lime'),
-    statRow('day',    null,                'lime', fmtMoney(dailyAllowance, {round:true}),  'lime'),
-    statRow('petty',  weeklyPettyHistory,  'warn', fmtMoney(weekSpent, {round:true}),       weekClass === 'bad' ? 'bad' : weekClass === 'warn' ? 'warn' : 'ok'),
-    statRow('used',   null,                '',     weekPct.toFixed(0) + '%',                weekClass === 'bad' ? 'bad' : weekClass === 'warn' ? 'warn' : 'ok'),
-  ].join('');
+  const pettyBars = `
+    ${statBar('weekly',  100, 'lime', fmtMoney(weeklyAllowance, {round:true}), 'lime')}
+    ${statBar('daily',   100, 'lime', fmtMoney(dailyAllowance, {round:true}), 'lime')}
+    ${statBar('this wk', Math.min(100, weekPct), weekPct >= 100 ? 'bad' : weekPct >= 75 ? 'warn' : 'ok', `${fmtMoney(weekSpent, {round:true})} (${weekPct.toFixed(0)}%)`, weekPct >= 100 ? 'bad' : weekPct >= 75 ? 'warn' : 'ok')}
+  `;
 
-  const summaryHTML = `available <span class="pos">${fmtMoney(monthlyAllowance, {round:true})}</span>/mo · ${monthPettyAll.length} petty entries`;
+  const pettyHTML = monthPettyAll.length ? `
+    <div class="proc-hdr"><span>id</span><span>desc</span><span class="r">amt</span><span class="r">date</span><span></span></div>
+    ${monthPettyAll.map(p => {
+      const cat = (CATEGORIES[p.category] || CATEGORIES.other);
+      return `<div class="proc">
+        <span class="id">${p.id}</span>
+        <span class="nm">${escHTML(p.note || '—')}<span class="cat" style="color:${cat.color};">${cat.label}</span></span>
+        <span class="col amt">${fmtMoney(p.amount, {round:true})}</span>
+        <span class="col due">${formatDate(p.date)}</span>
+        <span class="acts"><button class="err" data-action="rm" data-type="petty" data-id="${p.id}">x</button></span>
+      </div>`;
+    }).join('')}
+  ` : '<div class="empty">no transactions logged</div>';
 
-  const pettyList = monthPettyAll.map(p => {
-    const cat = (CATEGORIES[p.category] || CATEGORIES.other);
-    return `<div class="item">
-      <div class="r1">
-        <span class="nm">${escHTML(p.note || '—')}</span>
-        <span class="amt">${fmtMoney(p.amount)}</span>
-      </div>
-      <div class="r2">
-        <span class="meta">
-          <span style="color:${cat.color};">${cat.label}</span>
-          <span>${formatDate(p.date)}</span>
-        </span>
-        <span class="acts">
-          <button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button>
-        </span>
-      </div>
-    </div>`;
-  }).join('');
-
-  const goalsList = state.goals.map(g => {
+  const goalsHTML = state.goals.length ? state.goals.map(g => {
     const target = parseFloat(g.targetAmount) || 0;
     const saved = parseFloat(g.currentAmount) || 0;
     const p = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-    const cls = p >= 100 ? 'ok' : '';
     return `<div class="goal">
-      <div class="gh">
+      <div class="h">
         <span class="nm">${escHTML(g.name)}${g.targetDate ? `<span class="by">by ${formatDate(g.targetDate)}</span>` : ''}</span>
         <span class="pct">${p.toFixed(0)}%</span>
       </div>
-      <div class="asciibar ${cls}">${asciiBar(p, 28)}</div>
-      <div class="meta">
+      <div class="b">${asciiBar(p, 30)}</div>
+      <div class="m">
         <span>${fmtMoney(saved, {round:true})} / ${fmtMoney(target, {round:true})}${g._reqMo > 0 ? ` · <span class="req">${fmtMoney(g._reqMo, {round:true})}/mo needed</span>` : ''}</span>
         <span class="acts">
           <button class="ok" data-action="goal-add" data-id="${g.id}">+ fund</button>
-          <button data-action="edit" data-type="goals" data-id="${g.id}">edit</button>
-          <button class="err" data-action="rm" data-type="goals" data-id="${g.id}">rm</button>
+          <button data-action="edit" data-type="goals" data-id="${g.id}">e</button>
+          <button class="err" data-action="rm" data-type="goals" data-id="${g.id}">x</button>
         </span>
       </div>
     </div>`;
-  }).join('');
+  }).join('') : '<div class="empty">no goals</div>';
 
   return `
     ${monthNav(year, month)}
-    ${banner(ctx, rows, summaryHTML)}
-
-    <div class="sec-h"><span class="title">petty · ${new Date(year, month).toLocaleString('en-US',{month:'short'}).toLowerCase()}</span><span class="act" data-action="open-modal" data-type="petty">+ log</span></div>
-    ${monthPettyAll.length ? pettyList : '<div class="empty">no petty spending logged.</div>'}
-
-    <div class="sec-h"><span class="title">goals</span><span class="act" data-action="open-modal" data-type="goals">+ add</span></div>
-    ${state.goals.length ? goalsList : '<div class="empty">no goals yet.</div>'}
+    ${panel('F4', `budget${basisLabel ? ' · basis: ' + basisLabel : ''}`, allocBars)}
+    ${panel('', 'discretionary', pettyBars)}
+    ${panel('', `transactions · ${monthPettyAll.length} entries`, pettyHTML, { action: 'open-modal', type: 'petty', label: '+ log' })}
+    ${panel('', `savings goals · ${state.goals.length}`, goalsHTML, { action: 'open-modal', type: 'goals', label: '+ add' })}
   `;
 }
 
-// ──── Render: tasks ──────────────────────────────────────────
+// ──── Render: tasks (htop) ───────────────────────────────────
 function renderTasks() {
   const total = state.tasks.length;
   const open = state.tasks.filter(t => !t.done);
@@ -1283,14 +1206,12 @@ function renderTasks() {
   const todayCnt = state.tasks.filter(t => !t.done && isTodayDate(t.dueDate));
   const completionPct = total > 0 ? (done.length / total) * 100 : 0;
 
-  const rows = [
-    statRow('open',     null, '',     String(open.length),       'warm'),
-    overdue.length > 0 ? statRow('overdue', null, '', String(overdue.length), 'bad') : '',
-    todayCnt.length > 0 ? statRow('today', null, '', String(todayCnt.length), 'warn') : '',
-    statRow('done',     null, '',     completionPct.toFixed(0) + '%', 'ok'),
-  ].filter(Boolean).join('');
-
-  const summaryHTML = `${total} total · ${done.length} completed`;
+  const summaryBars = `
+    ${statBar('queued',  total > 0 ? open.length/total*100 : 0, 'warm', String(open.length), 'warm')}
+    ${overdue.length > 0 ? statBar('overdue', total > 0 ? overdue.length/total*100 : 0, 'bad', String(overdue.length), 'bad') : ''}
+    ${todayCnt.length > 0 ? statBar('today', total > 0 ? todayCnt.length/total*100 : 0, 'warn', String(todayCnt.length), 'warn') : ''}
+    ${statBar('done', completionPct, 'ok', `${done.length}/${total} (${completionPct.toFixed(0)}%)`, 'ok')}
+  `;
 
   const sorted = state.tasks.slice().sort((a, b) => {
     if (a.done !== b.done) return a.done ? 1 : -1;
@@ -1298,37 +1219,33 @@ function renderTasks() {
     return ad.localeCompare(bd);
   });
 
-  const list = sorted.map(t => {
-    const isOver = !t.done && isOverdue(t.dueDate);
-    const isToday = !t.done && isTodayDate(t.dueDate);
-    const pri = t.priority || '';
-    const dateCls = isOver ? 'err' : isToday ? 'warn' : 'info';
-    const priCls = pri === 'high' ? 'err' : pri === 'med' ? 'warn' : '';
-    return `<div class="item ${t.done ? 'done' : ''}">
-      <div class="r1">
+  const list = sorted.length ? `
+    <div class="proc-hdr"><span>id</span><span>task</span><span class="r">priority</span><span class="r">due</span><span></span></div>
+    ${sorted.map(t => {
+      const isOver = !t.done && isOverdue(t.dueDate);
+      const isToday = !t.done && isTodayDate(t.dueDate);
+      const pri = t.priority || '';
+      const priCls = pri === 'high' ? 'err' : pri === 'med' ? 'warn' : 'info';
+      return `<div class="proc ${t.done ? 'dim' : ''}">
+        <span class="id">${t.id}</span>
         <span class="nm">${escHTML(t.text)}</span>
-        ${t.dueDate ? `<span class="tag ${dateCls}">${formatDate(t.dueDate)}</span>` : ''}
-      </div>
-      <div class="r2">
-        <span class="meta">
-          ${pri ? `<span class="tag ${priCls}">${pri}</span>` : ''}
-        </span>
+        <span class="col">${pri ? `<span class="tag ${priCls}">${pri}</span>` : '—'}</span>
+        <span class="col due ${isOver ? 'over' : isToday ? 'today' : ''}">${t.dueDate ? formatDate(t.dueDate) : '—'}</span>
         <span class="acts">
           <button class="ok" data-action="toggle-task" data-id="${t.id}">${t.done ? 'undo' : 'done'}</button>
-          <button data-action="edit" data-type="tasks" data-id="${t.id}">edit</button>
-          <button class="err" data-action="rm" data-type="tasks" data-id="${t.id}">rm</button>
+          <button data-action="edit" data-type="tasks" data-id="${t.id}">e</button>
+          <button class="err" data-action="rm" data-type="tasks" data-id="${t.id}">x</button>
         </span>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('')}
+  ` : `<div class="empty">no tasks. <button class="btn-pri" data-action="open-modal" data-type="tasks">+ add task</button></div>`;
 
   return `
-    ${banner('tasks', rows, summaryHTML)}
-
-    <div class="sec-h"><span class="title">all tasks</span><span class="act" data-action="open-modal" data-type="tasks">+ add</span></div>
-    ${total ? list : `<div class="empty">no tasks yet.<br><br><button class="btn-pri" data-action="open-modal" data-type="tasks">+ add task</button></div>`}
+    ${panel('F5', 'task queue', summaryBars)}
+    ${panel('', `processes · ${total}`, list, { action: 'open-modal', type: 'tasks', label: '+ add' })}
   `;
 }
+
 
 // ──── Master render ──────────────────────────────────────────
 function updateBadges() {
@@ -1342,6 +1259,19 @@ function updateBadges() {
 
 function render() {
   updateBadges();
+  // htop-specific: update status bar
+  const tabEl = document.getElementById('status-tab');
+  if (tabEl) tabEl.textContent = currentTab;
+  const netEl = document.getElementById('status-net');
+  if (netEl) {
+    const { year, month } = getViewMonth();
+    const { income, bills } = getMonthlyStats(year, month);
+    const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
+    const petty = state.petty.filter(p => p.date && p.date.startsWith(monthKey)).reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+    const net = income - bills - petty;
+    netEl.textContent = fmtMoney(net, {sign: true, round: true});
+    netEl.className = 'val ' + (net >= 0 ? 'ok' : 'bad');
+  }
   document.querySelectorAll('nav.btm button').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
   const main = document.getElementById('content');
   if (currentTab === 'overview') main.innerHTML = renderOverview();
