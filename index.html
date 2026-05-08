@@ -106,6 +106,21 @@ main { flex: 1; padding: 8px; max-width: 900px; margin: 0 auto; width: 100%; }
 }
 .panel-r:hover { color: var(--lime); }
 
+/* ── chart wrapper ────────────────────────────────────── */
+.chart-svg-wrap {
+  margin: 2px -2px 0;
+  padding: 2px 0 0;
+}
+.chart-svg-wrap svg {
+  font-feature-settings: 'tnum';
+}
+.chart-svg-wrap .lnk {
+  color: var(--cyan); cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+.chart-svg-wrap .lnk:hover { color: var(--lime); }
+
 /* ── stat bar (overview-style) ────────────────────────── */
 .sbar {
   display: grid;
@@ -662,6 +677,23 @@ function fmtMoney(n, opts = {}) {
   const abs = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: opts.round ? 0 : 2, maximumFractionDigits: opts.round ? 0 : 2 });
   return (v < 0 ? '−$' : (opts.sign && v > 0 ? '+$' : '$')) + abs;
 }
+function fmtCompact(v) {
+  const n = Math.abs(parseFloat(v) || 0);
+  if (n >= 1000000) return `$${(n/1000000).toFixed(1)}m`;
+  if (n >= 10000) return `$${Math.round(n/1000)}k`;
+  if (n >= 1000) return `$${(n/1000).toFixed(1)}k`;
+  return `$${Math.round(n)}`;
+}
+function niceMax(v) {
+  if (v <= 0) return 100;
+  if (v <= 100) return Math.ceil(v / 25) * 25;
+  if (v <= 500) return Math.ceil(v / 100) * 100;
+  if (v <= 2000) return Math.ceil(v / 250) * 250;
+  if (v <= 5000) return Math.ceil(v / 500) * 500;
+  if (v <= 20000) return Math.ceil(v / 1000) * 1000;
+  if (v <= 100000) return Math.ceil(v / 5000) * 5000;
+  return Math.ceil(v / 10000) * 10000;
+}
 function fmtHM(decimal) {
   if (decimal == null || isNaN(decimal)) return '—';
   if (decimal === 0) return '0h';
@@ -888,6 +920,126 @@ function statBar(lab, barPct, barColor, val, valColor, delta) {
   return `<div class="sbar"><span class="lab">${lab}</span><span class="bar ${barColor||''}">${bar}</span><span class="val ${valColor||''}">${val}</span>${dh}</div>`;
 }
 
+// ──── Chart: income trend (htop) ─────────────────────────────
+function renderIncomeChart(monthsBack = 12) {
+  const now = new Date();
+  const data = [];
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const stats = getMonthlyStats(d.getFullYear(), d.getMonth());
+    data.push({
+      label: d.toLocaleString('en-US', { month: 'short' }).toLowerCase(),
+      year: d.getFullYear(),
+      month: d.getMonth(),
+      income: stats.income,
+      bills: stats.bills,
+      isCurrent: d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(),
+    });
+  }
+
+  const incValues = data.map(d => d.income);
+  const validInc = incValues.filter(v => v > 0);
+  if (validInc.length === 0) {
+    return `<div class="empty">no income history yet · <span class="lnk" data-action="open-modal" data-type="income">+ add income</span></div>`;
+  }
+
+  const yMax = niceMax(Math.max(...incValues));
+  const avg = validInc.reduce((a, b) => a + b, 0) / validInc.length;
+
+  // SVG dimensions — viewBox scales responsively
+  const W = 600, H = 180;
+  const pad = { top: 14, right: 10, bottom: 22, left: 46 };
+  const innerW = W - pad.left - pad.right;
+  const innerH = H - pad.top - pad.bottom;
+
+  const xPos = i => pad.left + (data.length <= 1 ? innerW / 2 : (i / (data.length - 1)) * innerW);
+  const yPos = v => pad.top + innerH - (v / yMax) * innerH;
+
+  // Y-axis grid + labels
+  const grids = [];
+  for (let i = 0; i <= 4; i++) {
+    const v = (yMax / 4) * i;
+    const y = yPos(v);
+    grids.push(`<line x1="${pad.left}" y1="${y}" x2="${W - pad.right}" y2="${y}" stroke="var(--line-strong)" stroke-dasharray="2 4" stroke-width="1" opacity="0.5" />`);
+    grids.push(`<text x="${pad.left - 6}" y="${y + 3}" fill="var(--t-faint)" font-size="9.5" font-family="JetBrains Mono, monospace" text-anchor="end">${fmtCompact(v)}</text>`);
+  }
+
+  // Find min/max month indices for highlight
+  let minIdx = -1, maxIdx = -1;
+  let minVal = Infinity, maxValSeen = -Infinity;
+  data.forEach((d, i) => {
+    if (d.income > 0 && d.income < minVal) { minVal = d.income; minIdx = i; }
+    if (d.income > maxValSeen) { maxValSeen = d.income; maxIdx = i; }
+  });
+
+  // Income area + line
+  const linePoints = data.map((d, i) => `${xPos(i).toFixed(1)},${yPos(d.income).toFixed(1)}`).join(' L');
+  const areaPath = `M${xPos(0).toFixed(1)},${(pad.top + innerH).toFixed(1)} L${linePoints} L${xPos(data.length - 1).toFixed(1)},${(pad.top + innerH).toFixed(1)} Z`;
+  const linePath = `M${linePoints}`;
+  const area = `<path d="${areaPath}" fill="var(--ok)" opacity="0.1" />`;
+  const line = `<path d="${linePath}" stroke="var(--ok)" stroke-width="1.5" fill="none" />`;
+
+  // Average reference line
+  const avgY = yPos(avg);
+  const avgLine = `<line x1="${pad.left}" y1="${avgY}" x2="${W - pad.right}" y2="${avgY}" stroke="var(--warm)" stroke-dasharray="3 3" stroke-width="1" opacity="0.7" />
+    <text x="${W - pad.right - 4}" y="${avgY - 4}" fill="var(--warm)" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="end">avg ${fmtCompact(avg)}</text>`;
+
+  // Data point dots
+  const dots = data.map((d, i) => {
+    if (d.income === 0) return '';
+    const isExtreme = i === minIdx || i === maxIdx;
+    const r = isExtreme ? 3 : 2.2;
+    const fill = d.isCurrent ? 'var(--ok)' : 'var(--bg-deep)';
+    return `<circle cx="${xPos(i).toFixed(1)}" cy="${yPos(d.income).toFixed(1)}" r="${r}" fill="${fill}" stroke="var(--ok)" stroke-width="1.3" />`;
+  }).join('');
+
+  // Highlight max value with label
+  let extremeLabels = '';
+  if (maxIdx >= 0 && data[maxIdx].income > 0) {
+    const x = xPos(maxIdx); const y = yPos(data[maxIdx].income);
+    extremeLabels += `<text x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" fill="var(--ok)" font-size="9" font-family="JetBrains Mono, monospace" text-anchor="middle">${fmtCompact(data[maxIdx].income)}</text>`;
+  }
+
+  // X-axis labels (every other month if 12)
+  const xLabelEvery = data.length > 8 ? 2 : 1;
+  const xLabels = data.map((d, i) => {
+    if (i % xLabelEvery !== 0 && i !== data.length - 1) return '';
+    const cls = d.isCurrent ? 'var(--lime)' : 'var(--t-faint)';
+    const yr = d.month === 0 || i === 0 ? `<tspan x="${xPos(i).toFixed(1)}" dy="11" fill="var(--t-mute)" font-size="8.5">${String(d.year).slice(2)}</tspan>` : '';
+    return `<text x="${xPos(i).toFixed(1)}" y="${H - 8}" fill="${cls}" font-size="9.5" font-family="JetBrains Mono, monospace" text-anchor="middle">${d.label}${yr}</text>`;
+  }).join('');
+
+  // Baseline x-axis
+  const xAxis = `<line x1="${pad.left}" y1="${pad.top + innerH}" x2="${W - pad.right}" y2="${pad.top + innerH}" stroke="var(--line-strong)" stroke-width="1" />`;
+
+  // Footer stats
+  const lastN = validInc.slice(-3);
+  const last3Avg = lastN.length ? lastN.reduce((a,b)=>a+b,0) / lastN.length : 0;
+  const trendDelta = avg > 0 ? ((last3Avg - avg) / avg * 100) : 0;
+  const trendSym = trendDelta > 5 ? '↑' : trendDelta < -5 ? '↓' : '·';
+  const trendCls = trendDelta > 5 ? 'ok' : trendDelta < -5 ? 'bad' : 'flat';
+
+  const footer = `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px 0;font-size:10px;color:var(--t-faint);flex-wrap:wrap;gap:8px;">
+    <span><span style="color:var(--ok);">●</span> income · ${validInc.length} active mo</span>
+    <span><span style="color:var(--warm);">┄</span> avg ${fmtMoney(avg, {round:true})}</span>
+    <span class="${trendCls === 'ok' ? '' : trendCls === 'bad' ? '' : ''}" style="color:var(--${trendCls === 'ok' ? 'ok' : trendCls === 'bad' ? 'bad' : 't-mute'});">${trendSym} ${Math.abs(trendDelta).toFixed(0)}% recent</span>
+  </div>`;
+
+  return `<div class="chart-svg-wrap">
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;display:block;">
+      ${grids.join('')}
+      ${xAxis}
+      ${area}
+      ${line}
+      ${avgLine}
+      ${dots}
+      ${extremeLabels}
+      ${xLabels}
+    </svg>
+    ${footer}
+  </div>`;
+}
+
 function panel(key, title, contentHTML, rightAction) {
   const k = key ? `<span class="key">${key}</span>` : '';
   const r = rightAction ? `<span class="panel-r" data-action="${rightAction.action}"${rightAction.type ? ` data-type="${rightAction.type}"` : ''}${rightAction.tab ? ` data-tab="${rightAction.tab}"` : ''}>${rightAction.label}</span>` : '';
@@ -1035,6 +1187,7 @@ function renderIncome() {
 
   return `
     ${panel('F2', 'income · ytd stats', summaryBars)}
+    ${panel('', 'income · 12mo trend', renderIncomeChart(12))}
     ${taxPanel}
     ${panel('', 'sources · ' + sources.length, sourcesHTML, { action: 'open-modal', type: 'income', label: '+ add' })}
   `;
