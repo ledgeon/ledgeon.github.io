@@ -237,7 +237,7 @@ main {
   font-variant-numeric: tabular-nums;
 }
 .bchart-bars {
-  display: flex; gap: 5px;
+  display: flex; gap: 3px;
   align-items: flex-end;
   height: 92px;
   border-bottom: 1px dashed var(--line-strong);
@@ -252,7 +252,7 @@ main {
   position: relative;
 }
 .bchart-bar {
-  width: 78%; max-width: 28px;
+  width: 78%; max-width: 26px;
   background: var(--lime);
   min-height: 0;
   opacity: 0.85;
@@ -278,10 +278,10 @@ main {
 }
 .bchart-col:hover .bchart-amt { opacity: 1; }
 .bchart-labels {
-  display: flex; gap: 5px;
+  display: flex; gap: 3px;
   margin-top: 4px;
   padding: 0 2px;
-  font-size: 10px; color: var(--t-faint);
+  font-size: 9.5px; color: var(--t-faint);
 }
 .bchart-labels > div {
   flex: 1; text-align: center;
@@ -742,7 +742,7 @@ const PRESET_BILLS = [
 ];
 
 // ──── State ──────────────────────────────────────────────────
-let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [] };
+let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [] };
 const possibleKeys = ['ledgeon-state-v5', 'ledgeon-state-v4', 'ledgeon-prompt-v1', 'ledgeon-state-v3'];
 for (const k of possibleKeys) {
   try {
@@ -751,12 +751,13 @@ for (const k of possibleKeys) {
       const v = JSON.parse(raw);
       if (Array.isArray(v.bills) || Array.isArray(v.income)) {
         state = {
-          tasks:  Array.isArray(v.tasks)  ? v.tasks  : [],
-          bills:  Array.isArray(v.bills)  ? v.bills  : [],
-          events: Array.isArray(v.events) ? v.events : [],
-          income: Array.isArray(v.income) ? v.income : [],
-          goals:  Array.isArray(v.goals)  ? v.goals  : [],
-          petty:  Array.isArray(v.petty)  ? v.petty  : [],
+          tasks:    Array.isArray(v.tasks)    ? v.tasks    : [],
+          bills:    Array.isArray(v.bills)    ? v.bills    : [],
+          events:   Array.isArray(v.events)   ? v.events   : [],
+          income:   Array.isArray(v.income)   ? v.income   : [],
+          goals:    Array.isArray(v.goals)    ? v.goals    : [],
+          petty:    Array.isArray(v.petty)    ? v.petty    : [],
+          payments: Array.isArray(v.payments) ? v.payments : [],
         };
         break;
       }
@@ -795,7 +796,7 @@ function setTaxPct(v) { localStorage.setItem(TAX_KEY, String(v)); }
 // ──── Helpers ────────────────────────────────────────────────
 function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {} }
 function nextId(col) {
-  const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p' }[col];
+  const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm' }[col];
   let max = 0;
   for (const item of state[col]) { const n = parseInt(item.id?.slice(1), 10); if (!isNaN(n) && n > max) max = n; }
   return pfx + (max + 1);
@@ -1039,6 +1040,63 @@ function getWeeklyPettyHistory(weeksBack = 6) {
   return out;
 }
 
+// unified transaction feed: petty + bill payments + one-time income
+function getRecentTransactions() {
+  const out = [];
+
+  for (const p of state.petty) {
+    out.push({
+      kind: 'petty',
+      refType: 'petty',
+      refId: p.id,
+      name: p.note || '—',
+      amount: parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0,
+      category: p.category || 'other',
+      date: p.date || p.createdAt,
+      sign: 'out',
+      canEdit: true,
+    });
+  }
+
+  for (const p of (state.payments || [])) {
+    out.push({
+      kind: 'payment',
+      refType: 'payments',
+      refId: p.id,
+      billId: p.billId,
+      name: p.name || '—',
+      amount: parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0,
+      category: p.category || 'other',
+      date: p.date || p.createdAt,
+      recurring: p.recurring,
+      sign: 'out',
+      canEdit: false,
+    });
+  }
+
+  for (const i of state.income) {
+    const isOnce = i.frequency === 'once' || !i.frequency;
+    if (!isOnce) continue; // recurring income is a source, not a discrete event
+    out.push({
+      kind: 'income',
+      refType: 'income',
+      refId: i.id,
+      name: i.source || '—',
+      amount: parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0,
+      category: 'income',
+      date: i.receivedAt || i.createdAt,
+      sign: 'in',
+      canEdit: true,
+    });
+  }
+
+  return out.sort((a, b) => {
+    const ad = a.date || '0000';
+    const bd = b.date || '0000';
+    return bd.localeCompare(ad);
+  });
+}
+
 // ──── UI helpers (cli) ───────────────────────────────────────
 // dot-leader row: label.....................value
 function kv(label, value, valColor = '', dim = false) {
@@ -1178,8 +1236,8 @@ function renderIncome() {
   const taxPct = getTaxPct();
   const taxSetaside = stats.ytdTips * taxPct / 100;
   const sources = state.income.slice().sort((a,b) => monthlyEq(b.amount, b.frequency) - monthlyEq(a.amount, a.frequency));
-  const history = getMonthlyHistory(6);
-  const incSeries = history.map(h => h.income);
+  const history = getMonthlyHistory(12);
+  const incSeries = getMonthlyHistory(6).map(h => h.income);
   const hoursHistory = getMonthlyHoursHistory(6);
 
   const summary = `
@@ -1222,7 +1280,7 @@ function renderIncome() {
   return `
     ${sec('ytd · income stats')}
     ${summary}
-    ${sec('income trend', { meta: '6 months' })}
+    ${sec('income trend', { meta: '12 months' })}
     ${renderBarChart(history.map(h => ({ label: h.label, value: h.income })))}
     ${taxSection}
     ${sec('income sources', { meta: sources.length + ' sources', add: { action: 'open-modal', type: 'income', label: '+ add' } })}
@@ -1352,11 +1410,7 @@ function renderBudget() {
   const weekSpent = weekEntries.reduce((s, e) => s + (parseFloat(String(e.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   const weekPct = weeklyAllowance > 0 ? (weekSpent / weeklyAllowance) * 100 : 0;
   const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
-  const pettyAll = state.petty.slice().sort((a, b) => {
-    const ad = a.date || a.createdAt || '0000';
-    const bd = b.date || b.createdAt || '0000';
-    return bd.localeCompare(ad);
-  });
+  const txns = getRecentTransactions();
   const weekHistory = getWeeklyPettyHistory(6);
 
   const allocation = `
@@ -1372,22 +1426,32 @@ function renderBudget() {
     ${kv('this week spent', `<span class="spark warn">${sparkline(weekHistory)}</span> ${fmtMoney(weekSpent, {round:true})} (${weekPct.toFixed(0)}%)`, weekPct >= 100 ? 'bad' : weekPct >= 75 ? 'warn' : 'ok')}
   `;
 
-  let pettyHTML = '';
-  if (pettyAll.length === 0) {
-    pettyHTML = `<div class="empty">no transactions logged · <span class="lnk" data-action="open-modal" data-type="petty">log one</span></div>`;
+  let txnHTML = '';
+  if (txns.length === 0) {
+    txnHTML = `<div class="empty">no transactions yet · <span class="lnk" data-action="open-modal" data-type="petty">log one</span></div>`;
   } else {
-    pettyHTML = pettyAll.map((p, i, arr) => {
-      const cat = (CATEGORIES[p.category] || CATEGORIES.other);
+    txnHTML = txns.map((t, i, arr) => {
       const isLast = i === arr.length - 1;
-      const dateStr = p.date || p.createdAt;
+      const cat = t.kind === 'income'
+        ? { label: 'income', color: 'var(--ok)' }
+        : (CATEGORIES[t.category] || CATEGORIES.other);
+      const isInc = t.sign === 'in';
+      const amtClass = isInc ? 'ok' : '';
+      const sign = isInc ? '+' : '';
+      const kindBadge = t.kind === 'payment'
+        ? `<span class="tag info">bill${t.recurring && t.recurring !== 'once' ? ' · ' + t.recurring : ''}</span>`
+        : t.kind === 'income'
+          ? `<span class="tag ok">in</span>`
+          : `<span class="tag warn">petty</span>`;
       return `<div class="li${isLast ? ' last' : ''}">
-        <span class="nm">${escHTML(p.note || '—')}</span>
+        <span class="nm">${escHTML(t.name)}</span>
+        ${kindBadge}
         <span class="cat" style="color:${cat.color};">${cat.label}</span>
-        <span class="due">${dateStr ? formatDate(dateStr) : '—'}</span>
-        <span class="amt">${fmtMoney(p.amount, {round:true})}</span>
+        <span class="due">${t.date ? formatDate(t.date) : '—'}</span>
+        <span class="amt ${amtClass}">${sign}${fmtMoney(t.amount, {round:true})}</span>
         <span class="acts">
-          <button data-action="edit" data-type="petty" data-id="${p.id}">edit</button>
-          <button class="err" data-action="rm" data-type="petty" data-id="${p.id}">rm</button>
+          ${t.canEdit ? `<button data-action="edit" data-type="${t.refType}" data-id="${t.refId}">edit</button>` : ''}
+          <button class="err" data-action="rm" data-type="${t.refType}" data-id="${t.refId}">rm</button>
         </span>
       </div>`;
     }).join('');
@@ -1425,8 +1489,8 @@ function renderBudget() {
     ${allocation}
     ${sec('discretionary')}
     ${discretionary}
-    ${sec('petty transactions', { meta: pettyAll.length + ' total', add: { action: 'open-modal', type: 'petty', label: '+ log' } })}
-    ${pettyHTML}
+    ${sec('transactions', { meta: txns.length + ' total', add: { action: 'open-modal', type: 'petty', label: '+ log' } })}
+    ${txnHTML}
     ${sec('savings goals', { meta: state.goals.length + ' goals', add: { action: 'open-modal', type: 'goals', label: '+ add' } })}
     ${goalsHTML}
   `;
@@ -1524,6 +1588,27 @@ document.addEventListener('click', e => {
   else if (act === 'rm') {
     if (confirm('Delete?')) {
       const t = btn.dataset.type === 'expenses' ? 'bills' : btn.dataset.type;
+      if (t === 'payments') {
+        // undo the bill payment when removing a payment log entry
+        const pay = state.payments.find(x => x.id === btn.dataset.id);
+        if (pay) {
+          const bill = state.bills.find(b => b.id === pay.billId);
+          if (bill) {
+            if (bill.recurring && bill.recurring !== 'once' && bill.dueDate) {
+              const d = new Date(bill.dueDate + 'T00:00:00');
+              if (bill.recurring === 'monthly') d.setMonth(d.getMonth() - 1);
+              else if (bill.recurring === 'weekly') d.setDate(d.getDate() - 7);
+              else if (bill.recurring === 'yearly') d.setFullYear(d.getFullYear() - 1);
+              bill.dueDate = isoDate(d);
+            } else {
+              bill.paid = false;
+            }
+          }
+        }
+      } else if (t === 'bills') {
+        // clean up orphan payment logs for the deleted bill
+        state.payments = state.payments.filter(p => p.billId !== btn.dataset.id);
+      }
       state[t] = state[t].filter(x => x.id !== btn.dataset.id);
       saveState(); render();
     }
@@ -1532,6 +1617,17 @@ document.addEventListener('click', e => {
   else if (act === 'pay-bill') {
     const b = state.bills.find(x => x.id === btn.dataset.id);
     if (b) {
+      // log the payment to the transaction history
+      state.payments.push({
+        id: nextId('payments'),
+        billId: b.id,
+        name: b.name,
+        amount: parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0,
+        category: b.category,
+        recurring: b.recurring,
+        date: isoDate(todayStart()),
+        createdAt: isoDate(todayStart()),
+      });
       if (b.recurring && b.recurring !== 'once' && b.dueDate) {
         const d = new Date(b.dueDate);
         if (b.recurring === 'monthly') d.setMonth(d.getMonth()+1);
@@ -1542,7 +1638,22 @@ document.addEventListener('click', e => {
       saveState(); render();
     }
   }
-  else if (act === 'unpay-bill') { const b = state.bills.find(x => x.id === btn.dataset.id); if (b) { b.paid = false; saveState(); render(); } }
+  else if (act === 'unpay-bill') {
+    const b = state.bills.find(x => x.id === btn.dataset.id);
+    if (b) {
+      b.paid = false;
+      // also remove the most recent payment log for this bill
+      let mostRecentIdx = -1;
+      let mostRecentKey = '';
+      state.payments.forEach((p, i) => {
+        if (p.billId !== b.id) return;
+        const key = (p.date || p.createdAt || '');
+        if (key >= mostRecentKey) { mostRecentIdx = i; mostRecentKey = key; }
+      });
+      if (mostRecentIdx >= 0) state.payments.splice(mostRecentIdx, 1);
+      saveState(); render();
+    }
+  }
   else if (act === 'toggle-task') { const t = state.tasks.find(x => x.id === btn.dataset.id); if (t) { t.done = !t.done; saveState(); render(); } }
   else if (act === 'goal-add') {
     const g = state.goals.find(x => x.id === btn.dataset.id);
@@ -1558,7 +1669,7 @@ document.addEventListener('click', e => {
     a.href = u; a.download = 'ledgeon.json'; a.click(); URL.revokeObjectURL(u);
   }
   else if (act === 'import') document.getElementById('file-import').click();
-  else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[] }; saveState(); render(); } }
+  else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[], payments:[] }; saveState(); render(); } }
 });
 
 document.getElementById('file-import').addEventListener('change', e => {
@@ -1570,7 +1681,8 @@ document.getElementById('file-import').addEventListener('change', e => {
       if (confirm('Import data? Replaces current.')) {
         state = {
           tasks: imp.tasks||[], bills: imp.bills||[], events: imp.events||[],
-          income: imp.income||[], goals: imp.goals||[], petty: imp.petty||[]
+          income: imp.income||[], goals: imp.goals||[], petty: imp.petty||[],
+          payments: imp.payments||[]
         };
         saveState(); render();
       }
