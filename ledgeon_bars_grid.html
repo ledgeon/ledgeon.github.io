@@ -214,58 +214,75 @@ main {
 .spark.warm { color: var(--warm); }
 .spark.cyan { color: var(--cyan); }
 
-/* ── chart: diff log (income trend) ──────────────────── */
+/* ── chart: bars + visible gridlines (income trend) ─── */
 .bchart {
-  margin: 4px 0 0;
-  padding: 0;
-}
-.diff-row {
-  display: grid;
-  grid-template-columns: 36px 1fr 16px 60px;
-  gap: 10px;
-  padding: 1px 0;
   padding-left: 18px;
   position: relative;
-  font-size: 11.5px;
-  align-items: center;
+  margin: 4px 0 0;
 }
-.diff-row::before {
-  content: '├─';
-  position: absolute; left: 0; top: 2px;
-  color: var(--t-mute); font-size: 12px;
-}
-.diff-row.last::before { content: '└─'; }
-.diff-mo { color: var(--t-faint); }
-.diff-row.cur .diff-mo { color: var(--lime); font-weight: 600; }
-.diff-val {
-  color: var(--t-bright);
-  font-variant-numeric: tabular-nums;
-}
-.diff-row.cur .diff-val { color: var(--lime); }
-.diff-arrow { text-align: center; font-size: 10px; }
-.diff-arrow.up { color: var(--ok); }
-.diff-arrow.down { color: var(--bad); }
-.diff-arrow.base { color: var(--t-mute); }
-.diff-pct {
-  font-size: 10.5px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-.diff-pct.up { color: var(--ok); }
-.diff-pct.down { color: var(--bad); }
-.diff-pct.base { color: var(--t-mute); }
-.diff-empty {
-  padding: 6px 0 0 18px;
-  position: relative;
-  color: var(--t-mute);
-  font-size: 11.5px;
-  font-style: italic;
-}
-.diff-empty::before {
+.bchart::before {
   content: '└─';
-  position: absolute; left: 0; top: 6px;
+  position: absolute; left: 0; top: 1px;
   color: var(--t-mute); font-size: 12px;
 }
+.bchart-frame {
+  position: relative;
+  height: 100px;
+  border-bottom: 1px solid var(--t-mute);
+  border-left: 1px dashed var(--t-mute);
+  margin-left: 30px;
+}
+.bchart-yl {
+  position: absolute;
+  right: 100%;
+  margin-right: 5px;
+  font-size: 9px;
+  color: var(--t-mute);
+  transform: translateY(50%);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.bchart-gline {
+  position: absolute; left: 0; right: 0;
+  border-top: 1px dashed var(--line-strong);
+  pointer-events: none;
+}
+.bchart-bars {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  display: flex; gap: 3px;
+  align-items: flex-end;
+  height: 100%;
+  padding: 0 4px;
+}
+.bchart-col {
+  flex: 1;
+  display: flex; align-items: flex-end; justify-content: center;
+  height: 100%;
+  min-width: 0;
+}
+.bchart-bar {
+  width: 80%;
+  max-width: 22px;
+  background: var(--lime);
+  opacity: 0.65;
+}
+.bchart-col.cur .bchart-bar { opacity: 1; }
+.bchart-col.empty .bchart-bar { display: none; }
+.bchart-labels {
+  display: flex;
+  margin-top: 4px;
+  font-size: 9.5px;
+  color: var(--t-faint);
+  padding: 0 4px;
+  margin-left: 30px;
+}
+.bchart-labels > span {
+  flex: 1; text-align: center;
+  text-transform: lowercase;
+  min-width: 0;
+}
+.bchart-labels > span.cur { color: var(--lime); }
 
 /* ── chart: horizontal bars (category breakdown) ──────── */
 .hcat {
@@ -1117,34 +1134,37 @@ function monthNav(year, month) {
   return `<span class="month-nav"><button data-action="prev-month">‹ prev</button><span class="label">${new Date(year, month).toLocaleString('en-US',{month:'short',year:'numeric'}).toLowerCase()}</span><button data-action="next-month">next ›</button>${!isCurr ? '<button data-action="curr-month">~ today</button>' : ''}</span>`;
 }
 
-// diff-log chart: monthly change with ▲▼ arrows, skips empty months
+// bars + visible gridlines chart
 function renderBarChart(data) {
   if (!data || data.length === 0) return '';
-  const filtered = data.filter(d => (d.value || 0) > 0);
-  if (filtered.length === 0) {
-    return `<div class="bchart"><div class="diff-empty">no income recorded this year yet</div></div>`;
-  }
+  const max = Math.max(...data.map(d => d.value || 0), 1);
+  const fmtShort = (n) => {
+    if (n >= 1000) return '$' + (n/1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return '$' + Math.round(n);
+  };
 
-  const rows = filtered.map((d, i, arr) => {
-    let arrow = '─', arrowCls = 'base', pctChange = 'start';
-    if (i > 0) {
-      const prev = arr[i-1].value;
-      const delta = ((d.value - prev) / prev) * 100;
-      if (delta > 0.5) { arrow = '▲'; arrowCls = 'up'; }
-      else if (delta < -0.5) { arrow = '▼'; arrowCls = 'down'; }
-      pctChange = (delta > 0 ? '+' : '') + delta.toFixed(0) + '%';
-    }
-    const isLast = i === arr.length - 1;
-    const cls = (d.current ? 'cur ' : '') + (isLast ? 'last' : '');
-    return `<div class="diff-row ${cls}">
-      <span class="diff-mo">${d.label}</span>
-      <span class="diff-val">${fmtMoney(d.value, {round:true})}</span>
-      <span class="diff-arrow ${arrowCls}">${arrow}</span>
-      <span class="diff-pct ${arrowCls}">${pctChange}</span>
-    </div>`;
+  const cols = data.map(d => {
+    const pct = d.value > 0 ? (d.value / max) * 100 : 0;
+    const cls = d.current ? 'cur' : (d.value === 0 ? 'empty' : '');
+    return `<div class="bchart-col ${cls}"><div class="bchart-bar" style="height: ${Math.max(pct, 1)}%;"></div></div>`;
   }).join('');
+  const labels = data.map(d => `<span${d.current ? ' class="cur"' : ''}>${d.label}</span>`).join('');
 
-  return `<div class="bchart">${rows}</div>`;
+  return `
+    <div class="bchart">
+      <div class="bchart-frame">
+        <span class="bchart-yl" style="bottom: 100%;">${fmtShort(max)}</span>
+        <span class="bchart-yl" style="bottom: 50%;">${fmtShort(max/2)}</span>
+        <span class="bchart-yl" style="bottom: 0;">$0</span>
+        <div class="bchart-gline" style="bottom: 25%;"></div>
+        <div class="bchart-gline" style="bottom: 50%;"></div>
+        <div class="bchart-gline" style="bottom: 75%;"></div>
+        <div class="bchart-gline" style="bottom: 100%;"></div>
+        <div class="bchart-bars">${cols}</div>
+      </div>
+      <div class="bchart-labels">${labels}</div>
+    </div>
+  `;
 }
 
 // horizontal category bars (% of avg-monthly income)
