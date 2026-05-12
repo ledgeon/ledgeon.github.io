@@ -214,57 +214,78 @@ main {
 .spark.warm { color: var(--warm); }
 .spark.cyan { color: var(--cyan); }
 
-/* ── chart: diff log (income trend) ──────────────────── */
+/* ── chart: vertical bars (income trend) ──────────────── */
 .bchart {
-  margin: 4px 0 0;
-  padding: 0;
-}
-.diff-row {
-  display: grid;
-  grid-template-columns: 36px 1fr 16px 60px;
-  gap: 10px;
-  padding: 1px 0;
+  margin: 6px 0 12px;
   padding-left: 18px;
   position: relative;
-  font-size: 11.5px;
-  align-items: center;
 }
-.diff-row::before {
-  content: '├─';
-  position: absolute; left: 0; top: 2px;
-  color: var(--t-mute); font-size: 12px;
-}
-.diff-row.last::before { content: '└─'; }
-.diff-mo { color: var(--t-faint); }
-.diff-row.cur .diff-mo { color: var(--lime); font-weight: 600; }
-.diff-val {
-  color: var(--t-bright);
-  font-variant-numeric: tabular-nums;
-}
-.diff-row.cur .diff-val { color: var(--lime); }
-.diff-arrow { text-align: center; font-size: 10px; }
-.diff-arrow.up { color: var(--ok); }
-.diff-arrow.down { color: var(--bad); }
-.diff-arrow.base { color: var(--t-mute); }
-.diff-pct {
-  font-size: 10.5px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-.diff-pct.up { color: var(--ok); }
-.diff-pct.down { color: var(--bad); }
-.diff-pct.base { color: var(--t-mute); }
-.diff-empty {
-  padding: 6px 0 0 18px;
-  position: relative;
-  color: var(--t-mute);
-  font-size: 11.5px;
-  font-style: italic;
-}
-.diff-empty::before {
+.bchart::before {
   content: '└─';
-  position: absolute; left: 0; top: 6px;
+  position: absolute; left: 0; top: 1px;
   color: var(--t-mute); font-size: 12px;
+}
+.bchart-bars {
+  display: flex; gap: 3px;
+  align-items: flex-end;
+  height: 84px;
+  border-bottom: 1px dashed var(--line-strong);
+  border-left: 1px dashed var(--line-strong);
+  padding: 14px 2px 0 2px;
+}
+.bchart-col {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  height: 100%; min-width: 0;
+  position: relative;
+}
+.bchart-bar {
+  display: flex; flex-direction: column;
+  width: 100%; max-width: 20px;
+  gap: 2px;
+  min-height: 0;
+}
+.bchart-block {
+  width: 100%;
+  height: 5px;
+  background: var(--lime);
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.bchart-col:hover .bchart-block,
+.bchart-col:active .bchart-block { opacity: 1; }
+.bchart-col.cur .bchart-block { opacity: 1; }
+.bchart-amt {
+  position: absolute;
+  bottom: 100%;
+  font-size: 9.5px;
+  color: var(--t-bright);
+  white-space: nowrap;
+  margin-bottom: 2px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 3;
+  background: var(--bg);
+  padding: 0 3px;
+  pointer-events: none;
+}
+.bchart-col:hover .bchart-amt,
+.bchart-col:active .bchart-amt { opacity: 1; }
+.bchart-labels {
+  display: flex; gap: 3px;
+  margin-top: 4px;
+  padding: 0 2px;
+  font-size: 9.5px; color: var(--t-faint);
+}
+.bchart-labels > div {
+  flex: 1; text-align: center;
+  text-transform: lowercase;
+  min-width: 0;
+}
+.bchart-labels > div.cur {
+  color: var(--lime);
 }
 
 /* ── chart: horizontal bars (category breakdown) ──────── */
@@ -1117,50 +1138,34 @@ function monthNav(year, month) {
   return `<span class="month-nav"><button data-action="prev-month">‹ prev</button><span class="label">${new Date(year, month).toLocaleString('en-US',{month:'short',year:'numeric'}).toLowerCase()}</span><button data-action="next-month">next ›</button>${!isCurr ? '<button data-action="curr-month">~ today</button>' : ''}</span>`;
 }
 
-// diff-log chart: monthly change with ▲▼ arrows, skips empty months
+// vertical block-bar chart
 function renderBarChart(data) {
   if (!data || data.length === 0) return '';
-  const filtered = data.filter(d => (d.value || 0) > 0);
-  if (filtered.length === 0) {
-    return `<div class="bchart"><div class="diff-empty">no income recorded this year yet</div></div>`;
-  }
+  const values = data.map(d => d.value || 0);
+  const max = Math.max(...values, 1);
+  const MAX_BLOCKS = 10;
 
-  const rows = filtered.map((d, i, arr) => {
-    let arrow = '─', arrowCls = 'base', pctChange = 'start';
-    if (i > 0) {
-      const prev = arr[i-1].value;
-      const delta = ((d.value - prev) / prev) * 100;
-      if (delta > 0.5) { arrow = '▲'; arrowCls = 'up'; }
-      else if (delta < -0.5) { arrow = '▼'; arrowCls = 'down'; }
-      pctChange = (delta > 0 ? '+' : '') + delta.toFixed(0) + '%';
-    }
-    const isLast = i === arr.length - 1;
-    const cls = (d.current ? 'cur ' : '') + (isLast ? 'last' : '');
-    return `<div class="diff-row ${cls}">
-      <span class="diff-mo">${d.label}</span>
-      <span class="diff-val">${fmtMoney(d.value, {round:true})}</span>
-      <span class="diff-arrow ${arrowCls}">${arrow}</span>
-      <span class="diff-pct ${arrowCls}">${pctChange}</span>
+  const bars = data.map(d => {
+    const v = d.value || 0;
+    const blocks = v > 0 ? Math.max(1, Math.round((v / max) * MAX_BLOCKS)) : 0;
+    const blockDivs = blocks > 0 ? '<div class="bchart-block"></div>'.repeat(blocks) : '';
+    const curClass = d.current ? ' cur' : '';
+    return `<div class="bchart-col${curClass}">
+      ${v > 0 ? `<span class="bchart-amt">${fmtMoney(v, {round:true})}</span>` : ''}
+      <div class="bchart-bar">${blockDivs}</div>
     </div>`;
   }).join('');
 
-  return `<div class="bchart">${rows}</div>`;
-}
+  const labels = data.map(d =>
+    `<div${d.current ? ' class="cur"' : ''}>${d.label}</div>`
+  ).join('');
 
-// horizontal category bars (% of avg-monthly income)
-function renderCategoryChart(catData, incTot) {
-  if (!catData || catData.length === 0) return '';
-  return catData.map((c, i, arr) => {
-    const pct = incTot > 0 ? (c.total / incTot) * 100 : 0;
-    const barPct = Math.max(1, Math.min(100, pct));
-    const isLast = i === arr.length - 1;
-    return `<div class="hcat${isLast ? ' last' : ''}">
-      <div class="hcat-lbl" style="color: ${c.color};">${c.label}</div>
-      <div class="hcat-bar"><div class="hcat-fill" style="width: ${barPct}%; background: ${c.color};"></div></div>
-      <div class="hcat-val">${fmtMoney(c.total, {round:true})}</div>
-      <div class="hcat-pct">${incTot > 0 ? pct.toFixed(0) + '%' : '—'}</div>
-    </div>`;
-  }).join('');
+  return `
+    <div class="bchart">
+      <div class="bchart-bars">${bars}</div>
+      <div class="bchart-labels">${labels}</div>
+    </div>
+  `;
 }
 
 // ──── Render: overview (cli) ─────────────────────────────────
@@ -1175,10 +1180,6 @@ function renderOverview() {
   const history = getMonthlyHistory(6);
   const incSeries = history.map(h => h.income);
   const billSeries = history.map(h => h.bills);
-
-  const yearHistory = getCalendarYearHistory();
-  const avgMonthly = getIncomeStats().avgMonthly;
-  const catData = aggregateBillsByCategory(state.bills, year, month);
 
   const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
   const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid)
@@ -1196,14 +1197,6 @@ function renderOverview() {
     ${kv('net',      fmtMoney(net, {sign:true, round:true}), net >= 0 ? 'ok' : 'bad')}
     ${pettySpent > 0 ? kvSub('petty spent this month', fmtMoney(pettySpent, {round:true}), 'warn') : ''}
   `;
-
-  const incomeTrendHTML = state.income.length > 0
-    ? `${sec('income trend', { meta: String(new Date().getFullYear()) })}${renderBarChart(yearHistory.map(h => ({ label: h.label, value: h.income, current: h.current })))}`
-    : '';
-
-  const catChartHTML = (catData.length && cur.bills > 0)
-    ? `${sec('expenses by category', { meta: '% of avg income' })}${renderCategoryChart(catData, avgMonthly)}`
-    : '';
 
   let upcomingHTML = '';
   if (upcoming.length) {
@@ -1246,8 +1239,6 @@ function renderOverview() {
   return `
     ${sec('overview', { meta: new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase(), monthNav: monthNav(year, month) })}
     ${summary}
-    ${incomeTrendHTML}
-    ${catChartHTML}
     ${sec('upcoming bills', { meta: '14 days' })}
     ${upcomingHTML}
     ${sec('task queue', { meta: openTasks.length + ' open' })}
@@ -1315,12 +1306,9 @@ function renderIncome() {
 
 // ──── Render: expenses (cli) ─────────────────────────────────
 function renderExpenses() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+  const { year, month } = getViewMonth();
   const cur = getMonthlyStats(year, month);
-  const total = cur.bills;
-  const incTot = getIncomeStats().avgMonthly;
+  const total = cur.bills; const incTot = cur.income;
   const catData = aggregateBillsByCategory(state.bills, year, month);
   const billsHistory = getMonthlyHistory(6).map(h => h.bills);
   const paidCount = state.bills.filter(b => b.paid).length;
@@ -1339,17 +1327,29 @@ function renderExpenses() {
     return ad.localeCompare(bd);
   });
 
-  const pctOfIncome = incTot > 0 ? (total / incTot) * 100 : 0;
   const summary = `
-    ${kv('monthly total', `<span class="spark bad">${sparkline(billsHistory)}</span> ${fmtMoney(total, {round:true})}`, 'bad')}
-    ${kv('% of avg income', incTot > 0 ? pctOfIncome.toFixed(0)+'%' : '—', pctOfIncome > 60 ? 'warn' : '')}
+    ${kv('total this month', `<span class="spark bad">${sparkline(billsHistory)}</span> ${fmtMoney(total, {round:true})}`, 'bad')}
+    ${kv('% of income', incTot > 0 ? (total/incTot*100).toFixed(0)+'%' : '—', total/incTot > 0.6 ? 'warn' : '')}
     ${kv('annual total', fmtMoney(totalAnnual, {round:true}), 'warm')}
     ${kv('paid / total', `${paidCount}/${paidCount+unpaidCount}`, 'ok')}
   `;
 
-  const catBreakdown = (catData.length && total > 0)
-    ? `${sec('by category', { meta: '% of avg income' })}${renderCategoryChart(catData, incTot)}`
-    : '';
+  let catBreakdown = '';
+  if (catData.length && total > 0) {
+    catBreakdown = `${sec('by category', { meta: '% of income' })}
+      ${catData.map((c, i, arr) => {
+        const pct = incTot > 0 ? (c.total / incTot) * 100 : 0;
+        const barPct = Math.max(1, Math.min(100, pct));
+        const isLast = i === arr.length - 1;
+        return `<div class="hcat${isLast ? ' last' : ''}">
+          <div class="hcat-lbl" style="color: ${c.color};">${c.label}</div>
+          <div class="hcat-bar"><div class="hcat-fill" style="width: ${barPct}%; background: ${c.color};"></div></div>
+          <div class="hcat-val">${fmtMoney(c.total, {round:true})}</div>
+          <div class="hcat-pct">${incTot > 0 ? pct.toFixed(0) + '%' : '—'}</div>
+        </div>`;
+      }).join('')}
+    `;
+  }
 
   let billsHTML = '';
   if (state.bills.length === 0) {
@@ -1381,7 +1381,7 @@ function renderExpenses() {
   }
 
   return `
-    ${sec('expenses', { meta: 'fixed · monthly' })}
+    ${sec('expenses', { meta: new Date(year, month).toLocaleString('en-US',{month:'long',year:'numeric'}).toLowerCase(), monthNav: monthNav(year, month) })}
     ${summary}
     ${catBreakdown}
     ${sec('bills', { meta: state.bills.length + ' bills', add: { action: 'open-modal', type: 'expenses', label: '+ add' } })}
@@ -1426,8 +1426,7 @@ function renderBudget() {
   const weekSpent = weekEntries.reduce((s, e) => s + (parseFloat(String(e.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   const weekPct = weeklyAllowance > 0 ? (weekSpent / weeklyAllowance) * 100 : 0;
   const monthKey = `${year}-${String(month+1).padStart(2,'0')}`;
-  const sevenDayCutoff = isoDate(new Date(todayStart().getTime() - 6 * 86400000));
-  const txns = getRecentTransactions().filter(t => t.date && t.date >= sevenDayCutoff);
+  const txns = getRecentTransactions();
   const weekHistory = getWeeklyPettyHistory(6);
 
   const allocation = `
@@ -1445,7 +1444,7 @@ function renderBudget() {
 
   let txnHTML = '';
   if (txns.length === 0) {
-    txnHTML = `<div class="empty">none in the last 7 days · <span class="lnk" data-action="open-modal" data-type="petty">log one</span></div>`;
+    txnHTML = `<div class="empty">no transactions yet · <span class="lnk" data-action="open-modal" data-type="petty">log one</span></div>`;
   } else {
     txnHTML = txns.map((t, i, arr) => {
       const isLast = i === arr.length - 1;
@@ -1506,7 +1505,7 @@ function renderBudget() {
     ${allocation}
     ${sec('discretionary')}
     ${discretionary}
-    ${sec('transactions', { meta: 'last 7 days · ' + txns.length, add: { action: 'open-modal', type: 'petty', label: '+ log' } })}
+    ${sec('transactions', { meta: txns.length + ' total', add: { action: 'open-modal', type: 'petty', label: '+ log' } })}
     ${txnHTML}
     ${sec('savings goals', { meta: state.goals.length + ' goals', add: { action: 'open-modal', type: 'goals', label: '+ add' } })}
     ${goalsHTML}
