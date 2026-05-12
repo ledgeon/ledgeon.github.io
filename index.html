@@ -356,7 +356,7 @@ main { flex: 1; }
 /* ── category bars ───────────────────────────────────────── */
 .cat {
   display: grid;
-  grid-template-columns: 80px 1fr 60px;
+  grid-template-columns: 68px 1fr 56px 36px;
   gap: 10px;
   align-items: center;
   padding: 7px 0;
@@ -364,6 +364,11 @@ main { flex: 1; }
   letter-spacing: 0.3px;
   text-transform: uppercase;
   color: var(--ink-soft);
+}
+.cat-l {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .cat-bar {
   height: 5px;
@@ -382,6 +387,13 @@ main { flex: 1; }
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--ink);
+}
+.cat-pct {
+  text-align: right;
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
 }
 
 /* ── goal ────────────────────────────────────────────────── */
@@ -748,7 +760,7 @@ main > * { animation: fadeIn 0.15s ease-out; }
   .task { padding: 12px 18px; }
   .goal { padding: 16px 18px; }
   .bchart { padding: 8px 18px 14px; }
-  .cat { grid-template-columns: 72px 1fr 56px; gap: 8px; font-size: 10.5px; }
+  .cat { grid-template-columns: 60px 1fr 50px 32px; gap: 7px; font-size: 10.5px; }
   .note { padding: 10px 18px; }
   .empty { padding: 24px 18px; }
 
@@ -1434,12 +1446,14 @@ function renderBarChart(data) {
 function renderCategoryChart(catData, incTot) {
   if (!catData || catData.length === 0) return '';
   return catData.map(c => {
-    const barPct = incTot > 0 ? Math.min(100, Math.max(2, (c.total / incTot) * 100)) : 0;
-    const pctTxt = incTot > 0 ? ` (${((c.total / incTot) * 100).toFixed(0)}%)` : '';
+    const rawPct = incTot > 0 ? (c.total / incTot) * 100 : 0;
+    const barPct = incTot > 0 ? Math.min(100, Math.max(1, rawPct)) : 0;
+    const pctTxt = incTot > 0 ? `${rawPct.toFixed(0)}%` : '—';
     return `<div class="cat">
-      <div>${(c.label || '').toLowerCase()}</div>
+      <div class="cat-l">${(c.label || '').toLowerCase()}</div>
       <div class="cat-bar"><div class="cat-fill" style="width:${barPct}%"></div></div>
       <div class="cat-v">${fmtMoney(c.total, {round:true})}</div>
+      <div class="cat-pct">${pctTxt}</div>
     </div>`;
   }).join('');
 }
