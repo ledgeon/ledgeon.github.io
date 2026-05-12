@@ -338,6 +338,7 @@ main { flex: 1; }
   border-radius: 1px;
 }
 .bar.cur { background: var(--accent); }
+.bar.empty { background: var(--hairline-strong); min-height: 2px; }
 .bars-foot {
   display: grid; gap: 5px; margin-top: 8px;
   font-size: 9px; font-weight: 500;
@@ -793,7 +794,7 @@ main > * { animation: fadeIn 0.15s ease-out; }
 <nav class="mnav" id="tabs">
   <button data-tab="overview">overview</button>
   <button data-tab="income">income</button>
-  <button data-tab="expenses">expenses<span class="badge badge-e" style="display:none">0</span></button>
+  <button data-tab="expenses">exp<span class="badge badge-e" style="display:none">0</span></button>
   <button data-tab="budget">budget</button>
   <button data-tab="tasks">tasks<span class="badge badge-t" style="display:none">0</span></button>
 </nav>
@@ -1411,17 +1412,18 @@ function heroBlock(label, value, sub, opts = {}) {
 // bar chart (income trend)
 function renderBarChart(data) {
   if (!data || data.length === 0) return '';
-  const filtered = data.filter(d => (d.value || 0) > 0);
-  if (filtered.length === 0) {
+  const maxVal = Math.max(...data.map(d => d.value || 0));
+  if (maxVal === 0) {
     return `<div class="bchart"><div class="bchart-empty">No income recorded this year yet</div></div>`;
   }
-  const maxVal = Math.max(...filtered.map(d => d.value));
-  const bars = filtered.map(d => {
-    const h = maxVal > 0 ? Math.max(4, (d.value / maxVal) * 100) : 0;
-    return `<div class="bar ${d.current ? 'cur' : ''}" style="height:${h}%"></div>`;
+  const bars = data.map(d => {
+    const v = d.value || 0;
+    const h = v > 0 ? Math.max(4, (v / maxVal) * 100) : 0;
+    const cls = v === 0 ? 'empty' : (d.current ? 'cur' : '');
+    return `<div class="bar ${cls}" style="height:${h}%"></div>`;
   }).join('');
-  const labels = filtered.map(d => `<div>${d.label.toLowerCase()}</div>`).join('');
-  const n = filtered.length;
+  const labels = data.map(d => `<div>${d.label.toLowerCase()}</div>`).join('');
+  const n = data.length;
   return `<div class="bchart">
     <div class="bars" style="grid-template-columns: repeat(${n}, 1fr);">${bars}</div>
     <div class="bars-foot" style="grid-template-columns: repeat(${n}, 1fr);">${labels}</div>
@@ -1429,11 +1431,11 @@ function renderBarChart(data) {
 }
 
 // category bars
-function renderCategoryChart(catData, _incTot) {
+function renderCategoryChart(catData, incTot) {
   if (!catData || catData.length === 0) return '';
-  const maxVal = Math.max(...catData.map(c => c.total));
   return catData.map(c => {
-    const barPct = maxVal > 0 ? Math.max(2, (c.total / maxVal) * 100) : 0;
+    const barPct = incTot > 0 ? Math.min(100, Math.max(2, (c.total / incTot) * 100)) : 0;
+    const pctTxt = incTot > 0 ? ` (${((c.total / incTot) * 100).toFixed(0)}%)` : '';
     return `<div class="cat">
       <div>${(c.label || '').toLowerCase()}</div>
       <div class="cat-bar"><div class="cat-fill" style="width:${barPct}%"></div></div>
@@ -1500,7 +1502,7 @@ function renderOverview() {
     const today = isTodayDate(nextBill.dueDate);
     const dueLabel = overdue ? 'OVERDUE' : today ? 'DUE TODAY' : ('DUE ' + formatDate(nextBill.dueDate).toUpperCase());
     const others = upcoming.length - 1;
-    const sub = others > 0 ? `+ ${others} bill${others > 1 ? 's' : ''} this week` : '14-day window';
+    const sub = others > 0 ? `+ ${others} more this week` : '14-day window';
     nextBillBlock = heroBlock(
       dueLabel,
       `<span class="x">${fmtMoney(nextBill.amount, {round:true})}</span> ${escHTML(nextBill.name)}`,
@@ -1509,16 +1511,16 @@ function renderOverview() {
     );
   } else if (state.bills.length === 0) {
     nextBillBlock = heroBlock(
-      'BILLS',
+      'EXPENSES',
       'none yet',
-      `<span class="lnk" data-action="open-modal" data-type="expenses">add a bill</span>`,
+      `<span class="lnk" data-action="open-modal" data-type="expenses">add an expense</span>`,
       { size: 'med' }
     );
   } else {
     nextBillBlock = heroBlock(
       'UPCOMING',
       'all clear',
-      'no bills due in 14 days',
+      'nothing due in 14 days',
       { size: 'med' }
     );
   }
@@ -1570,7 +1572,7 @@ function renderOverview() {
   if (upcoming.length > 0) {
     const items = upcoming.slice(0, 5);
     upcomingHTML = `
-      ${sec('Upcoming Bills', { meta: upcoming.length + (upcoming.length === 1 ? ' bill' : ' bills') })}
+      ${sec('Upcoming', { meta: upcoming.length + (upcoming.length === 1 ? ' expense' : ' expenses') })}
       ${items.map((b, i, arr) => {
         const overdue = isOverdue(b.dueDate); const today = isTodayDate(b.dueDate);
         const isLast = i === arr.length - 1 && upcoming.length <= 5;
@@ -1640,8 +1642,6 @@ function renderOverview() {
 // ──── Render: income ───────────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
-  const taxPct = getTaxPct();
-  const taxSetaside = stats.ytdTips * taxPct / 100;
   const sources = state.income.slice().sort((a,b) => monthlyEq(b.amount, b.frequency) - monthlyEq(a.amount, a.frequency));
   const yearHistory = getCalendarYearHistory();
 
@@ -1657,13 +1657,6 @@ function renderIncome() {
     stats.ytdTips > 0 ? `tips · ${fmtMoney(stats.ytdTips, {round:true})}` : null,
     { size: 'med' }
   );
-
-  // tax setaside section (only if tips)
-  const taxSection = stats.ytdTips > 0 ? `
-    ${sec('Tax Setaside', { meta: 'estimated' })}
-    ${rowsWrap(kv('Owed (' + taxPct + '% of cash tips)', fmtMoney(taxSetaside, {round:true}), 'warn'))}
-    <div class="note">Set aside <input type="number" class="tax-pct-input" id="tax-pct-input" value="${taxPct}" min="0" max="100" step="1" />% of cash tip income for taxes</div>
-  ` : '';
 
   // sources list
   let sourcesHTML = '';
@@ -1701,7 +1694,6 @@ function renderIncome() {
     </div>
     ${sec('Income Trend', { meta: String(new Date().getFullYear()) })}
     ${renderBarChart(yearHistory.map(h => ({ label: h.label, value: h.income, current: h.current })))}
-    ${taxSection}
     ${sec('Sources', { meta: sources.length + (sources.length === 1 ? ' source' : ' sources'), add: { action: 'open-modal', type: 'income', label: '+ add' } })}
     ${sourcesHTML}
   `;
@@ -1748,12 +1740,12 @@ function renderExpenses() {
   );
 
   const weekBlock = dueCount > 0
-    ? heroBlock('DUE THIS WEEK', `<span class="x">${fmtMoney(dueThisWeek, {round:true})}</span>`, `${dueCount} bill${dueCount > 1 ? 's' : ''}`, { size: 'med' })
+    ? heroBlock('DUE THIS WEEK', `<span class="x">${fmtMoney(dueThisWeek, {round:true})}</span>`, `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med' })
     : heroBlock('ANNUAL TOTAL', fmtMoney(totalAnnual, {round:true}), 'projected recurring', { size: 'med' });
 
   // categories section
   const catBreakdown = (catData.length && total > 0)
-    ? `${sec('By Category', { meta: '% of max' })}<div class="rows pad-b">${renderCategoryChart(catData, incTot)}</div>`
+    ? `${sec('By Category', { meta: '% of income' })}<div class="rows pad-b">${renderCategoryChart(catData, incTot)}</div>`
     : '';
 
   // bills list
@@ -1802,7 +1794,7 @@ function renderExpenses() {
       ${weekBlock}
     </div>
     ${catBreakdown}
-    ${sec('Bills', { meta: state.bills.length + (state.bills.length === 1 ? ' bill' : ' bills'), add: { action: 'open-modal', type: 'expenses', label: '+ add' } })}
+    ${sec('Expenses', { meta: state.bills.length + (state.bills.length === 1 ? ' expense' : ' expenses'), add: { action: 'open-modal', type: 'expenses', label: '+ add' } })}
     ${billsHTML}
   `;
 }
@@ -1864,7 +1856,7 @@ function renderBudget() {
   // allocation breakdown
   const allocation = rowsWrap(`
     ${kv('Income', fmtMoney(inc, {round:true}))}
-    ${kv('− Fixed Bills', fmtMoney(fixed, {round:true}))}
+    ${kv('− Expenses', fmtMoney(fixed, {round:true}))}
     ${savings > 0 ? kv('− Savings', fmtMoney(savings, {round:true})) : ''}
     ${kv('= Available', fmtMoney(monthlyAllowance, {round:true}), '', 'big ok')}
   `, { padB: true });
@@ -2050,7 +2042,7 @@ function updateHeader() {
   let title = 'Ledgeon';
   let meta = monthTag;
   if (currentTab === 'income') { title = 'Income'; meta = 'ytd'; }
-  else if (currentTab === 'expenses') { title = 'Bills'; }
+  else if (currentTab === 'expenses') { title = 'Expenses'; }
   else if (currentTab === 'budget') { title = 'Budget'; }
   else if (currentTab === 'tasks') {
     title = 'Tasks';
