@@ -2656,4 +2656,964 @@ function renderBudget() {
 
   let goalsHTML = '';
   if (state.goals.length === 0) {
-    goalsHTML = `<div class="empty">No savings goals · <span class="lnk" data-action="open-modal" data-type="goals">Add one</span
+    goalsHTML = `<div class="empty">No savings goals · <span class="lnk" data-action="open-modal" data-type="goals">Add one</span></div>`;
+  } else {
+    goalsHTML = state.goals.map(g => {
+      const target = parseFloat(g.targetAmount) || 0;
+      const saved = parseFloat(g.currentAmount) || 0;
+      const p = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+      const metaParts = [`${fmtMoney(saved, {round:true})} of ${fmtMoney(target, {round:true})}`];
+      if (g.targetDate) metaParts.push(`By ${compactDate(g.targetDate)}`);
+      if (g._reqMo > 0) metaParts.push(`<span class="req">${fmtMoney(g._reqMo, {round:true})}/mo to reach</span>`);
+      const metaInner = metaParts.map((p, i) => (i > 0 ? '<span class="dot">·</span>' : '') + `<span>${p}</span>`).join('');
+      return `<div class="goal"><div class="goal-h"><span class="n">${escHTML(g.name)}</span><span class="p">${p.toFixed(0)}%</span></div><div class="goal-bar"><div class="goal-bar-f" style="width:${p}%"></div></div><div class="goal-meta">${metaInner}</div><div class="goal-acts"><button class="primary" data-action="goal-add" data-id="${g.id}">Add funds</button><button data-action="edit" data-type="goals" data-id="${g.id}">Edit</button></div></div>`;
+    }).join('');
+  }
+
+  // --- NEW: Debt Strategy Simulator ---
+  let debtHTML = '';
+  const debts = state.bills.filter(b => b.balance > 0 && !b.paid);
+  
+  if (debts.length > 0) {
+    let totalBalance = 0;
+    let totalMinPayments = 0;
+    let monthlyInterestBurn = 0;
+    
+    debts.forEach(d => {
+      const bal = parseFloat(d.balance) || 0;
+      const apr = parseFloat(d.apr) || 0;
+      const minPay = monthlyEq(d.amount, d.recurring);
+      totalBalance += bal;
+      totalMinPayments += minPay;
+      monthlyInterestBurn += bal * (apr / 1200);
+    });
+
+    const dti = inc > 0 ? (totalMinPayments / inc) * 100 : 0;
+    let dtiColor = 'positive'; let dtiText = 'Comfortable';
+    if (dti > 43) { dtiColor = 'negative'; dtiText = 'Distressed'; }
+    else if (dti > 36) { dtiColor = 'negative'; dtiText = 'Stretched'; }
+    else if (dti > 20) { dtiColor = 'warning'; dtiText = 'Manageable'; }
+
+    const debtSub = monthlyInterestBurn > 0 
+      ? `Losing <span class="negative">${fmtMoney(monthlyInterestBurn, {round:true})}/mo</span> to interest` 
+      : '0% Interest';
+    const debtBlock = blk('Total Debt', fmtMoney(totalBalance, {round:true}), debtSub, { color: 'negative' });
+
+    let simDebts = debts.map(d => ({ 
+      bal: parseFloat(d.balance)||0, 
+      apr: parseFloat(d.apr)||0, 
+      min: monthlyEq(d.amount, d.recurring) 
+    }));
+    let infinite = simDebts.some(d => d.min <= d.bal * (d.apr/1200) && d.bal > 0 && d.apr > 0);
+
+    let payoffText = '';
+    if (infinite) {
+      payoffText = `<div class="note"><span class="negative" style="font-weight:600;">Warning:</span> Minimum payments do not cover interest on all accounts. Balances will grow forever.</div>`;
+    } else {
+      let months = 0; let totalInterest = 0;
+      while(simDebts.some(d => d.bal > 0) && months < 1200) {
+        months++;
+        simDebts.forEach(d => {
+          if (d.bal > 0) {
+            const interest = d.bal * (d.apr/1200);
+            totalInterest += interest;
+            d.bal += interest;
+            d.bal -= d.min;
+            if (d.bal < 0) d.bal = 0;
+          }
+        });
+      }
+      
+      if (months >= 1200) {
+        payoffText = `<div class="note">Payoff exceeds 100 years at current pace. Consider increasing your payments.</div>`;
+      } else {
+        const d = new Date(); d.setMonth(d.getMonth() + months);
+        payoffText = `<div class="note">At current payments, debt-free by <span style="font-weight:600; color:var(--ink)">${d.toLocaleDateString('en-US',{month:'short', year:'numeric'})}</span>. Total interest cost: <span class="negative">${fmtMoney(totalInterest, {round:true})}</span>.</div>`;
+      }
+    }
+
+    const debtList = debts.slice().sort((a,b)=> (parseFloat(b.apr)||0) - (parseFloat(a.apr)||0)).map(d => {
+      return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${d.id}"><div><div class="n">${escHTML(d.name)}</div><div class="m">${fmtMoney(d.balance)} @ ${d.apr}% APR</div></div><span class="v negative">${fmtMoney(monthlyEq(d.amount, d.recurring), {round:true})}/mo</span></div>`;
+    }).join('');
+
+    debtHTML = `${sh('Debt & Leverage')}
+    <div class="row"><span class="l">Debt-to-Income (DTI)</span><span class="v ${dtiColor}">${dti.toFixed(1)}% · ${dtiText}</span></div>
+    ${debtBlock}
+    ${payoffText}
+    ${debtList}`;
+  }
+  // ------------------------------------------
+
+  return `${availBlock}${sh('Allocation', { meta: basisLabel })}${allocationHTML}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}${debtHTML}`;
+}
+
+// ──── Render: tasks ────────────────────────────────────────
+function renderTasks() {
+  const total = state.tasks.length;
+  const open = state.tasks.filter(t => !t.done);
+  const done = state.tasks.filter(t => t.done);
+  const overdue = state.tasks.filter(t => !t.done && isOverdue(t.dueDate));
+  const todayCnt = state.tasks.filter(t => !t.done && isTodayDate(t.dueDate));
+  const completionPct = total > 0 ? (done.length / total) * 100 : 0;
+
+  const sorted = state.tasks.slice().sort((a, b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
+    return ad.localeCompare(bd);
+  });
+
+  const openSub = total > 0
+    ? `${done.length} of ${total} done${overdue.length > 0 ? ' · <span class="a">' + overdue.length + ' overdue</span>' : ''}`
+    : 'Add a task to start';
+  const openBlock = blk('Open tasks', String(open.length), openSub, { color: open.length === 0 ? 'positive' : '' });
+
+  let urgentBlock = '';
+  if (overdue.length > 0) {
+    urgentBlock = blk('Overdue', String(overdue.length), todayCnt.length > 0 ? `${todayCnt.length} also due today` : 'Needs attention', { color: 'negative', size: 'med' });
+  } else if (todayCnt.length > 0) {
+    urgentBlock = blk('Due today', String(todayCnt.length), 'Tap to mark complete', { color: 'warning', size: 'med' });
+  } else if (open.length > 0) {
+    urgentBlock = blk('On track', 'All caught up', 'Nothing overdue or due today', { color: 'positive', size: 'med' });
+  }
+
+  let listHTML;
+  if (sorted.length === 0) {
+    listHTML = `<div class="empty">No tasks yet · <span class="lnk" data-action="open-modal" data-type="tasks">Add one</span></div>`;
+  } else {
+    listHTML = sorted.map(t => {
+      const isOver = !t.done && isOverdue(t.dueDate);
+      const isToday = !t.done && isTodayDate(t.dueDate);
+      const pri = t.priority || '';
+
+      let rightHTML;
+      if (t.done) rightHTML = pill('Done', 'g', { action: 'toggle-task', id: t.id });
+      else if (isOver) rightHTML = pill('Overdue', 'r', { action: 'toggle-task', id: t.id });
+      else if (isToday) rightHTML = pill('Today', 'y', { action: 'toggle-task', id: t.id });
+      else if (t.dueDate) {
+        const days = Math.round((new Date(t.dueDate + 'T00:00:00') - todayStart()) / 86400000);
+        if (days === 1) rightHTML = pill('Tomorrow', 'y', { action: 'toggle-task', id: t.id });
+        else rightHTML = `<span class="pill muted clickable" data-action="toggle-task" data-id="${t.id}">Done?</span>`;
+      } else {
+        rightHTML = `<span class="pill muted clickable" data-action="toggle-task" data-id="${t.id}">Done?</span>`;
+      }
+
+      const metaParts = [];
+      if (pri === 'high') metaParts.push('High');
+      else if (pri === 'med') metaParts.push('Medium');
+      else if (pri === 'low') metaParts.push('Low');
+      if (t.dueDate && !isOver && !isToday) metaParts.push(compactDate(t.dueDate));
+      const metaText = metaParts.join(' · ');
+
+      const dimCls = t.done ? ' dim' : '';
+
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="tasks" data-id="${t.id}"><div><div class="n">${escHTML(t.text)}</div>${metaText ? `<div class="m">${metaText}</div>` : ''}</div>${rightHTML}</div>`;
+    }).join('');
+  }
+
+  return `${openBlock}${urgentBlock}${sh('All tasks', { meta: `${total} ${total === 1 ? 'task' : 'tasks'}`, add: { action: 'open-modal', type: 'tasks', label: '+ Add' } })}${listHTML}`;
+}
+
+// ──── Master render ──────────────────────────────────────────
+function updateBadges() {
+  const e = state.bills.filter(b => !isBillCurrentlyPaid(b)).length;
+  const t = state.tasks.filter(t => !t.done).length;
+  const set = (cls, v) => document.querySelectorAll(cls).forEach(el => {
+    el.textContent = v; el.style.display = v > 0 ? 'inline-block' : 'none';
+  });
+  set('.badge-e', e); set('.badge-t', t);
+}
+
+function updateHeader() {
+  const titleEl = document.getElementById('mtitle');
+  if (!titleEl) return;
+  let title = 'Ledgeon';
+  if (currentTab === 'income') title = 'Income';
+  else if (currentTab === 'expenses') title = 'Expenses';
+  else if (currentTab === 'budget') title = 'Budget';
+  else if (currentTab === 'tasks') title = 'Tasks';
+  titleEl.textContent = title;
+}
+
+function render() {
+  syncPercentBills();
+  updateBadges();
+  updateHeader();
+  document.querySelectorAll('nav.mnav button').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
+  const main = document.getElementById('content');
+  if (currentTab === 'overview') main.innerHTML = renderOverview();
+  else if (currentTab === 'income') main.innerHTML = renderIncome();
+  else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
+  else if (currentTab === 'budget') main.innerHTML = renderBudget();
+  else if (currentTab === 'tasks') main.innerHTML = renderTasks();
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ──── Event handlers ─────────────────────────────────────────
+document.addEventListener('click', e => {
+  // close header menu when clicking outside it (and outside its toggle)
+  const _menu = document.getElementById('header-menu');
+  if (_menu && !_menu.hidden) {
+    if (!e.target.closest('#header-menu') && !e.target.closest('[data-action="toggle-menu"]')) {
+      _menu.hidden = true;
+    }
+  }
+
+  const tab = e.target.closest('nav.mnav button[data-tab]');
+  if (tab) { currentTab = tab.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); return; }
+
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const act = btn.dataset.action;
+
+  if (act === 'toggle-menu') { if (_menu) _menu.hidden = !_menu.hidden; return; }
+  if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
+
+  if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
+  else if (act === 'open-modal') { openModal(btn.dataset.type); if (btn.dataset.type === 'petty') document.getElementById('petty-date-input').value = isoDate(todayStart()); }
+  else if (act === 'close-modal') document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+  else if (act === 'rm') {
+    if (confirm('Delete?')) {
+      const t = btn.dataset.type === 'expenses' ? 'bills' : btn.dataset.type;
+      if (t === 'payments') {
+        // undo the bill payment when removing a payment log entry
+        const pay = state.payments.find(x => x.id === btn.dataset.id);
+        if (pay) {
+          const bill = state.bills.find(b => b.id === pay.billId);
+          if (bill) {
+            if (bill.recurring && bill.recurring !== 'once' && bill.dueDate) {
+              const d = new Date(bill.dueDate + 'T00:00:00');
+              if (bill.recurring === 'monthly') d.setMonth(d.getMonth() - 1);
+              else if (bill.recurring === 'weekly') d.setDate(d.getDate() - 7);
+              else if (bill.recurring === 'yearly') d.setFullYear(d.getFullYear() - 1);
+              bill.dueDate = isoDate(d);
+            } else {
+              bill.paid = false;
+            }
+          }
+        }
+      } else if (t === 'bills') {
+        // clean up orphan payment logs for the deleted bill
+        state.payments = state.payments.filter(p => p.billId !== btn.dataset.id);
+      }
+      state[t] = state[t].filter(x => x.id !== btn.dataset.id);
+      saveState(); render();
+      document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
+    }
+  }
+  else if (act === 'edit') openModal(btn.dataset.type, btn.dataset.id);
+  else if (act === 'pay-bill') {
+    const b = state.bills.find(x => x.id === btn.dataset.id);
+    if (b) {
+      // log the payment to the transaction history
+      state.payments.push({
+        id: nextId('payments'),
+        billId: b.id,
+        name: b.name,
+        amount: parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0,
+        category: b.category,
+        recurring: b.recurring,
+        date: isoDate(todayStart()),
+        createdAt: isoDate(todayStart()),
+      });
+      if (b.recurring && b.recurring !== 'once' && b.dueDate) {
+        const d = new Date(b.dueDate + 'T00:00:00');
+        if (b.recurring === 'monthly') d.setMonth(d.getMonth()+1);
+        else if (b.recurring === 'biweekly') d.setDate(d.getDate()+14);
+        else if (b.recurring === 'weekly') d.setDate(d.getDate()+7);
+        else if (b.recurring === 'yearly') d.setFullYear(d.getFullYear()+1);
+        b.dueDate = isoDate(d);
+      }
+      b.paid = true;
+      saveState(); render();
+    }
+  }
+  else if (act === 'unpay-bill') {
+    const b = state.bills.find(x => x.id === btn.dataset.id);
+    if (b) {
+      // For recurring bills, also roll back the dueDate to the previous cycle
+      if (b.recurring && b.recurring !== 'once' && b.dueDate) {
+        const d = new Date(b.dueDate + 'T00:00:00');
+        if (b.recurring === 'monthly') d.setMonth(d.getMonth() - 1);
+        else if (b.recurring === 'biweekly') d.setDate(d.getDate() - 14);
+        else if (b.recurring === 'weekly') d.setDate(d.getDate() - 7);
+        else if (b.recurring === 'yearly') d.setFullYear(d.getFullYear() - 1);
+        b.dueDate = isoDate(d);
+      }
+      b.paid = false;
+      // also remove the most recent payment log for this bill
+      let mostRecentIdx = -1;
+      let mostRecentKey = '';
+      state.payments.forEach((p, i) => {
+        if (p.billId !== b.id) return;
+        const key = (p.date || p.createdAt || '');
+        if (key >= mostRecentKey) { mostRecentIdx = i; mostRecentKey = key; }
+      });
+      if (mostRecentIdx >= 0) state.payments.splice(mostRecentIdx, 1);
+      saveState(); render();
+    }
+  }
+  else if (act === 'toggle-task') { const t = state.tasks.find(x => x.id === btn.dataset.id); if (t) { t.done = !t.done; saveState(); render(); } }
+  else if (act === 'goal-add') {
+    const g = state.goals.find(x => x.id === btn.dataset.id);
+    if (g) { const a = parseFloat(prompt(`Fund "${g.name}":`)); if (a > 0) { g.currentAmount = (parseFloat(g.currentAmount) || 0) + a; saveState(); render(); } }
+  }
+  else if (act === 'prev-month') { const v = getViewMonth(); viewMonth = { year: v.month === 0 ? v.year - 1 : v.year, month: v.month === 0 ? 11 : v.month - 1 }; render(); }
+  else if (act === 'next-month') { const v = getViewMonth(); viewMonth = { year: v.month === 11 ? v.year + 1 : v.year, month: v.month === 11 ? 0 : v.month + 1 }; render(); }
+  else if (act === 'curr-month') { viewMonth = null; render(); }
+  else if (act === 'open-presets') openPresetPicker();
+  else if (act === 'export') {
+    const b = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const u = URL.createObjectURL(b); const a = document.createElement('a');
+    a.href = u; a.download = 'ledgeon.json'; a.click(); URL.revokeObjectURL(u);
+  }
+  else if (act === 'import') document.getElementById('file-import').click();
+  else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[], payments:[] }; saveState(); render(); } }
+});
+
+document.getElementById('file-import').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const imp = JSON.parse(ev.target.result);
+      if (confirm('Import data? Replaces current.')) {
+        state = {
+          tasks: imp.tasks||[], bills: imp.bills||[], events: imp.events||[],
+          income: imp.income||[], goals: imp.goals||[], petty: imp.petty||[],
+          payments: imp.payments||[]
+        };
+        saveState(); render();
+      }
+    } catch { alert('Error importing.'); }
+  };
+  r.readAsText(f); e.target.value = '';
+});
+
+document.addEventListener('change', e => {
+  if (e.target.id === 'tipsEnabled') {
+    const g = document.getElementById('tipsInputGroup');
+    if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
+    else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
+  }
+  else if (e.target.id === 'isDebtToggle') {
+    const g = document.getElementById('debtInputGroup');
+    if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
+    else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
+  }
+  else if (e.target.id === 'isPercentToggle') {
+    updateExpensePercentUI();
+  }
+  else if (e.target.name === 'category' && e.target.closest('#modal-expenses')) {
+    updateDebtSectionVisibility();
+  }
+  else if (e.target.id === 'tax-pct-input') {
+    const v = parseFloat(e.target.value);
+    if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'expense-amount-input' && document.getElementById('isPercentToggle')?.checked) {
+    updatePctPreview();
+  }
+});
+
+function openModal(type, id = null) {
+  document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+  const f = document.querySelector(`#modal-${type} form`);
+  if (!f) return;
+  f.reset();
+  editingItem = id ? { type, id } : null;
+  const tArr = type === 'expenses' ? state.bills : state[type];
+  if (id) {
+    const item = tArr.find(x => x.id === id);
+    if (item) {
+      Object.keys(item).forEach(k => { if (f.elements[k]) f.elements[k].value = item[k]; });
+      if (type === 'expenses' || type === 'tasks') {
+        if (f.elements['date']) f.elements['date'].value = item.dueDate || '';
+      }
+      if (type === 'income') {
+        f.elements['amount'].value = item.baseAmount !== undefined ? item.baseAmount : item.amount;
+        if (item.hours != null && !isNaN(item.hours) && item.hours > 0) {
+          const totalMin = Math.round(Number(item.hours) * 60);
+          const h = Math.floor(totalMin / 60); const m = totalMin % 60;
+          f.elements['hours'].value = h ? h : '';
+          f.elements['minutes'].value = m ? m : '';
+        } else { f.elements['hours'].value = ''; f.elements['minutes'].value = ''; }
+        f.elements['tipsEnabled'].checked = !!item.tipsEnabled;
+        f.elements['tipsValue'].value = item.tipsValue || 6;
+        f.elements['tipsType'].value = item.tipsType || 'percent';
+        f.elements['tipsEnabled'].dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (type === 'expenses') {
+        f.elements['balance'].value = item.balance || '';
+        f.elements['apr'].value = item.apr || '';
+        f.elements['isDebt'].checked = !!item.balance;
+        f.elements['isDebt'].dispatchEvent(new Event('change', { bubbles: true }));
+
+        // Percent-of-income mode
+        if (item.isPercent && typeof item.pctValue === 'number') {
+          f.elements['amount'].value = item.pctValue;
+          f.elements['isPercent'].checked = true;
+        } else {
+          f.elements['isPercent'].checked = false;
+        }
+        f.elements['isPercent'].dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  }
+  // Show/hide Delete button based on edit/add mode
+  const factionsDiv = f.querySelector('.factions');
+  if (factionsDiv) {
+    let delBtn = factionsDiv.querySelector('[data-action="rm"]');
+    if (id) {
+      if (!delBtn) {
+        delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.dataset.action = 'rm';
+        delBtn.textContent = 'Delete';
+        factionsDiv.insertBefore(delBtn, factionsDiv.firstChild);
+      }
+      delBtn.dataset.type = type;
+      delBtn.dataset.id = id;
+      delBtn.style.display = '';
+    } else if (delBtn) {
+      delBtn.style.display = 'none';
+    }
+  }
+  // Update modal title (Add vs Edit)
+  const _titleEl = document.querySelector('#modal-' + type + ' .modal-t');
+  if (_titleEl) {
+    const verb = id ? 'Edit' : 'Add';
+    const typeLabel = ({expenses: 'expense', income: 'income source', tasks: 'task', goals: 'goal', petty: 'transaction'})[type] || type;
+    _titleEl.textContent = verb + ' ' + typeLabel;
+  }
+  // Populate payment history (expense edit modal only)
+  const histSection = document.getElementById('payment-history-section');
+  if (histSection) {
+    if (type === 'expenses' && id) {
+      const payments = state.payments
+        .filter(p => p.billId === id)
+        .sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
+      if (payments.length > 0) {
+        const total = payments.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+        const avg = total / payments.length;
+        const lastDateStr = payments[0].date || payments[0].createdAt;
+        const lastDate = lastDateStr ? new Date(lastDateStr + 'T00:00:00') : null;
+        const lastFmt = lastDate
+          ? lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : '—';
+        const today = todayStart();
+        const rows = payments.map(p => {
+          const amt = parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0;
+          const ds = p.date || p.createdAt;
+          if (!ds) return `<div class="history-row"><span class="d">—</span><span class="v">${fmtMoney(amt, {round:true})}</span></div>`;
+          const d = new Date(ds + 'T00:00:00');
+          const daysAgo = Math.round((today - d) / 86400000);
+          let agoStr = '';
+          if (daysAgo === 0) agoStr = 'today';
+          else if (daysAgo === 1) agoStr = 'yesterday';
+          else if (daysAgo > 1 && daysAgo < 30) agoStr = daysAgo + 'd ago';
+          else if (daysAgo >= 30 && daysAgo < 365) agoStr = Math.round(daysAgo / 30) + 'mo ago';
+          else if (daysAgo >= 365) agoStr = Math.round(daysAgo / 365) + 'y ago';
+          const dateFmt = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          return `<div class="history-row"><span class="d">${dateFmt}${agoStr ? `<span class="ago">${agoStr}</span>` : ''}</span><span class="v">${fmtMoney(amt, {round:true})}</span></div>`;
+        }).join('');
+        histSection.innerHTML = `<div class="history-section">
+          <div class="history-h">
+            <h4>Payment history</h4>
+            <span class="history-h-meta">Last paid ${lastFmt}</span>
+          </div>
+          <div class="history-stats">
+            <div class="history-stat">
+              <div class="history-stat-l">Count</div>
+              <div class="history-stat-v">${payments.length}</div>
+            </div>
+            <div class="history-stat">
+              <div class="history-stat-l">Total</div>
+              <div class="history-stat-v">${fmtMoney(total, {round:true})}</div>
+            </div>
+            <div class="history-stat">
+              <div class="history-stat-l">Average</div>
+              <div class="history-stat-v">${fmtMoney(avg, {round:true})}</div>
+            </div>
+          </div>
+          <div class="history-list">${rows}</div>
+        </div>`;
+        histSection.style.display = '';
+      } else {
+        histSection.innerHTML = '';
+        histSection.style.display = 'none';
+      }
+    } else {
+      histSection.innerHTML = '';
+      histSection.style.display = 'none';
+    }
+  }
+  document.getElementById('modal-' + type).classList.add('open');
+  if (type === 'expenses') { updateExpensePercentUI(); updateDebtSectionVisibility(); }
+  setTimeout(() => f.querySelector('input')?.focus(), 50);
+}
+
+document.querySelectorAll('form[data-type]').forEach(f => {
+  f.addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(f); const type = f.dataset.type;
+    const isEdit = editingItem && editingItem.type === type;
+    const tArr = type === 'expenses' ? state.bills : state[type];
+    const item = isEdit ? tArr.find(x => x.id === editingItem.id) : { id: nextId(type === 'expenses' ? 'bills' : type), createdAt: isoDate(todayStart()) };
+    const pAmt = v => { const n = parseFloat(String(v).replace(/[$,\s]/g, '')); return isNaN(n) ? 0 : n; };
+
+    if (type === 'income') {
+      item.source = fd.get('source');
+      const base = pAmt(fd.get('amount'));
+      item.baseAmount = base;
+      const hVal = parseFloat(fd.get('hours')) || 0; const mVal = parseFloat(fd.get('minutes')) || 0;
+      const totalHours = hVal + mVal / 60;
+      item.hours = totalHours > 0 ? totalHours : null;
+      item.tipsEnabled = f.elements['tipsEnabled'].checked;
+      item.tipsType = f.elements['tipsType'].value;
+      let final = base;
+      if (item.tipsEnabled) {
+        let tv = pAmt(f.elements['tipsValue'].value);
+        if (tv === 0) tv = 6;
+        item.tipsValue = tv;
+        final += item.tipsType === 'percent' ? base * (tv / 100) : tv;
+      } else item.tipsValue = 0;
+      item.amount = final;
+      item.frequency = fd.get('frequency') || 'monthly';
+      item.receivedAt = fd.get('receivedAt') || null;
+    } else if (type === 'expenses') {
+      item.name = fd.get('name');
+      item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
+      item.dueDate = fd.get('date') || null; if (!isEdit) item.paid = false;
+
+      const inputVal = pAmt(fd.get('amount'));
+      if (f.elements['isPercentToggle'].checked) {
+        item.isPercent = true;
+        item.pctValue = inputVal;
+        const avg = getIncomeStats().avgMonthly || 0;
+        item.amount = avg * inputVal / 100;
+      } else {
+        delete item.isPercent;
+        delete item.pctValue;
+        item.amount = inputVal;
+      }
+
+      // Update debt fields — only kept if category is 'debt' and toggle is on
+      if (item.category === 'debt' && f.elements['isDebtToggle'].checked) {
+        item.balance = pAmt(fd.get('balance'));
+        item.apr = parseFloat(fd.get('apr')) || 0;
+      } else {
+        delete item.balance;
+        delete item.apr;
+      }
+
+    } else if (type === 'tasks') {
+      item.text = fd.get('text'); item.priority = fd.get('priority');
+      item.dueDate = fd.get('date') || null; if (!isEdit) item.done = false;
+    } else if (type === 'goals') {
+      item.name = fd.get('name'); item.targetAmount = pAmt(fd.get('targetAmount'));
+      item.currentAmount = pAmt(fd.get('currentAmount')); item.targetDate = fd.get('targetDate') || null;
+    } else if (type === 'petty') {
+      item.amount = pAmt(fd.get('amount')); item.category = fd.get('category');
+      item.note = fd.get('note'); item.date = fd.get('date');
+    }
+
+    if (!isEdit) tArr.push(item);
+
+    if (!isEdit && type === 'income' && state.bills.length === 0) {
+      if (confirm('Add starter budget based on this income?')) {
+        const iMo = monthlyEq(item.amount, item.frequency);
+        PRESET_BILLS.forEach(p => state.bills.push({
+          id: nextId('bills'), name: p.name, amount: Math.round(iMo*(p.pct/100)),
+          category: p.category, recurring: p.recurring, paid: false,
+          createdAt: isoDate(todayStart())
+        }));
+        currentTab = 'expenses'; localStorage.setItem(TAB_KEY, currentTab);
+      }
+    }
+
+    saveState();
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+    render();
+  });
+});
+
+let presetSel = new Set();
+function openPresetPicker() {
+  presetSel.clear();
+  const { year, month } = getViewMonth();
+  const { income: inc } = getMonthlyStats(year, month);
+  const list = document.getElementById('preset-list');
+  if (inc === 0) list.innerHTML = `<div class="empty">add income first</div>`;
+  else {
+    const ex = new Set(state.bills.map(b => b.name.toLowerCase()));
+    list.innerHTML = PRESET_BILLS.map((p, i) => `<div class="preset-row ${ex.has(p.name.toLowerCase())?'exists':''}" data-idx="${i}"><div class="box"></div><div class="nm">${p.name}</div><div class="pct">${fmtMoney(inc*(p.pct/100),{round:true})} · ${p.pct}%</div></div>`).join('');
+    list.querySelectorAll('.preset-row:not(.exists)').forEach(r => r.addEventListener('click', () => {
+      const i = parseInt(r.dataset.idx);
+      if (presetSel.has(i)) { presetSel.delete(i); r.classList.remove('sel'); }
+      else { presetSel.add(i); r.classList.add('sel'); }
+      document.getElementById('preset-apply-btn').disabled = presetSel.size === 0;
+    }));
+  }
+  document.getElementById('modal-presets').classList.add('open');
+}
+
+document.getElementById('preset-apply-btn').addEventListener('click', () => {
+  const { year, month } = getViewMonth();
+  const { income: inc } = getMonthlyStats(year, month);
+  presetSel.forEach(idx => {
+    const p = PRESET_BILLS[idx];
+    state.bills.push({
+      id: nextId('bills'), name: p.name, amount: Math.round(inc*(p.pct/100)),
+      category: p.category, recurring: p.recurring, paid: false,
+      createdAt: isoDate(todayStart())
+    });
+  });
+  saveState();
+  document.getElementById('modal-presets').classList.remove('open');
+  render();
+});
+
+// ──── Cloud sync ─────────────────────────────────────────────
+let pushTimer = null;
+
+// Code alphabet excludes ambiguous chars (0/O, 1/I/L)
+const SYNC_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const SYNC_CODE_LENGTH = 6;
+const SYNC_CODE_MIN = 4;
+
+function normalizeSyncCode(s) {
+  return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+function generateSyncCode() {
+  const bytes = new Uint8Array(SYNC_CODE_LENGTH);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < SYNC_CODE_LENGTH; i++) out += SYNC_CODE_ALPHABET[bytes[i] % SYNC_CODE_ALPHABET.length];
+  return out;
+}
+
+function getSyncConfig() {
+  try { return JSON.parse(localStorage.getItem(SYNC_CONFIG_KEY)) || null; } catch { return null; }
+}
+function setSyncConfig(cfg) {
+  if (cfg) localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(cfg));
+  else localStorage.removeItem(SYNC_CONFIG_KEY);
+}
+function syncEnabled() {
+  const c = getSyncConfig();
+  return !!(c && c.key);
+}
+
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function syncUrlBase() { return SYNC_WORKER_URL.replace(/\/+$/, ''); }
+
+function setSyncBadge(kind, text) {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  if (!syncEnabled()) { el.hidden = true; return; }
+  el.hidden = false;
+  el.classList.remove('syncing', 'ok', 'err');
+  if (kind) el.classList.add(kind);
+  el.textContent = text;
+}
+
+async function syncRequest(method, body) {
+  const cfg = getSyncConfig();
+  if (!cfg) throw new Error('no-config');
+  const hash = await sha256Hex(normalizeSyncCode(cfg.key));
+  const opts = { method };
+  if (body !== undefined) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = body;
+  }
+  const res = await fetch(`${syncUrlBase()}/sync/${hash}`, opts);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function syncPull() {
+  if (!syncEnabled()) return null;
+  setSyncBadge('syncing', 'syncing');
+  try {
+    const data = await syncRequest('GET');
+    setSyncBadge('ok', 'synced');
+    return data;
+  } catch (e) {
+    setSyncBadge('err', 'sync error');
+    console.warn('Sync pull failed:', e);
+    return null;
+  }
+}
+
+async function syncPush() {
+  if (!syncEnabled()) return false;
+  setSyncBadge('syncing', 'syncing');
+  try {
+    const payload = JSON.stringify({ state, updatedAt: state.updatedAt || Date.now() });
+    await syncRequest('PUT', payload);
+    setSyncBadge('ok', 'synced');
+    return true;
+  } catch (e) {
+    setSyncBadge('err', 'sync error');
+    console.warn('Sync push failed:', e);
+    return false;
+  }
+}
+
+function schedulePush() {
+  if (!syncEnabled()) return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 2000);
+}
+
+function stateHasData(s) {
+  if (!s) return false;
+  return !!(s.bills?.length || s.income?.length || s.tasks?.length || s.goals?.length || s.petty?.length || s.payments?.length);
+}
+
+function applyRemoteState(remoteState, remoteUpdatedAt) {
+  state = {
+    tasks:    Array.isArray(remoteState.tasks)    ? remoteState.tasks    : [],
+    bills:    Array.isArray(remoteState.bills)    ? remoteState.bills    : [],
+    events:   Array.isArray(remoteState.events)   ? remoteState.events   : [],
+    income:   Array.isArray(remoteState.income)   ? remoteState.income   : [],
+    goals:    Array.isArray(remoteState.goals)    ? remoteState.goals    : [],
+    petty:    Array.isArray(remoteState.petty)    ? remoteState.petty    : [],
+    payments: Array.isArray(remoteState.payments) ? remoteState.payments : [],
+    updatedAt: remoteUpdatedAt || Date.now(),
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+async function syncStartup() {
+  if (!syncEnabled()) return;
+  const remote = await syncPull();
+  if (!remote) return;
+  const localUpdated = state.updatedAt || 0;
+  const remoteUpdated = remote.updatedAt || 0;
+  if (remote.state && stateHasData(remote.state) && remoteUpdated > localUpdated) {
+    applyRemoteState(remote.state, remoteUpdated);
+    render(); updateBadges();
+    setSyncBadge('ok', 'synced');
+  } else if (localUpdated > remoteUpdated) {
+    await syncPush();
+  } else {
+    setSyncBadge('ok', 'synced');
+  }
+}
+
+function setSyncMsg(text, isErr) {
+  const m = document.getElementById('sync-msg');
+  if (!m) return;
+  m.style.color = isErr ? 'var(--negative)' : 'var(--ink-3)';
+  m.textContent = text;
+}
+
+function openSyncModal() {
+  const cfg = getSyncConfig() || {};
+  document.getElementById('sync-code-input').value = cfg.key || '';
+  const enabled = syncEnabled();
+  document.getElementById('sync-disable-btn').style.display = enabled ? '' : 'none';
+  if (enabled) {
+    const ts = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : '—';
+    setSyncMsg(`Sync active · last local change: ${ts}`, false);
+  } else {
+    setSyncMsg('Generate a code on your first device, then enter the same code on your others.', false);
+  }
+  document.getElementById('modal-sync').classList.add('open');
+}
+
+function handleSyncGenerate() {
+  const code = generateSyncCode();
+  document.getElementById('sync-code-input').value = code;
+  setSyncMsg('New code generated. Tap "Save & sync" to start, then copy this code to your other devices.', false);
+}
+
+async function handleSyncCopy() {
+  const code = normalizeSyncCode(document.getElementById('sync-code-input').value);
+  if (!code) { setSyncMsg('Nothing to copy yet.', true); return; }
+  try {
+    await navigator.clipboard.writeText(code);
+    setSyncMsg('Copied to clipboard.', false);
+  } catch {
+    const inp = document.getElementById('sync-code-input');
+    inp.select(); inp.setSelectionRange(0, 9999);
+    try { document.execCommand('copy'); setSyncMsg('Copied to clipboard.', false); }
+    catch { setSyncMsg('Copy failed. Select the code manually.', true); }
+  }
+}
+
+let _conflictCtx = null;
+
+function relativeTime(ts) {
+  if (!ts) return 'unknown time';
+  const abs = Math.abs(Date.now() - ts);
+  const min = Math.floor(abs / 60000);
+  const hr = Math.floor(abs / 3600000);
+  const day = Math.floor(abs / 86400000);
+  if (abs < 60000)   return 'just now';
+  if (min < 60)      return `${min} min${min === 1 ? '' : 's'} ago`;
+  if (hr < 24)       return `${hr} hr${hr === 1 ? '' : 's'} ago`;
+  if (day < 30)      return `${day} day${day === 1 ? '' : 's'} ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function summarizeStateForConflict(s) {
+  if (!s) return 'no data';
+  const parts = [];
+  if (s.bills?.length)  parts.push(`${s.bills.length} ${s.bills.length === 1 ? 'expense' : 'expenses'}`);
+  if (s.income?.length) parts.push(`${s.income.length} income`);
+  if (s.goals?.length)  parts.push(`${s.goals.length} ${s.goals.length === 1 ? 'goal' : 'goals'}`);
+  if (s.petty?.length)  parts.push(`${s.petty.length} petty`);
+  if (s.tasks?.length)  parts.push(`${s.tasks.length} ${s.tasks.length === 1 ? 'task' : 'tasks'}`);
+  return parts.length ? parts.join(' · ') : 'empty';
+}
+
+function openConflictModal(localState, localUpdatedAt, remoteState, remoteUpdatedAt) {
+  document.getElementById('conflict-local-rel').textContent = relativeTime(localUpdatedAt || 0);
+  document.getElementById('conflict-local-abs').textContent = localUpdatedAt ? new Date(localUpdatedAt).toLocaleString() : '—';
+  document.getElementById('conflict-local-summary').textContent = summarizeStateForConflict(localState);
+  document.getElementById('conflict-remote-rel').textContent = relativeTime(remoteUpdatedAt || 0);
+  document.getElementById('conflict-remote-abs').textContent = remoteUpdatedAt ? new Date(remoteUpdatedAt).toLocaleString() : '—';
+  document.getElementById('conflict-remote-summary').textContent = summarizeStateForConflict(remoteState);
+  document.getElementById('modal-sync-conflict').classList.add('open');
+}
+
+function closeConflictModal() {
+  document.getElementById('modal-sync-conflict').classList.remove('open');
+}
+
+async function handleConflictUseRemote() {
+  if (!_conflictCtx) return;
+  const { remote } = _conflictCtx;
+  applyRemoteState(remote.state, remote.updatedAt);
+  render(); updateBadges();
+  setSyncMsg('Pulled cloud data. Sync active.', false);
+  document.getElementById('sync-disable-btn').style.display = '';
+  setSyncBadge('ok', 'synced');
+  closeConflictModal();
+  _conflictCtx = null;
+}
+
+async function handleConflictKeepLocal() {
+  if (!_conflictCtx) return;
+  const ok = await syncPush();
+  setSyncMsg(ok ? 'Pushed this device to cloud. Sync active.' : 'Push failed.', !ok);
+  document.getElementById('sync-disable-btn').style.display = '';
+  closeConflictModal();
+  _conflictCtx = null;
+}
+
+function handleConflictCancel() {
+  if (!_conflictCtx) return;
+  setSyncConfig(_conflictCtx.oldCfg);
+  document.getElementById('sync-code-input').value = (_conflictCtx.oldCfg && _conflictCtx.oldCfg.key) || '';
+  setSyncMsg('Sync not started. Both copies left as-is.', false);
+  closeConflictModal();
+  if (syncEnabled()) {
+    setSyncBadge('ok', 'synced');
+    document.getElementById('sync-disable-btn').style.display = '';
+  } else {
+    const el = document.getElementById('sync-indicator');
+    if (el) el.hidden = true;
+    document.getElementById('sync-disable-btn').style.display = 'none';
+  }
+  _conflictCtx = null;
+}
+
+async function handleSyncSave() {
+  const raw = document.getElementById('sync-code-input').value;
+  const code = normalizeSyncCode(raw);
+  if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Sync code must be at least ${SYNC_CODE_MIN} characters. Tap "Generate new code" if you don't have one yet.`, true); return; }
+
+  const oldCfg = getSyncConfig();
+  setSyncConfig({ key: code });
+  document.getElementById('sync-code-input').value = code;
+  setSyncMsg('Saved. Checking cloud…', false);
+
+  const remote = await syncPull();
+  if (!remote) {
+    setSyncConfig(oldCfg);
+    document.getElementById('sync-code-input').value = (oldCfg && oldCfg.key) || code;
+    setSyncMsg('Could not reach the sync server. Check your connection.', true);
+    return;
+  }
+
+  const localHasData = stateHasData(state);
+  const remoteHasData = remote.state && stateHasData(remote.state);
+
+  if (remoteHasData && localHasData) {
+    _conflictCtx = { code, oldCfg, remote };
+    openConflictModal(state, state.updatedAt, remote.state, remote.updatedAt);
+    return;
+  }
+
+  if (remoteHasData) {
+    applyRemoteState(remote.state, remote.updatedAt);
+    render(); updateBadges();
+    setSyncMsg('Pulled from cloud. Sync active.', false);
+  } else {
+    const ok = localHasData ? await syncPush() : true;
+    setSyncMsg(ok ? 'Sync active. ' + (localHasData ? 'Local data backed up.' : 'Cloud is empty — make a change to start syncing.') : 'Push failed.', !ok);
+  }
+  document.getElementById('sync-disable-btn').style.display = '';
+}
+
+function handleSyncDisable() {
+  const cfg = getSyncConfig();
+  const codeMsg = cfg && cfg.key ? `\n\nYour code is: ${cfg.key}\nSave it somewhere if you want to rejoin this sync later.` : '';
+  if (!confirm('Disable sync on this device? Your local data stays. Other devices using this code keep syncing.' + codeMsg)) return;
+  setSyncConfig(null);
+  setSyncMsg('Sync disabled.', false);
+  const inp = document.getElementById('sync-code-input'); if (inp) inp.value = '';
+  document.getElementById('sync-disable-btn').style.display = 'none';
+  const el = document.getElementById('sync-indicator');
+  if (el) el.hidden = true;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const act = btn.dataset.action;
+  if (act === 'open-sync') {
+    const menu = document.getElementById('header-menu');
+    if (menu) menu.hidden = true;
+    openSyncModal();
+  } else if (act === 'set-theme') {
+    applyTheme(btn.dataset.themeName);
+    const menu = document.getElementById('header-menu');
+    if (menu) menu.hidden = true;
+  } else if (act === 'sync-save') {
+    handleSyncSave();
+  } else if (act === 'sync-generate') {
+    handleSyncGenerate();
+  } else if (act === 'sync-disable') {
+    handleSyncDisable();
+  } else if (act === 'sync-copy') {
+    handleSyncCopy();
+  } else if (act === 'conflict-use-remote') {
+    handleConflictUseRemote();
+  } else if (act === 'conflict-keep-local') {
+    handleConflictKeepLocal();
+  } else if (act === 'conflict-cancel') {
+    handleConflictCancel();
+  }
+});
+
+updateThemeMenuMarkers();
+render();
+if (syncEnabled()) {
+  setSyncBadge('syncing', 'syncing');
+  syncStartup();
+}
+</script>
+</body>
+</html>
