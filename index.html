@@ -1222,7 +1222,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
         </div>
       </div>
       <div class="frow">
-        <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
+        <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="dueDate"></div>
       </div>
       
       <div class="tip-box" style="margin-top: 6px; margin-bottom: 0;">
@@ -1281,7 +1281,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
         <div class="fcol"><label class="flbl">priority</label>
           <select class="select" name="priority"><option value="">none</option><option value="low">low</option><option value="med">medium</option><option value="high">high</option></select>
         </div>
-        <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
+        <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="dueDate"></div>
       </div>
       <div class="factions"><button type="button" data-action="close-modal">cancel</button><button type="submit" class="primary">save</button></div>
     </form>
@@ -1997,6 +1997,8 @@ function renderIncome() {
       const metaParts = [freq.charAt(0).toUpperCase() + freq.slice(1)];
       if (hrs > 0) metaParts.push(fmtHM(hrs));
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
+      const dStr = i.receivedAt || i.createdAt;
+      if (dStr) metaParts.push(compactDate(dStr));
       const hasTips = i.tipsEnabled && amt > base;
       const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
       return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="n">${escHTML(i.source)}${tipsPill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
@@ -2714,7 +2716,7 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     } else if (type === 'expenses') {
       item.name = fd.get('name'); item.amount = pAmt(fd.get('amount'));
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
-      item.dueDate = fd.get('date') || null; if (!isEdit) item.paid = false;
+      item.dueDate = fd.get('dueDate') || null; if (!isEdit) item.paid = false;
       
       // Update debt fields
       if (f.elements['isDebtToggle'].checked) {
@@ -2727,7 +2729,7 @@ document.querySelectorAll('form[data-type]').forEach(f => {
 
     } else if (type === 'tasks') {
       item.text = fd.get('text'); item.priority = fd.get('priority');
-      item.dueDate = fd.get('date') || null; if (!isEdit) item.done = false;
+      item.dueDate = fd.get('dueDate') || null; if (!isEdit) item.done = false;
     } else if (type === 'goals') {
       item.name = fd.get('name'); item.targetAmount = pAmt(fd.get('targetAmount'));
       item.currentAmount = pAmt(fd.get('currentAmount')); item.targetDate = fd.get('targetDate') || null;
