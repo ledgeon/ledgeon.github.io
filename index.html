@@ -1016,7 +1016,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <header class="mhdr">
   <h1 class="mtitle" id="mtitle">Ledgeon</h1>
   <div class="mhdr-r">
-    <span class="mmeta" id="mmeta">October</span>
     <button class="mhdr-menu-btn" data-action="toggle-menu" aria-label="Menu">⋯</button>
   </div>
 </header>
@@ -2109,22 +2108,13 @@ function updateBadges() {
 
 function updateHeader() {
   const titleEl = document.getElementById('mtitle');
-  const metaEl = document.getElementById('mmeta');
-  if (!titleEl || !metaEl) return;
-  const v = getViewMonth();
-  const monthName = new Date(v.year, v.month).toLocaleString('en-US',{month:'long'});
+  if (!titleEl) return;
   let title = 'Ledgeon';
-  let meta = monthName;
-  if (currentTab === 'income') { title = 'Income'; meta = 'YTD'; }
-  else if (currentTab === 'expenses') { title = 'Expenses'; meta = monthName; }
-  else if (currentTab === 'budget') { title = 'Budget'; meta = 'Average'; }
-  else if (currentTab === 'tasks') {
-    title = 'Tasks';
-    const o = state.tasks.filter(t => !t.done).length;
-    meta = o + ' open';
-  }
+  if (currentTab === 'income') title = 'Income';
+  else if (currentTab === 'expenses') title = 'Expenses';
+  else if (currentTab === 'budget') title = 'Budget';
+  else if (currentTab === 'tasks') title = 'Tasks';
   titleEl.textContent = title;
-  metaEl.textContent = meta;
 }
 
 function render() {
