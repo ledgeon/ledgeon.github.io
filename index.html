@@ -2451,9 +2451,9 @@ function renderExpenses() {
       else if (b.dueDate) {
         const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
         if (days === 1) pillHTML = pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id });
-        else pillHTML = pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
+        else pillHTML = pill('Pay', 'i', { action: 'pay-bill', id: b.id });
       } else {
-        pillHTML = pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
+        pillHTML = pill('Pay', 'i', { action: 'pay-bill', id: b.id });
       }
 
       const valCls = isPaid ? 'muted' : overdue ? 'negative' : '';
