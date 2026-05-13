@@ -77,46 +77,46 @@
   --warning-soft:  #423b2a;
 }
 
-[data-theme="cobalt"] {
-  --bg:            #0f1729;
-  --bg-subtle:     #1a2238;
-  --bg-hover:      #25304a;
-  --border:        #2d3858;
-  --border-light:  #1f2940;
-  --ink:           #f0f6ff;
-  --ink-2:         #c9d6e8;
-  --ink-3:         #8a9cb8;
-  --ink-4:         #5a6c88;
-  --accent:        #60a5fa;
-  --accent-soft:   #1e3a5f;
-  --accent-strong: #3b82f6;
-  --positive:      #4ade80;
-  --positive-soft: #1a3f24;
-  --negative:      #f87171;
-  --negative-soft: #3f1d1d;
-  --warning:       #fbbf24;
-  --warning-soft:  #3f2d1a;
-}
-
-[data-theme="slate"] {
-  --bg:            #f8fafc;
-  --bg-subtle:     #f1f5f9;
-  --bg-hover:      #e2e8f0;
-  --border:        #cbd5e1;
-  --border-light:  #e2e8f0;
-  --ink:           #0f172a;
-  --ink-2:         #334155;
-  --ink-3:         #64748b;
-  --ink-4:         #94a3b8;
-  --accent:        #4f46e5;
-  --accent-soft:   #eef2ff;
-  --accent-strong: #4338ca;
+[data-theme="mono"] {
+  --bg:            #ffffff;
+  --bg-subtle:     #f5f5f5;
+  --bg-hover:      #e8e8e8;
+  --border:        #1a1a1a;
+  --border-light:  #d4d4d4;
+  --ink:           #000000;
+  --ink-2:         #2a2a2a;
+  --ink-3:         #595959;
+  --ink-4:         #8c8c8c;
+  --accent:        #000000;
+  --accent-soft:   #e8e8e8;
+  --accent-strong: #000000;
   --positive:      #15803d;
   --positive-soft: #dcfce7;
   --negative:      #b91c1c;
   --negative-soft: #fee2e2;
   --warning:       #b45309;
   --warning-soft:  #fef3c7;
+}
+
+[data-theme="dracula"] {
+  --bg:            #282a36;
+  --bg-subtle:     #313442;
+  --bg-hover:      #44475a;
+  --border:        #44475a;
+  --border-light:  #353746;
+  --ink:           #f8f8f2;
+  --ink-2:         #c4c4be;
+  --ink-3:         #8e8e89;
+  --ink-4:         #6272a4;
+  --accent:        #bd93f9;
+  --accent-soft:   #3a2e52;
+  --accent-strong: #a675f5;
+  --positive:      #50fa7b;
+  --positive-soft: #1f3a26;
+  --negative:      #ff5555;
+  --negative-soft: #401e1e;
+  --warning:       #f1fa8c;
+  --warning-soft:  #3a3a1f;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -396,6 +396,48 @@ main { flex: 1; }
 .row .v.muted { color: var(--ink-4); text-decoration: line-through; }
 .row.strong .v { font-weight: 700; }
 .row.strong .l { font-weight: 600; }
+
+/* ── AMOUNT BUTTON (pay/unpay via tapping the dollar amount) ── */
+.amount-btn {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.amount-btn:hover, .amount-btn:focus-visible, .amount-btn:active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+.amount-btn.urgent { color: var(--negative); border-color: var(--negative-soft); }
+.amount-btn.urgent:hover, .amount-btn.urgent:focus-visible, .amount-btn.urgent:active {
+  background: var(--negative-soft); border-color: var(--negative); color: var(--negative);
+}
+.amount-btn.soon { color: var(--warning); border-color: var(--warning-soft); }
+.amount-btn.soon:hover, .amount-btn.soon:focus-visible, .amount-btn.soon:active {
+  background: var(--warning-soft); border-color: var(--warning); color: var(--warning);
+}
+.amount-btn.paid {
+  text-decoration: line-through;
+  color: var(--ink-4);
+  border-color: var(--border-light);
+  opacity: 0.65;
+}
+.amount-btn.paid:hover, .amount-btn.paid:focus-visible, .amount-btn.paid:active {
+  background: var(--bg-hover); color: var(--ink-3); border-color: var(--border); opacity: 1;
+  text-decoration: none;
+}
 
 /* ── PILL BADGES ────────────────────────────────────────── */
 .pill {
@@ -1294,10 +1336,10 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <div class="mhdr-menu" id="header-menu" hidden>
   <div class="menu-label">Theme</div>
   <button data-action="set-theme" data-theme-name="light">Light</button>
-  <button data-action="set-theme" data-theme-name="slate">Slate</button>
+  <button data-action="set-theme" data-theme-name="mono">Mono</button>
   <button data-action="set-theme" data-theme-name="dark">Dark</button>
   <button data-action="set-theme" data-theme-name="nord">Nord</button>
-  <button data-action="set-theme" data-theme-name="cobalt">Cobalt</button>
+  <button data-action="set-theme" data-theme-name="dracula">Dracula</button>
   <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
@@ -1646,7 +1688,7 @@ function getTheme() {
   try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
 }
 function applyTheme(name) {
-  if (!['light', 'slate', 'dark', 'nord', 'cobalt'].includes(name)) name = 'light';
+  if (!['light', 'mono', 'dark', 'nord', 'dracula'].includes(name)) name = 'light';
   if (name === 'light') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
@@ -2219,7 +2261,7 @@ function renderOverview() {
       const last = cumPoints[cumPoints.length - 1];
       const sign = last.val >= 0 ? '+' : '−';
       const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
     }
 
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
@@ -2347,7 +2389,7 @@ function renderIncome() {
         .filter(b => b.recurring && b.recurring !== 'once')
         .reduce((s, b) => s + monthlyEq(parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0, b.recurring), 0);
       const monthlyFixedStr = fmtMoney(monthlyFixed, { round: true });
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
     }
 
     chartHTML = `
@@ -2439,28 +2481,27 @@ function renderExpenses() {
       const isPaid = !!b.paid;
       const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
       const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
+      let isTomorrow = false;
+      if (b.dueDate && !b.paid && !overdue && !today) {
+        const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
+        isTomorrow = days === 1;
+      }
       const cat = (CATEGORIES[b.category] || CATEGORIES.other);
       const metaParts = [cap(cat.label), cap(b.recurring || 'once')];
       if (b.isPercent && typeof b.pctValue === 'number') metaParts.push(`${b.pctValue}% of income`);
-      if (b.dueDate && !isPaid && !overdue && !today) metaParts.push(compactDate(b.dueDate));
-
-      let pillHTML = '';
-      if (isPaid) pillHTML = pill('Paid', 'g', { action: 'unpay-bill', id: b.id });
-      else if (overdue) pillHTML = pill('Overdue', 'r', { action: 'pay-bill', id: b.id });
-      else if (today) pillHTML = pill('Today', 'y', { action: 'pay-bill', id: b.id });
-      else if (b.dueDate) {
-        const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-        if (days === 1) pillHTML = pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id });
-        else pillHTML = pill('Pay', 'i', { action: 'pay-bill', id: b.id });
-      } else {
-        pillHTML = pill('Pay', 'i', { action: 'pay-bill', id: b.id });
+      if (b.dueDate) {
+        if (overdue) metaParts.push('Overdue · ' + compactDate(b.dueDate));
+        else metaParts.push(compactDate(b.dueDate));
       }
 
-      const valCls = isPaid ? 'muted' : overdue ? 'negative' : '';
+      let amountCls = 'amount-btn';
+      if (isPaid) amountCls += ' paid';
+      else if (overdue) amountCls += ' urgent';
+      else if (today || isTomorrow) amountCls += ' soon';
+      const amountAction = isPaid ? 'unpay-bill' : 'pay-bill';
       const dimCls = isPaid ? ' dim' : '';
-      const inlinePill = pillHTML ? ' ' + pillHTML : '';
 
-      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${inlinePill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}</div><div class="m">${metaParts.join(' · ')}</div></div><button type="button" class="${amountCls}" data-action="${amountAction}" data-id="${b.id}">${fmtMoney(b.amount, {round:true})}</button></div>`;
     }).join('');
   }
 
