@@ -2028,7 +2028,7 @@ function renderBudget() {
   }
 
   const pieHTML = buildPieChart(inc, catData, savings, netForPie);
-  return `${availBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('This week')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
+  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
