@@ -8,8 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="icon.png">
-<script>try{var t=localStorage.getItem('ledgeon-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch{}</script>
 <style>
 /* ════════════════════════════════════════════════════════════════
    SLATE · design tokens (from preview 01 verbatim)
@@ -35,90 +33,6 @@
   --warning-soft:  #fef3c7;
 }
 
-[data-theme="dark"] {
-  --bg:            #0c0c0e;
-  --bg-subtle:     #161618;
-  --bg-hover:      #232327;
-  --border:        #2a2a30;
-  --border-light:  #1c1c20;
-  --ink:           #f4f4f5;
-  --ink-2:         #a1a1aa;
-  --ink-3:         #71717a;
-  --ink-4:         #52525b;
-  --accent:        #818cf8;
-  --accent-soft:   #1e1b4b;
-  --accent-strong: #6366f1;
-  --positive:      #4ade80;
-  --positive-soft: #052e16;
-  --negative:      #f87171;
-  --negative-soft: #450a0a;
-  --warning:       #fbbf24;
-  --warning-soft:  #422006;
-}
-
-[data-theme="nord"] {
-  --bg:            #2e3440;
-  --bg-subtle:     #3b4252;
-  --bg-hover:      #434c5e;
-  --border:        #4c566a;
-  --border-light:  #3b4252;
-  --ink:           #eceff4;
-  --ink-2:         #d8dee9;
-  --ink-3:         #a3aebc;
-  --ink-4:         #6e7a8a;
-  --accent:        #88c0d0;
-  --accent-soft:   #3a4a59;
-  --accent-strong: #5e81ac;
-  --positive:      #a3be8c;
-  --positive-soft: #354039;
-  --negative:      #bf616a;
-  --negative-soft: #422a2c;
-  --warning:       #ebcb8b;
-  --warning-soft:  #423b2a;
-}
-
-[data-theme="mono"] {
-  --bg:            #ffffff;
-  --bg-subtle:     #f5f5f5;
-  --bg-hover:      #e8e8e8;
-  --border:        #1a1a1a;
-  --border-light:  #d4d4d4;
-  --ink:           #000000;
-  --ink-2:         #2a2a2a;
-  --ink-3:         #595959;
-  --ink-4:         #8c8c8c;
-  --accent:        #000000;
-  --accent-soft:   #e8e8e8;
-  --accent-strong: #000000;
-  --positive:      #15803d;
-  --positive-soft: #dcfce7;
-  --negative:      #b91c1c;
-  --negative-soft: #fee2e2;
-  --warning:       #b45309;
-  --warning-soft:  #fef3c7;
-}
-
-[data-theme="dracula"] {
-  --bg:            #282a36;
-  --bg-subtle:     #313442;
-  --bg-hover:      #44475a;
-  --border:        #44475a;
-  --border-light:  #353746;
-  --ink:           #f8f8f2;
-  --ink-2:         #c4c4be;
-  --ink-3:         #8e8e89;
-  --ink-4:         #6272a4;
-  --accent:        #bd93f9;
-  --accent-soft:   #3a2e52;
-  --accent-strong: #a675f5;
-  --positive:      #50fa7b;
-  --positive-soft: #1f3a26;
-  --negative:      #ff5555;
-  --negative-soft: #401e1e;
-  --warning:       #f1fa8c;
-  --warning-soft:  #3a3a1f;
-}
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   background: var(--bg); color: var(--ink);
@@ -126,7 +40,6 @@ html, body {
   font-size: 14px; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
-  overflow-x: clip;
 }
 body {
   display: flex; flex-direction: column;
@@ -164,50 +77,6 @@ main { flex: 1; }
   margin-right: 8px;
 }
 .mhdr-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.sync-ind {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--bg-hover);
-  color: var(--ink-3);
-}
-.sync-ind.syncing { background: var(--accent-soft); color: var(--accent); }
-.sync-ind.ok      { background: var(--positive-soft); color: var(--positive); }
-.sync-ind.err     { background: var(--negative-soft); color: var(--negative); }
-
-.conflict-card {
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-.conflict-card-h {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: var(--ink-3);
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.conflict-card-ts {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 2px;
-}
-.conflict-card-sub {
-  font-size: 11px;
-  color: var(--ink-3);
-  font-variant-numeric: tabular-nums;
-}
-.conflict-card-summary {
-  font-size: 11.5px;
-  color: var(--ink-2);
-  margin-top: 4px;
-}
 .mmeta {
   font-size: 11px; font-weight: 600;
   color: var(--ink-3);
@@ -251,26 +120,6 @@ main { flex: 1; }
 .mhdr-menu button:hover { background: var(--bg-hover); }
 .mhdr-menu button.danger { color: var(--negative); }
 .mhdr-menu button.danger:hover { background: var(--negative-soft); }
-.mhdr-menu .menu-label {
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: var(--ink-4);
-  padding: 8px 11px 4px;
-}
-.mhdr-menu .menu-divider {
-  height: 1px;
-  background: var(--border);
-  margin: 4px 4px;
-}
-.mhdr-menu button.current {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
-}
-.mhdr-menu button.current::before { content: '✓  '; font-weight: 700; }
-.mhdr-menu button[data-action="set-theme"]:not(.current)::before { content: '\2003\2003'; }
 
 /* ── HERO BLOCK ─────────────────────────────────────────── */
 .blk {
@@ -332,7 +181,7 @@ main { flex: 1; }
   margin-left: auto;
   letter-spacing: 0.2px;
 }
-.sh .add:hover { background: var(--accent-soft); }
+.sh .add:hover { background: #e0e7ff; }
 .sh .month-nav {
   margin-left: auto;
   display: inline-flex; align-items: center;
@@ -392,52 +241,9 @@ main { flex: 1; }
 }
 .row .v.positive { color: var(--positive); }
 .row .v.negative { color: var(--negative); }
-.row .v.warning { color: var(--warning); }
 .row .v.muted { color: var(--ink-4); text-decoration: line-through; }
 .row.strong .v { font-weight: 700; }
 .row.strong .l { font-weight: 600; }
-
-/* ── AMOUNT BUTTON (pay/unpay via tapping the dollar amount) ── */
-.amount-btn {
-  display: inline-block;
-  padding: 5px 11px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
-  -webkit-tap-highlight-color: transparent;
-}
-.amount-btn:hover, .amount-btn:focus-visible, .amount-btn:active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
-  outline: none;
-}
-.amount-btn.urgent { color: var(--negative); border-color: var(--negative-soft); }
-.amount-btn.urgent:hover, .amount-btn.urgent:focus-visible, .amount-btn.urgent:active {
-  background: var(--negative-soft); border-color: var(--negative); color: var(--negative);
-}
-.amount-btn.soon { color: var(--warning); border-color: var(--warning-soft); }
-.amount-btn.soon:hover, .amount-btn.soon:focus-visible, .amount-btn.soon:active {
-  background: var(--warning-soft); border-color: var(--warning); color: var(--warning);
-}
-.amount-btn.paid {
-  text-decoration: line-through;
-  color: var(--ink-4);
-  border-color: var(--border-light);
-  opacity: 0.65;
-}
-.amount-btn.paid:hover, .amount-btn.paid:focus-visible, .amount-btn.paid:active {
-  background: var(--bg-hover); color: var(--ink-3); border-color: var(--border); opacity: 1;
-  text-decoration: none;
-}
 
 /* ── PILL BADGES ────────────────────────────────────────── */
 .pill {
@@ -507,9 +313,9 @@ main { flex: 1; }
   letter-spacing: 0.2px;
   min-height: 22px;
 }
-.li-acts button:hover { background: var(--bg-hover); color: var(--ink); }
+.li-acts button:hover { background: #e4e4e7; color: var(--ink); }
 .li-acts button.primary { background: var(--accent-soft); color: var(--accent); }
-.li-acts button.primary:hover { background: var(--accent-soft); }
+.li-acts button.primary:hover { background: #e0e7ff; }
 .li-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
 /* ── METER (category breakdown bars) ────────────────────── */
@@ -530,7 +336,7 @@ main { flex: 1; }
 .meter-b {
   display: block;
   height: 6px;
-  background: var(--bg-hover);
+  background: #f1f1f4;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -549,57 +355,36 @@ main { flex: 1; }
   color: var(--ink);
 }
 
-/* ── CHART (axis + flex layout) ─────────────────────────── */
+/* ── CHART (income trend, 12-month bar chart) ───────────── */
 .chart {
-  padding: 16px 16px 20px;
+  padding: 12px 16px 14px;
   border-bottom: 1px solid var(--border);
 }
-.chart-layout {
-  display: flex;
-  gap: 12px;
-  height: 120px;
-}
-.chart-y {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-bottom: 22px; /* offsets text height to align perfectly with baseline */
-  font-size: 9.5px;
-  color: var(--ink-4);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: 34px;
-}
+/* Each month is a SINGLE column containing both its bar AND its
+   label. They share one flex item so they cannot drift apart. */
 .chart-cols {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   align-items: stretch;
-  flex: 1;
-  justify-content: center;
 }
 .chart-col {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 }
 .chart-col .bar-track {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
+  height: 60px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  position: relative;
 }
 .chart-col .bar {
-  width: 14px;
+  width: 100%;
   background: var(--accent);
-  border-radius: 3px 3px 0 0;
-  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  min-height: 3px;
 }
 .chart-col .bar.empty { background: transparent; min-height: 0; }
 .chart-col.cur .bar { box-shadow: 0 0 0 2px var(--accent-soft); }
@@ -614,7 +399,6 @@ main { flex: 1; }
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
-  width: 100%;
 }
 .chart-col.cur .label { color: var(--accent); font-weight: 700; }
 .chart-empty {
@@ -639,7 +423,7 @@ main { flex: 1; }
 .goal-h .p { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.2px; }
 .goal-bar {
   height: 6px;
-  background: var(--bg-hover);
+  background: #f1f1f4;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -672,9 +456,9 @@ main { flex: 1; }
   min-height: 24px;
 }
 .goal-acts button.primary { background: var(--accent-soft); color: var(--accent); }
-.goal-acts button.primary:hover { background: var(--accent-soft); }
+.goal-acts button.primary:hover { background: #e0e7ff; }
 .goal-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
-.goal-acts button:hover:not(.primary):not(.danger) { background: var(--bg-hover); color: var(--ink); }
+.goal-acts button:hover:not(.primary):not(.danger) { background: #e4e4e7; color: var(--ink); }
 
 /* ── TASK ──────────────────────────────────────────────── */
 .task {
@@ -740,7 +524,7 @@ main { flex: 1; }
   letter-spacing: 0.2px;
   min-height: 22px;
 }
-.task-acts button:hover { background: var(--bg-hover); color: var(--ink); }
+.task-acts button:hover { background: #e4e4e7; color: var(--ink); }
 .task-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
 /* ── NOTE / EMPTY ───────────────────────────────────────── */
@@ -946,6 +730,14 @@ nav.mnav button .badge {
   display: flex; justify-content: flex-end; gap: 8px;
   margin-top: 14px; padding-top: 12px;
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.factions button.accent-soft {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.factions button.accent-soft:hover {
+  background: #e0e7ff;
 }
 .factions button {
   padding: 8px 14px;
@@ -956,7 +748,7 @@ nav.mnav button .badge {
   font-weight: 600;
   letter-spacing: 0.1px;
 }
-.factions button:hover { background: var(--bg-hover); }
+.factions button:hover { background: #e4e4e7; }
 .factions button.primary {
   background: var(--accent);
   color: white;
@@ -1021,10 +813,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .task { padding: 10px 14px; }
   .goal { padding: 12px 14px; }
   .meter { grid-template-columns: 78px 1fr 42px; gap: 8px; padding: 7px 14px; }
-  .chart { padding: 16px 14px 20px; }
-  .chart-layout { gap: 8px; }
-  .chart-cols { gap: 3px; min-width: 0; }
-  .chart-col .bar { width: 12px; }
+  .chart { padding: 12px 14px; }
   .chart-col .label { font-size: 9px; letter-spacing: 0; }
   .note, .empty { padding: 14px; }
   .modal { padding: 10px; }
@@ -1039,7 +828,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
   nav.mnav button { font-size: 10px; }
   .blk-v { font-size: 28px; }
   .chart-cols { gap: 2px; }
-  .chart-col .bar { width: 12px; }
   .chart-col .label { font-size: 8.5px; }
 }
 
@@ -1329,19 +1117,10 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <header class="mhdr">
   <h1 class="mtitle" id="mtitle">Ledgeon</h1>
   <div class="mhdr-r">
-    <span id="sync-indicator" class="mmeta sync-ind" hidden></span>
     <button class="mhdr-menu-btn" data-action="toggle-menu" aria-label="Menu">⋯</button>
   </div>
 </header>
 <div class="mhdr-menu" id="header-menu" hidden>
-  <div class="menu-label">Theme</div>
-  <button data-action="set-theme" data-theme-name="light">Light</button>
-  <button data-action="set-theme" data-theme-name="mono">Mono</button>
-  <button data-action="set-theme" data-theme-name="dark">Dark</button>
-  <button data-action="set-theme" data-theme-name="nord">Nord</button>
-  <button data-action="set-theme" data-theme-name="dracula">Dracula</button>
-  <div class="menu-divider"></div>
-  <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
   <button data-action="export">Export data</button>
   <button class="danger" data-action="reset">Reset everything</button>
@@ -1357,6 +1136,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <button data-tab="tasks">Tasks<span class="badge badge-t" style="display:none">0</span></button>
 </nav>
 
+<!-- modals -->
 <div class="modal" id="modal-income">
   <div class="modal-bd" data-action="close-modal"></div>
   <div class="modal-c">
@@ -1409,15 +1189,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
     <form data-type="expenses">
       <div class="frow">
         <div class="fcol"><label class="flbl">name</label><input type="text" class="input" name="name" required></div>
-        <div class="fcol" style="min-width: 100px;"><label class="flbl" id="expense-amount-label">amount</label><input type="text" class="input" name="amount" id="expense-amount-input" placeholder="0.00" required></div>
-      </div>
-      <div class="frow" style="margin-top: -4px;">
-        <div class="fcol">
-          <label class="tip-toggle" style="font-size: 12px; color: var(--ink-3);">
-            <input type="checkbox" name="isPercent" id="isPercentToggle"> Set as % of monthly average income
-          </label>
-          <div id="pct-preview" style="font-size: 11px; color: var(--ink-3); margin-top: 4px; display: none; font-style: italic;"></div>
-        </div>
+        <div class="fcol" style="min-width: 100px;"><label class="flbl">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
       </div>
       <div class="frow">
         <div class="fcol"><label class="flbl">category</label>
@@ -1436,17 +1208,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
       <div class="frow">
         <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
       </div>
-      
-      <div class="tip-box" id="debt-section" style="margin-top: 6px; margin-bottom: 0; display: none;">
-        <label class="tip-toggle">
-          <input type="checkbox" name="isDebt" id="isDebtToggle"> Track as debt (Balance & APR)
-        </label>
-        <div class="tip-input-grp" id="debtInputGroup" style="display:none;">
-          <input type="number" step="0.01" class="input" name="balance" placeholder="Current Balance" style="flex:1;">
-          <input type="number" step="0.01" class="input" name="apr" placeholder="APR %" style="width: 80px;">
-        </div>
-      </div>
-
       <div id="payment-history-section" style="display:none"></div>
       <div class="factions">
         <button type="button" data-action="close-modal">cancel</button>
@@ -1531,59 +1292,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
   </div>
 </div>
 
-<div class="modal" id="modal-sync">
-  <div class="modal-bd" data-action="close-modal"></div>
-  <div class="modal-c">
-    <div class="modal-t">cloud sync</div>
-    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 4px; line-height: 1.5;">
-      Use the same sync code on every device to share data. Generate one here, then enter it on your other devices.
-    </div>
-    <div class="frow"><div class="fcol">
-      <label class="flbl">sync code</label>
-      <div style="display: flex; gap: 6px;">
-        <input type="text" class="input" id="sync-code-input" placeholder="generate or paste a code" autocomplete="off" spellcheck="false" maxlength="20" style="flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; text-align: center; font-weight: 700; font-size: 18px;">
-        <button type="button" data-action="sync-copy" id="sync-copy-btn" style="background: var(--accent-soft); color: var(--accent); padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 700;">Copy</button>
-      </div>
-    </div></div>
-    <div class="frow"><div class="fcol">
-      <button type="button" data-action="sync-generate" style="background: var(--bg-hover); color: var(--ink-2); padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; width: 100%;">Generate new code</button>
-    </div></div>
-    <div id="sync-msg" style="font-size: 12px; color: var(--ink-3); margin: 4px 0 12px; min-height: 16px; line-height: 1.5;"></div>
-    <div class="factions">
-      <button type="button" class="danger" id="sync-disable-btn" data-action="sync-disable" style="display:none">Disable</button>
-      <button type="button" data-action="close-modal">close</button>
-      <button type="button" class="primary" data-action="sync-save">Save &amp; sync</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal" id="modal-sync-conflict">
-  <div class="modal-bd" data-action="conflict-cancel"></div>
-  <div class="modal-c">
-    <div class="modal-t">sync conflict</div>
-    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5;">
-      Both this device and the cloud have data under this code. Pick which copy to keep — the other will be replaced. There's no merge or undo.
-    </div>
-    <div class="conflict-card">
-      <div class="conflict-card-h">This device</div>
-      <div class="conflict-card-ts" id="conflict-local-rel">—</div>
-      <div class="conflict-card-sub" id="conflict-local-abs">—</div>
-      <div class="conflict-card-summary" id="conflict-local-summary">—</div>
-    </div>
-    <div class="conflict-card">
-      <div class="conflict-card-h">The cloud</div>
-      <div class="conflict-card-ts" id="conflict-remote-rel">—</div>
-      <div class="conflict-card-sub" id="conflict-remote-abs">—</div>
-      <div class="conflict-card-summary" id="conflict-remote-summary">—</div>
-    </div>
-    <div class="factions" style="flex-wrap: wrap; gap: 6px;">
-      <button type="button" data-action="conflict-cancel">Cancel</button>
-      <button type="button" data-action="conflict-keep-local">Keep this device</button>
-      <button type="button" class="primary" data-action="conflict-use-remote">Use cloud</button>
-    </div>
-  </div>
-</div>
-
 <script>
 'use strict';
 
@@ -1604,9 +1312,6 @@ $$$  ██████
 const STORAGE_KEY = 'ledgeon-state-v5';
 const TAB_KEY = 'ledgeon-tab';
 const TAX_KEY = 'ledgeon-tax-pct';
-const SYNC_CONFIG_KEY = 'ledgeon-sync-config';
-const SYNC_WORKER_URL = 'https://ledgeon-sync.danielssouthworth.workers.dev';
-const THEME_KEY = 'ledgeon-theme';
 const TABS = ['overview', 'income', 'expenses', 'budget', 'tasks'];
 
 const CATEGORIES = {
@@ -1632,7 +1337,7 @@ const PRESET_BILLS = [
 ];
 
 // ──── State ──────────────────────────────────────────────────
-let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [], updatedAt: 0 };
+let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [] };
 const possibleKeys = ['ledgeon-state-v5', 'ledgeon-state-v4', 'ledgeon-prompt-v1', 'ledgeon-state-v3'];
 for (const k of possibleKeys) {
   try {
@@ -1648,7 +1353,6 @@ for (const k of possibleKeys) {
           goals:    Array.isArray(v.goals)    ? v.goals    : [],
           petty:    Array.isArray(v.petty)    ? v.petty    : [],
           payments: Array.isArray(v.payments) ? v.payments : [],
-          updatedAt: typeof v.updatedAt === 'number' ? v.updatedAt : 0,
         };
         break;
       }
@@ -1684,94 +1388,8 @@ let viewMonth = null;
 function getTaxPct() { const v = parseFloat(localStorage.getItem(TAX_KEY)); return isNaN(v) ? 25 : v; }
 function setTaxPct(v) { localStorage.setItem(TAX_KEY, String(v)); }
 
-function getTheme() {
-  try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
-}
-function applyTheme(name) {
-  if (!['light', 'mono', 'dark', 'nord', 'dracula'].includes(name)) name = 'light';
-  if (name === 'light') document.documentElement.removeAttribute('data-theme');
-  else document.documentElement.setAttribute('data-theme', name);
-  try { localStorage.setItem(THEME_KEY, name); } catch {}
-  updateThemeMenuMarkers();
-}
-function updateThemeMenuMarkers() {
-  const cur = getTheme();
-  document.querySelectorAll('[data-theme-name]').forEach(btn => {
-    btn.classList.toggle('current', btn.dataset.themeName === cur);
-  });
-}
-
 // ──── Helpers ────────────────────────────────────────────────
-function saveState() {
-  state.updatedAt = Date.now();
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {}
-  schedulePush();
-}
-
-// Recompute amount on any percent-based bills using the current monthly average income.
-// Does not call saveState — pure in-memory refresh, called at the top of render().
-function syncPercentBills() {
-  let avg = null;
-  for (const b of state.bills) {
-    if (b.isPercent && typeof b.pctValue === 'number') {
-      if (avg === null) avg = getIncomeStats().avgMonthly || 0;
-      b.amount = avg * b.pctValue / 100;
-    }
-  }
-}
-
-function updateDebtSectionVisibility() {
-  const f = document.querySelector('#modal-expenses form');
-  if (!f) return;
-  const catSel = f.elements['category'];
-  const section = document.getElementById('debt-section');
-  const debtToggle = f.elements['isDebtToggle'];
-  if (!catSel || !section || !debtToggle) return;
-  if (catSel.value === 'debt') {
-    section.style.display = '';
-  } else {
-    section.style.display = 'none';
-    // If category is no longer 'debt', untick the toggle so save logic strips balance/apr
-    if (debtToggle.checked) {
-      debtToggle.checked = false;
-      debtToggle.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }
-}
-
-function updateExpensePercentUI() {
-  const toggle = document.getElementById('isPercentToggle');
-  const label  = document.getElementById('expense-amount-label');
-  const input  = document.getElementById('expense-amount-input');
-  const prev   = document.getElementById('pct-preview');
-  if (!toggle || !label || !input || !prev) return;
-  if (toggle.checked) {
-    label.textContent = '% of monthly income';
-    input.placeholder = 'e.g. 30';
-    prev.style.display = '';
-    updatePctPreview();
-  } else {
-    label.textContent = 'amount';
-    input.placeholder = '0.00';
-    prev.style.display = 'none';
-    prev.textContent = '';
-  }
-}
-
-function updatePctPreview() {
-  const input = document.getElementById('expense-amount-input');
-  const prev  = document.getElementById('pct-preview');
-  if (!input || !prev) return;
-  const pct = parseFloat(String(input.value).replace(/[^\d.-]/g, '')) || 0;
-  const avg = getIncomeStats().avgMonthly || 0;
-  if (pct > 0 && avg > 0) {
-    prev.textContent = `≈ ${fmtMoney(avg * pct / 100, {round:true})}/mo at current income`;
-  } else if (pct > 0) {
-    prev.textContent = `Will calculate once income is recorded`;
-  } else {
-    prev.textContent = '';
-  }
-}
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {} }
 function nextId(col) {
   const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm' }[col];
   let max = 0;
@@ -1793,14 +1411,6 @@ function formatDate(s) {
 }
 function isOverdue(s) { return s && new Date(s + (s.includes('T') ? '' : 'T00:00:00')) < todayStart(); }
 function isTodayDate(s) { return s && +new Date(s + (s.includes('T') ? '' : 'T00:00:00')) === +todayStart(); }
-// A recurring bill is "currently paid" if it was marked paid AND the next due date is still in the future.
-// Once the new cycle's due date arrives, the bill auto-unpays so the user can pay the new cycle.
-function isBillCurrentlyPaid(b) {
-  if (!b || !b.paid) return false;
-  if (!b.recurring || b.recurring === 'once') return true;
-  if (!b.dueDate) return true;
-  return isoDate(todayStart()) < b.dueDate;
-}
 function fmtMoney(n, opts = {}) {
   const v = parseFloat(String(n).replace(/[^\d.-]/g, '')) || 0;
   const abs = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: opts.round ? 0 : 2, maximumFractionDigits: opts.round ? 0 : 2 });
@@ -1901,17 +1511,12 @@ function getCalendarYearHistory() {
 function getIncomeStats() {
   const now = new Date(); const curY = now.getFullYear(); const curM = now.getMonth();
   let rawInc = []; let rawBills = [];
-  
-  // Exclude current incomplete month from averages
   for (let i = 1; i <= 12; i++) {
     let m = curM - i; let y = curY; if (m < 0) { m += 12; y -= 1; }
     const st = getMonthlyStats(y, m);
-    if (st.income > 0 || st.bills > 0) {
-      rawInc.push(st.income);
-      rawBills.push(st.bills);
-    }
+    if (st.income > 0) rawInc.push(st.income);
+    if (st.bills > 0) rawBills.push(st.bills);
   }
-  
   let validInc = rawInc.length > 1 ? rawInc.filter(inc => inc >= Math.max(...rawInc) * 0.5) : rawInc;
   if (validInc.length === 0) { const cur = getMonthlyStats(curY, curM); if (cur.income > 0) validInc.push(cur.income); }
   const avgMonthly = validInc.length ? validInc.reduce((a,b)=>a+b,0) / validInc.length : 0;
@@ -2148,24 +1753,6 @@ function compactDate(iso) {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Smooth path through points using quadratic beziers (data points are control points,
-// curve passes through midpoints — clean look without overshoot).
-function smoothPath(pts) {
-  if (!pts || pts.length === 0) return '';
-  if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`;
-  if (pts.length === 2) return `M ${pts[0].x},${pts[0].y} L ${pts[1].x},${pts[1].y}`;
-  let d = `M ${pts[0].x},${pts[0].y}`;
-  const m0 = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-  d += ` L ${m0.x},${m0.y}`;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const nm = { x: (pts[i].x + pts[i+1].x) / 2, y: (pts[i].y + pts[i+1].y) / 2 };
-    d += ` Q ${pts[i].x},${pts[i].y} ${nm.x},${nm.y}`;
-  }
-  const last = pts[pts.length - 1];
-  d += ` L ${last.x},${last.y}`;
-  return d;
-}
-
 // ──── Render: overview ─────────────────────────────────────
 function renderOverview() {
   const { year, month } = getViewMonth();
@@ -2182,7 +1769,7 @@ function renderOverview() {
   const avgSurplus = avgIn - avgOut;
 
   const upcIso = isoDate(new Date(Date.now() + 14 * 86400000));
-  const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !isBillCurrentlyPaid(b))
+  const upcoming = state.bills.filter(b => b.dueDate && b.dueDate <= upcIso && !b.paid)
     .sort((a,b) => a.dueDate.localeCompare(b.dueDate));
   const openTasks = state.tasks.filter(t => !t.done).sort((a,b) => {
     const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
@@ -2194,97 +1781,12 @@ function renderOverview() {
     : `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out`;
   const heroNet = blk('Net this month', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), heroSub, { color: net >= 0 ? 'positive' : 'negative' });
 
-  // --- NEW: Net Flow Chart (Filtered for valid data) ---
-  const yearHist = getCalendarYearHistory();
-  const curMonthIndex = new Date().getMonth();
-  
-  // Exclude future months, and exclude past months with no income 
-  const chartDataRaw = yearHist.map((h, i) => {
-    const isFuture = i > curMonthIndex;
-    const isEmpty = isFuture || h.income <= 0;
-    return { ...h, income: isEmpty ? 0 : h.income, bills: isEmpty ? 0 : h.bills, empty: isEmpty };
-  });
-
-  const validMonths = chartDataRaw.filter(m => !m.empty);
-  
-  let chartHTML = '';
-  if (validMonths.length === 0) {
-    chartHTML = `<div class="chart-empty">No complete months to display yet. Add income first.</div>`;
-  } else {
-    const maxAbsNet = Math.max(1, ...validMonths.map(m => Math.abs(m.income - m.bills)));
-    const maxValStr = fmtMoney(maxAbsNet, {round:true});
-    const minValStr = '−' + fmtMoney(maxAbsNet, {round:true}).replace('−', '');
-    
-    const colsFlow = chartDataRaw.map(h => {
-      const hasData = !h.empty;
-      const cNet = h.income - h.bills;
-      const hPct = hasData ? (Math.abs(cNet) / maxAbsNet) * 100 : 0;
-      const isPos = cNet >= 0;
-      
-      let topHalf = '';
-      let botHalf = '';
-      
-      if (!hasData) {
-        topHalf = `<div style="height: 50%; width: 100%;"></div>`;
-        botHalf = `<div style="height: 50%; width: 100%;"></div>`;
-      } else if (isPos) {
-        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%; justify-content: center;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--accent); width: 14px; border-radius: 3px 3px 0 0;"></div></div>`;
-        botHalf = `<div style="height: 50%; width: 100%;"></div>`;
-      } else {
-        topHalf = `<div style="height: 50%; width: 100%;"></div>`;
-        botHalf = `<div style="height: 50%; display: flex; align-items: flex-start; width: 100%; justify-content: center;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--negative); width: 14px; border-radius: 0 0 3px 3px;"></div></div>`;
-      }
-
-      const colCls = h.current ? ' cur' : '';
-      return `<div class="chart-col${colCls}">
-        <div class="bar-track" style="flex-direction: column; justify-content: center; position: relative;">
-          <div style="position: absolute; top: 50%; left: -2px; right: -2px; height: 1px; background: var(--border-light); z-index: 0;"></div>
-          <div style="position: relative; z-index: 1; height: 100%; width: 100%; display: flex; flex-direction: column;">
-            ${topHalf}${botHalf}
-          </div>
-        </div>
-        <div class="label">${h.label}</div>
-      </div>`;
-    }).join('');
-
-    // Cumulative net line overlay (YTD running total of income - bills)
-    let cumLineSVG = '';
-    let running = 0;
-    const cumPoints = [];
-    chartDataRaw.forEach((h, i) => {
-      if (!h.empty) {
-        running += (h.income - h.bills);
-        cumPoints.push({ i, val: running });
-      }
-    });
-    if (cumPoints.length > 1) {
-      // Anchor the cumulative line's zero to the chart's midpoint (same as the bars' zero axis),
-      // so the line crossing zero visually corresponds to YTD = 0.
-      const maxAbsCum = Math.max(1, ...cumPoints.map(p => Math.abs(p.val)));
-      const padPct = 8;
-      const xs = cumPoints.map(p => ((p.i + 0.5) / 12) * 100);
-      const ys = cumPoints.map(p => 50 - (p.val / maxAbsCum) * (50 - padPct));
-      const ptsArr = xs.map((x, i) => ({ x, y: ys[i] }));
-      const pathD = smoothPath(ptsArr);
-      const last = cumPoints[cumPoints.length - 1];
-      const sign = last.val >= 0 ? '+' : '−';
-      const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
-    }
-
-    chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
-      <div class="chart">
-        <div class="chart-layout" style="height: 140px;">
-          <div class="chart-y">
-            <span>${maxValStr}</span>
-            <span>$0</span>
-            <span>${minValStr}</span>
-          </div>
-          <div class="chart-cols" style="position: relative;">${cumLineSVG}${colsFlow}</div>
-        </div>
-      </div>`;
+  let avgBlock = '';
+  if (avgIn > 0) {
+    avgBlock = blk('Monthly average', (avgSurplus >= 0 ? '+' : '−') + fmtMoney(Math.abs(avgSurplus), {round:true}),
+      `${fmtMoney(avgIn, {round:true})} in · ${fmtMoney(avgOut, {round:true})} out`,
+      { size: 'med', color: avgSurplus >= 0 ? 'positive' : 'negative' });
   }
-  // ------------------------------------
 
   const periodSection = sh('Period', { monthNav: monthNav(year, month) }) +
     row('Income', '+' + fmtMoney(cur.income, {round:true}), 'positive') +
@@ -2339,17 +1841,13 @@ function renderOverview() {
       (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : '');
   }
 
-  return `${heroNet}${chartHTML}${periodSection}${queueHTML}${tasksHTML}`;
+  return `${heroNet}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
 // ──── Render: income ───────────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
-  const sources = state.income.slice().sort((a, b) => {
-    const ad = a.receivedAt || a.createdAt || '';
-    const bd = b.receivedAt || b.createdAt || '';
-    return bd.localeCompare(ad);
-  });
+  const sources = state.income.slice().sort((a,b) => monthlyEq(b.amount, b.frequency) - monthlyEq(a.amount, a.frequency));
   const yearHist = getCalendarYearHistory();
   const monthsWithData = yearHist.filter(h => h.income > 0);
   const maxVal = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(h => h.income)) : 0;
@@ -2368,49 +1866,16 @@ function renderIncome() {
   if (monthsWithData.length === 0) {
     chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
   } else {
-    // Scale chart to whichever is larger between income and bills across the year,
-    // so the expenses line fits without clipping.
-    const maxBills = Math.max(0, ...yearHist.map(h => h.bills || 0));
-    const chartMax = Math.max(maxVal, maxBills, 1);
-    const maxValStr = chartMax > 0 ? fmtMoney(chartMax, {round:true}) : '';
-    const midValStr = chartMax > 0 ? fmtMoney(chartMax/2, {round:true}) : '';
-
     const cols = yearHist.map(h => {
       const hasIncome = h.income > 0;
-      const heightPct = hasIncome && chartMax > 0 ? Math.max(3, (h.income / chartMax) * 100) : 0;
+      const heightPct = hasIncome && maxVal > 0 ? Math.max(6, (h.income / maxVal) * 100) : 0;
       const colCls = h.current ? ' cur' : '';
       const barInner = hasIncome
         ? `<div class="bar" style="height:${heightPct}%"></div>`
         : `<div class="bar empty"></div>`;
       return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
     }).join('');
-
-    // Expenses line overlay — only points where there were actually any bills paid that month
-    const billsPts = yearHist.map((h, i) => h.bills > 0 ? ({ i, val: h.bills }) : null).filter(Boolean);
-    let billsLineSVG = '';
-    if (billsPts.length > 1) {
-      const xs = billsPts.map(p => ((p.i + 0.5) / 12) * 100);
-      const ys = billsPts.map(p => 100 - (p.val / chartMax) * 100);
-      const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
-      // Sum monthly-equivalent of every recurring (fixed) bill — the baseline monthly burn
-      const monthlyFixed = state.bills
-        .filter(b => b.recurring && b.recurring !== 'once')
-        .reduce((s, b) => s + monthlyEq(parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0, b.recurring), 0);
-      const monthlyFixedStr = fmtMoney(monthlyFixed, { round: true });
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
-    }
-
-    chartHTML = `
-      <div class="chart">
-        <div class="chart-layout">
-          <div class="chart-y">
-            <span>${maxValStr}</span>
-            <span>${midValStr}</span>
-            <span>$0</span>
-          </div>
-          <div class="chart-cols" style="position: relative;">${billsLineSVG}${cols}</div>
-        </div>
-      </div>`;
+    chartHTML = `<div class="chart"><div class="chart-cols">${cols}</div></div>`;
   }
 
   let sourcesHTML;
@@ -2426,8 +1891,6 @@ function renderIncome() {
       const metaParts = [freq.charAt(0).toUpperCase() + freq.slice(1)];
       if (hrs > 0) metaParts.push(fmtHM(hrs));
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
-      const dateStr = i.receivedAt || i.createdAt;
-      if (dateStr) metaParts.push(freq === 'once' ? compactDate(dateStr) : `since ${compactDate(dateStr)}`);
       const hasTips = i.tipsEnabled && amt > base;
       const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
       return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="n">${escHTML(i.source)}${tipsPill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
@@ -2446,13 +1909,13 @@ function renderExpenses() {
   const total = cur.bills;
   const incTot = getIncomeStats().avgMonthly;
   const catData = aggregateBillsByCategory(state.bills, year, month);
-  const paidCount = state.bills.filter(b => isBillCurrentlyPaid(b)).length;
-  const unpaidCount = state.bills.filter(b => !isBillCurrentlyPaid(b)).length;
+  const paidCount = state.bills.filter(b => b.paid).length;
+  const unpaidCount = state.bills.filter(b => !b.paid).length;
 
   const weekIso = isoDate(new Date(Date.now() + 7 * 86400000));
-  const dueThisWeek = state.bills.filter(b => b.dueDate && b.dueDate <= weekIso && !isBillCurrentlyPaid(b))
+  const dueThisWeek = state.bills.filter(b => b.dueDate && b.dueDate <= weekIso && !b.paid)
     .reduce((s, b) => s + (parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-  const dueCount = state.bills.filter(b => b.dueDate && b.dueDate <= weekIso && !isBillCurrentlyPaid(b)).length;
+  const dueCount = state.bills.filter(b => b.dueDate && b.dueDate <= weekIso && !b.paid).length;
 
   const recurring = state.bills.filter(b => b.recurring && b.recurring !== 'once').map(b => {
     const amt = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -2472,8 +1935,7 @@ function renderExpenses() {
     : blk('Annual total', fmtMoney(totalAnnual, {round:true}), 'Projected recurring', { size: 'med' });
 
   const billsSorted = state.bills.slice().sort((a, b) => {
-    const ap = isBillCurrentlyPaid(a); const bp = isBillCurrentlyPaid(b);
-    if (ap !== bp) return ap ? 1 : -1;
+    if (a.paid !== b.paid) return a.paid ? 1 : -1;
     const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
     return ad.localeCompare(bd);
   });
@@ -2487,30 +1949,34 @@ function renderExpenses() {
     }
   } else {
     billsHTML = billsSorted.map(b => {
-      const isPaid = isBillCurrentlyPaid(b);
-      const overdue = b.dueDate && !isPaid && isOverdue(b.dueDate);
-      const today = b.dueDate && !isPaid && isTodayDate(b.dueDate);
-      let isTomorrow = false;
-      if (b.dueDate && !isPaid && !overdue && !today) {
-        const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-        isTomorrow = days === 1;
-      }
+      const isPaid = !!b.paid;
+      const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
+      const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
       const cat = (CATEGORIES[b.category] || CATEGORIES.other);
       const metaParts = [cap(cat.label), cap(b.recurring || 'once')];
-      if (b.isPercent && typeof b.pctValue === 'number') metaParts.push(`${b.pctValue}% of income`);
-      if (b.dueDate) {
-        if (overdue) metaParts.push('Overdue · ' + compactDate(b.dueDate));
-        else metaParts.push(compactDate(b.dueDate));
+      if (b.dueDate && !isPaid && !overdue && !today) metaParts.push(compactDate(b.dueDate));
+
+      let pillHTML;
+      if (isPaid) {
+        pillHTML = pill('Paid', 'g', { action: 'unpay-bill', id: b.id });
+      } else if (overdue) {
+        pillHTML = pill('Overdue', 'r', { action: 'pay-bill', id: b.id });
+      } else if (today) {
+        pillHTML = pill('Today', 'y', { action: 'pay-bill', id: b.id });
+      } else if (b.dueDate) {
+        const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
+        pillHTML = days === 1
+          ? pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id })
+          : pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
+      } else {
+        pillHTML = pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
       }
 
-      let amountCls = 'amount-btn';
-      if (isPaid) amountCls += ' paid';
-      else if (overdue) amountCls += ' urgent';
-      else if (today || isTomorrow) amountCls += ' soon';
-      const amountAction = isPaid ? 'unpay-bill' : 'pay-bill';
+      const valCls = isPaid ? 'muted' : overdue ? 'negative' : '';
       const dimCls = isPaid ? ' dim' : '';
+      const inlinePill = pillHTML ? ' ' + pillHTML : '';
 
-      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}</div><div class="m">${metaParts.join(' · ')}</div></div><button type="button" class="${amountCls}" data-action="${amountAction}" data-id="${b.id}">${fmtMoney(b.amount, {round:true})}</button></div>`;
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${inlinePill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
     }).join('');
   }
 
@@ -2670,81 +2136,7 @@ function renderBudget() {
     }).join('');
   }
 
-  // --- NEW: Debt Strategy Simulator ---
-  let debtHTML = '';
-  const debts = state.bills.filter(b => b.balance > 0 && !b.paid);
-  
-  if (debts.length > 0) {
-    let totalBalance = 0;
-    let totalMinPayments = 0;
-    let monthlyInterestBurn = 0;
-    
-    debts.forEach(d => {
-      const bal = parseFloat(d.balance) || 0;
-      const apr = parseFloat(d.apr) || 0;
-      const minPay = monthlyEq(d.amount, d.recurring);
-      totalBalance += bal;
-      totalMinPayments += minPay;
-      monthlyInterestBurn += bal * (apr / 1200);
-    });
-
-    const dti = inc > 0 ? (totalMinPayments / inc) * 100 : 0;
-    let dtiColor = 'positive'; let dtiText = 'Comfortable';
-    if (dti > 43) { dtiColor = 'negative'; dtiText = 'Distressed'; }
-    else if (dti > 36) { dtiColor = 'negative'; dtiText = 'Stretched'; }
-    else if (dti > 20) { dtiColor = 'warning'; dtiText = 'Manageable'; }
-
-    const debtSub = monthlyInterestBurn > 0 
-      ? `Losing <span class="negative">${fmtMoney(monthlyInterestBurn, {round:true})}/mo</span> to interest` 
-      : '0% Interest';
-    const debtBlock = blk('Total Debt', fmtMoney(totalBalance, {round:true}), debtSub, { color: 'negative' });
-
-    let simDebts = debts.map(d => ({ 
-      bal: parseFloat(d.balance)||0, 
-      apr: parseFloat(d.apr)||0, 
-      min: monthlyEq(d.amount, d.recurring) 
-    }));
-    let infinite = simDebts.some(d => d.min <= d.bal * (d.apr/1200) && d.bal > 0 && d.apr > 0);
-
-    let payoffText = '';
-    if (infinite) {
-      payoffText = `<div class="note"><span class="negative" style="font-weight:600;">Warning:</span> Minimum payments do not cover interest on all accounts. Balances will grow forever.</div>`;
-    } else {
-      let months = 0; let totalInterest = 0;
-      while(simDebts.some(d => d.bal > 0) && months < 1200) {
-        months++;
-        simDebts.forEach(d => {
-          if (d.bal > 0) {
-            const interest = d.bal * (d.apr/1200);
-            totalInterest += interest;
-            d.bal += interest;
-            d.bal -= d.min;
-            if (d.bal < 0) d.bal = 0;
-          }
-        });
-      }
-      
-      if (months >= 1200) {
-        payoffText = `<div class="note">Payoff exceeds 100 years at current pace. Consider increasing your payments.</div>`;
-      } else {
-        const d = new Date(); d.setMonth(d.getMonth() + months);
-        payoffText = `<div class="note">At current payments, debt-free by <span style="font-weight:600; color:var(--ink)">${d.toLocaleDateString('en-US',{month:'short', year:'numeric'})}</span>. Total interest cost: <span class="negative">${fmtMoney(totalInterest, {round:true})}</span>.</div>`;
-      }
-    }
-
-    const debtList = debts.slice().sort((a,b)=> (parseFloat(b.apr)||0) - (parseFloat(a.apr)||0)).map(d => {
-      return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${d.id}"><div><div class="n">${escHTML(d.name)}</div><div class="m">${fmtMoney(d.balance)} @ ${d.apr}% APR</div></div><span class="v negative">${fmtMoney(monthlyEq(d.amount, d.recurring), {round:true})}/mo</span></div>`;
-    }).join('');
-
-    debtHTML = `${sh('Debt & Leverage')}
-    <div class="row"><span class="l">Debt-to-Income (DTI)</span><span class="v ${dtiColor}">${dti.toFixed(1)}% · ${dtiText}</span></div>
-    ${debtBlock}
-    ${payoffText}
-    ${debtList}`;
-  }
-  // ------------------------------------------
-
-  return `${availBlock}${sh('Allocation', { meta: basisLabel })}${allocationHTML}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}${debtHTML}`;
+  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
@@ -2815,7 +2207,7 @@ function renderTasks() {
 
 // ──── Master render ──────────────────────────────────────────
 function updateBadges() {
-  const e = state.bills.filter(b => !isBillCurrentlyPaid(b)).length;
+  const e = state.bills.filter(b => !b.paid).length;
   const t = state.tasks.filter(t => !t.done).length;
   const set = (cls, v) => document.querySelectorAll(cls).forEach(el => {
     el.textContent = v; el.style.display = v > 0 ? 'inline-block' : 'none';
@@ -2835,7 +2227,6 @@ function updateHeader() {
 }
 
 function render() {
-  syncPercentBills();
   updateBadges();
   updateHeader();
   document.querySelectorAll('nav.mnav button').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
@@ -2916,29 +2307,19 @@ document.addEventListener('click', e => {
         createdAt: isoDate(todayStart()),
       });
       if (b.recurring && b.recurring !== 'once' && b.dueDate) {
-        const d = new Date(b.dueDate + 'T00:00:00');
+        const d = new Date(b.dueDate);
         if (b.recurring === 'monthly') d.setMonth(d.getMonth()+1);
-        else if (b.recurring === 'biweekly') d.setDate(d.getDate()+14);
         else if (b.recurring === 'weekly') d.setDate(d.getDate()+7);
         else if (b.recurring === 'yearly') d.setFullYear(d.getFullYear()+1);
         b.dueDate = isoDate(d);
-      }
-      b.paid = true;
+      } else b.paid = true;
       saveState(); render();
     }
+    document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
   }
   else if (act === 'unpay-bill') {
     const b = state.bills.find(x => x.id === btn.dataset.id);
     if (b) {
-      // For recurring bills, also roll back the dueDate to the previous cycle
-      if (b.recurring && b.recurring !== 'once' && b.dueDate) {
-        const d = new Date(b.dueDate + 'T00:00:00');
-        if (b.recurring === 'monthly') d.setMonth(d.getMonth() - 1);
-        else if (b.recurring === 'biweekly') d.setDate(d.getDate() - 14);
-        else if (b.recurring === 'weekly') d.setDate(d.getDate() - 7);
-        else if (b.recurring === 'yearly') d.setFullYear(d.getFullYear() - 1);
-        b.dueDate = isoDate(d);
-      }
       b.paid = false;
       // also remove the most recent payment log for this bill
       let mostRecentIdx = -1;
@@ -2951,6 +2332,7 @@ document.addEventListener('click', e => {
       if (mostRecentIdx >= 0) state.payments.splice(mostRecentIdx, 1);
       saveState(); render();
     }
+    document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
   }
   else if (act === 'toggle-task') { const t = state.tasks.find(x => x.id === btn.dataset.id); if (t) { t.done = !t.done; saveState(); render(); } }
   else if (act === 'goal-add') {
@@ -2995,26 +2377,9 @@ document.addEventListener('change', e => {
     if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
     else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
   }
-  else if (e.target.id === 'isDebtToggle') {
-    const g = document.getElementById('debtInputGroup');
-    if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
-    else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
-  }
-  else if (e.target.id === 'isPercentToggle') {
-    updateExpensePercentUI();
-  }
-  else if (e.target.name === 'category' && e.target.closest('#modal-expenses')) {
-    updateDebtSectionVisibility();
-  }
   else if (e.target.id === 'tax-pct-input') {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
-  }
-});
-
-document.addEventListener('input', e => {
-  if (e.target.id === 'expense-amount-input' && document.getElementById('isPercentToggle')?.checked) {
-    updatePctPreview();
   }
 });
 
@@ -3029,9 +2394,6 @@ function openModal(type, id = null) {
     const item = tArr.find(x => x.id === id);
     if (item) {
       Object.keys(item).forEach(k => { if (f.elements[k]) f.elements[k].value = item[k]; });
-      if (type === 'expenses' || type === 'tasks') {
-        if (f.elements['date']) f.elements['date'].value = item.dueDate || '';
-      }
       if (type === 'income') {
         f.elements['amount'].value = item.baseAmount !== undefined ? item.baseAmount : item.amount;
         if (item.hours != null && !isNaN(item.hours) && item.hours > 0) {
@@ -3044,20 +2406,6 @@ function openModal(type, id = null) {
         f.elements['tipsValue'].value = item.tipsValue || 6;
         f.elements['tipsType'].value = item.tipsType || 'percent';
         f.elements['tipsEnabled'].dispatchEvent(new Event('change', { bubbles: true }));
-      } else if (type === 'expenses') {
-        f.elements['balance'].value = item.balance || '';
-        f.elements['apr'].value = item.apr || '';
-        f.elements['isDebt'].checked = !!item.balance;
-        f.elements['isDebt'].dispatchEvent(new Event('change', { bubbles: true }));
-
-        // Percent-of-income mode
-        if (item.isPercent && typeof item.pctValue === 'number') {
-          f.elements['amount'].value = item.pctValue;
-          f.elements['isPercent'].checked = true;
-        } else {
-          f.elements['isPercent'].checked = false;
-        }
-        f.elements['isPercent'].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   }
@@ -3079,6 +2427,36 @@ function openModal(type, id = null) {
       delBtn.style.display = '';
     } else if (delBtn) {
       delBtn.style.display = 'none';
+    }
+  }
+  // Show/hide Pay/Unpay button for expense modal
+  if (factionsDiv) {
+    let payBtn = factionsDiv.querySelector('[data-action="pay-bill"], [data-action="unpay-bill"]');
+    if (type === 'expenses' && id) {
+      const bill = state.bills.find(x => x.id === id);
+      if (bill) {
+        if (!payBtn) {
+          payBtn = document.createElement('button');
+          payBtn.type = 'button';
+          // Place between Delete (first) and Cancel/Save (last two)
+          const closeBtn = factionsDiv.querySelector('[data-action="close-modal"]');
+          if (closeBtn) factionsDiv.insertBefore(payBtn, closeBtn);
+          else factionsDiv.appendChild(payBtn);
+        }
+        payBtn.dataset.id = id;
+        if (bill.paid) {
+          payBtn.dataset.action = 'unpay-bill';
+          payBtn.textContent = 'Mark unpaid';
+          payBtn.className = '';
+        } else {
+          payBtn.dataset.action = 'pay-bill';
+          payBtn.textContent = 'Mark paid';
+          payBtn.className = 'accent-soft';
+        }
+        payBtn.style.display = '';
+      }
+    } else if (payBtn) {
+      payBtn.style.display = 'none';
     }
   }
   // Update modal title (Add vs Edit)
@@ -3151,7 +2529,6 @@ function openModal(type, id = null) {
     }
   }
   document.getElementById('modal-' + type).classList.add('open');
-  if (type === 'expenses') { updateExpensePercentUI(); updateDebtSectionVisibility(); }
   setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
@@ -3184,31 +2561,9 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.frequency = fd.get('frequency') || 'monthly';
       item.receivedAt = fd.get('receivedAt') || null;
     } else if (type === 'expenses') {
-      item.name = fd.get('name');
+      item.name = fd.get('name'); item.amount = pAmt(fd.get('amount'));
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
       item.dueDate = fd.get('date') || null; if (!isEdit) item.paid = false;
-
-      const inputVal = pAmt(fd.get('amount'));
-      if (f.elements['isPercentToggle'].checked) {
-        item.isPercent = true;
-        item.pctValue = inputVal;
-        const avg = getIncomeStats().avgMonthly || 0;
-        item.amount = avg * inputVal / 100;
-      } else {
-        delete item.isPercent;
-        delete item.pctValue;
-        item.amount = inputVal;
-      }
-
-      // Update debt fields — only kept if category is 'debt' and toggle is on
-      if (item.category === 'debt' && f.elements['isDebtToggle'].checked) {
-        item.balance = pAmt(fd.get('balance'));
-        item.apr = parseFloat(fd.get('apr')) || 0;
-      } else {
-        delete item.balance;
-        delete item.apr;
-      }
-
     } else if (type === 'tasks') {
       item.text = fd.get('text'); item.priority = fd.get('priority');
       item.dueDate = fd.get('date') || null; if (!isEdit) item.done = false;
@@ -3276,344 +2631,7 @@ document.getElementById('preset-apply-btn').addEventListener('click', () => {
   render();
 });
 
-// ──── Cloud sync ─────────────────────────────────────────────
-let pushTimer = null;
-
-// Code alphabet excludes ambiguous chars (0/O, 1/I/L)
-const SYNC_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
-const SYNC_CODE_LENGTH = 6;
-const SYNC_CODE_MIN = 4;
-
-function normalizeSyncCode(s) {
-  return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-}
-function generateSyncCode() {
-  const bytes = new Uint8Array(SYNC_CODE_LENGTH);
-  crypto.getRandomValues(bytes);
-  let out = '';
-  for (let i = 0; i < SYNC_CODE_LENGTH; i++) out += SYNC_CODE_ALPHABET[bytes[i] % SYNC_CODE_ALPHABET.length];
-  return out;
-}
-
-function getSyncConfig() {
-  try { return JSON.parse(localStorage.getItem(SYNC_CONFIG_KEY)) || null; } catch { return null; }
-}
-function setSyncConfig(cfg) {
-  if (cfg) localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(cfg));
-  else localStorage.removeItem(SYNC_CONFIG_KEY);
-}
-function syncEnabled() {
-  const c = getSyncConfig();
-  return !!(c && c.key);
-}
-
-async function sha256Hex(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', buf);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function syncUrlBase() { return SYNC_WORKER_URL.replace(/\/+$/, ''); }
-
-function setSyncBadge(kind, text) {
-  const el = document.getElementById('sync-indicator');
-  if (!el) return;
-  if (!syncEnabled()) { el.hidden = true; return; }
-  el.hidden = false;
-  el.classList.remove('syncing', 'ok', 'err');
-  if (kind) el.classList.add(kind);
-  el.textContent = text;
-}
-
-async function syncRequest(method, body) {
-  const cfg = getSyncConfig();
-  if (!cfg) throw new Error('no-config');
-  const hash = await sha256Hex(normalizeSyncCode(cfg.key));
-  const opts = { method };
-  if (body !== undefined) {
-    opts.headers = { 'Content-Type': 'application/json' };
-    opts.body = body;
-  }
-  const res = await fetch(`${syncUrlBase()}/sync/${hash}`, opts);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
-
-async function syncPull() {
-  if (!syncEnabled()) return null;
-  setSyncBadge('syncing', 'syncing');
-  try {
-    const data = await syncRequest('GET');
-    setSyncBadge('ok', 'synced');
-    return data;
-  } catch (e) {
-    setSyncBadge('err', 'sync error');
-    console.warn('Sync pull failed:', e);
-    return null;
-  }
-}
-
-async function syncPush() {
-  if (!syncEnabled()) return false;
-  setSyncBadge('syncing', 'syncing');
-  try {
-    const payload = JSON.stringify({ state, updatedAt: state.updatedAt || Date.now() });
-    await syncRequest('PUT', payload);
-    setSyncBadge('ok', 'synced');
-    return true;
-  } catch (e) {
-    setSyncBadge('err', 'sync error');
-    console.warn('Sync push failed:', e);
-    return false;
-  }
-}
-
-function schedulePush() {
-  if (!syncEnabled()) return;
-  if (pushTimer) clearTimeout(pushTimer);
-  pushTimer = setTimeout(syncPush, 2000);
-}
-
-function stateHasData(s) {
-  if (!s) return false;
-  return !!(s.bills?.length || s.income?.length || s.tasks?.length || s.goals?.length || s.petty?.length || s.payments?.length);
-}
-
-function applyRemoteState(remoteState, remoteUpdatedAt) {
-  state = {
-    tasks:    Array.isArray(remoteState.tasks)    ? remoteState.tasks    : [],
-    bills:    Array.isArray(remoteState.bills)    ? remoteState.bills    : [],
-    events:   Array.isArray(remoteState.events)   ? remoteState.events   : [],
-    income:   Array.isArray(remoteState.income)   ? remoteState.income   : [],
-    goals:    Array.isArray(remoteState.goals)    ? remoteState.goals    : [],
-    petty:    Array.isArray(remoteState.petty)    ? remoteState.petty    : [],
-    payments: Array.isArray(remoteState.payments) ? remoteState.payments : [],
-    updatedAt: remoteUpdatedAt || Date.now(),
-  };
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-}
-
-async function syncStartup() {
-  if (!syncEnabled()) return;
-  const remote = await syncPull();
-  if (!remote) return;
-  const localUpdated = state.updatedAt || 0;
-  const remoteUpdated = remote.updatedAt || 0;
-  if (remote.state && stateHasData(remote.state) && remoteUpdated > localUpdated) {
-    applyRemoteState(remote.state, remoteUpdated);
-    render(); updateBadges();
-    setSyncBadge('ok', 'synced');
-  } else if (localUpdated > remoteUpdated) {
-    await syncPush();
-  } else {
-    setSyncBadge('ok', 'synced');
-  }
-}
-
-function setSyncMsg(text, isErr) {
-  const m = document.getElementById('sync-msg');
-  if (!m) return;
-  m.style.color = isErr ? 'var(--negative)' : 'var(--ink-3)';
-  m.textContent = text;
-}
-
-function openSyncModal() {
-  const cfg = getSyncConfig() || {};
-  document.getElementById('sync-code-input').value = cfg.key || '';
-  const enabled = syncEnabled();
-  document.getElementById('sync-disable-btn').style.display = enabled ? '' : 'none';
-  if (enabled) {
-    const ts = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : '—';
-    setSyncMsg(`Sync active · last local change: ${ts}`, false);
-  } else {
-    setSyncMsg('Generate a code on your first device, then enter the same code on your others.', false);
-  }
-  document.getElementById('modal-sync').classList.add('open');
-}
-
-function handleSyncGenerate() {
-  const code = generateSyncCode();
-  document.getElementById('sync-code-input').value = code;
-  setSyncMsg('New code generated. Tap "Save & sync" to start, then copy this code to your other devices.', false);
-}
-
-async function handleSyncCopy() {
-  const code = normalizeSyncCode(document.getElementById('sync-code-input').value);
-  if (!code) { setSyncMsg('Nothing to copy yet.', true); return; }
-  try {
-    await navigator.clipboard.writeText(code);
-    setSyncMsg('Copied to clipboard.', false);
-  } catch {
-    const inp = document.getElementById('sync-code-input');
-    inp.select(); inp.setSelectionRange(0, 9999);
-    try { document.execCommand('copy'); setSyncMsg('Copied to clipboard.', false); }
-    catch { setSyncMsg('Copy failed. Select the code manually.', true); }
-  }
-}
-
-let _conflictCtx = null;
-
-function relativeTime(ts) {
-  if (!ts) return 'unknown time';
-  const abs = Math.abs(Date.now() - ts);
-  const min = Math.floor(abs / 60000);
-  const hr = Math.floor(abs / 3600000);
-  const day = Math.floor(abs / 86400000);
-  if (abs < 60000)   return 'just now';
-  if (min < 60)      return `${min} min${min === 1 ? '' : 's'} ago`;
-  if (hr < 24)       return `${hr} hr${hr === 1 ? '' : 's'} ago`;
-  if (day < 30)      return `${day} day${day === 1 ? '' : 's'} ago`;
-  return new Date(ts).toLocaleDateString();
-}
-
-function summarizeStateForConflict(s) {
-  if (!s) return 'no data';
-  const parts = [];
-  if (s.bills?.length)  parts.push(`${s.bills.length} ${s.bills.length === 1 ? 'expense' : 'expenses'}`);
-  if (s.income?.length) parts.push(`${s.income.length} income`);
-  if (s.goals?.length)  parts.push(`${s.goals.length} ${s.goals.length === 1 ? 'goal' : 'goals'}`);
-  if (s.petty?.length)  parts.push(`${s.petty.length} petty`);
-  if (s.tasks?.length)  parts.push(`${s.tasks.length} ${s.tasks.length === 1 ? 'task' : 'tasks'}`);
-  return parts.length ? parts.join(' · ') : 'empty';
-}
-
-function openConflictModal(localState, localUpdatedAt, remoteState, remoteUpdatedAt) {
-  document.getElementById('conflict-local-rel').textContent = relativeTime(localUpdatedAt || 0);
-  document.getElementById('conflict-local-abs').textContent = localUpdatedAt ? new Date(localUpdatedAt).toLocaleString() : '—';
-  document.getElementById('conflict-local-summary').textContent = summarizeStateForConflict(localState);
-  document.getElementById('conflict-remote-rel').textContent = relativeTime(remoteUpdatedAt || 0);
-  document.getElementById('conflict-remote-abs').textContent = remoteUpdatedAt ? new Date(remoteUpdatedAt).toLocaleString() : '—';
-  document.getElementById('conflict-remote-summary').textContent = summarizeStateForConflict(remoteState);
-  document.getElementById('modal-sync-conflict').classList.add('open');
-}
-
-function closeConflictModal() {
-  document.getElementById('modal-sync-conflict').classList.remove('open');
-}
-
-async function handleConflictUseRemote() {
-  if (!_conflictCtx) return;
-  const { remote } = _conflictCtx;
-  applyRemoteState(remote.state, remote.updatedAt);
-  render(); updateBadges();
-  setSyncMsg('Pulled cloud data. Sync active.', false);
-  document.getElementById('sync-disable-btn').style.display = '';
-  setSyncBadge('ok', 'synced');
-  closeConflictModal();
-  _conflictCtx = null;
-}
-
-async function handleConflictKeepLocal() {
-  if (!_conflictCtx) return;
-  const ok = await syncPush();
-  setSyncMsg(ok ? 'Pushed this device to cloud. Sync active.' : 'Push failed.', !ok);
-  document.getElementById('sync-disable-btn').style.display = '';
-  closeConflictModal();
-  _conflictCtx = null;
-}
-
-function handleConflictCancel() {
-  if (!_conflictCtx) return;
-  setSyncConfig(_conflictCtx.oldCfg);
-  document.getElementById('sync-code-input').value = (_conflictCtx.oldCfg && _conflictCtx.oldCfg.key) || '';
-  setSyncMsg('Sync not started. Both copies left as-is.', false);
-  closeConflictModal();
-  if (syncEnabled()) {
-    setSyncBadge('ok', 'synced');
-    document.getElementById('sync-disable-btn').style.display = '';
-  } else {
-    const el = document.getElementById('sync-indicator');
-    if (el) el.hidden = true;
-    document.getElementById('sync-disable-btn').style.display = 'none';
-  }
-  _conflictCtx = null;
-}
-
-async function handleSyncSave() {
-  const raw = document.getElementById('sync-code-input').value;
-  const code = normalizeSyncCode(raw);
-  if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Sync code must be at least ${SYNC_CODE_MIN} characters. Tap "Generate new code" if you don't have one yet.`, true); return; }
-
-  const oldCfg = getSyncConfig();
-  setSyncConfig({ key: code });
-  document.getElementById('sync-code-input').value = code;
-  setSyncMsg('Saved. Checking cloud…', false);
-
-  const remote = await syncPull();
-  if (!remote) {
-    setSyncConfig(oldCfg);
-    document.getElementById('sync-code-input').value = (oldCfg && oldCfg.key) || code;
-    setSyncMsg('Could not reach the sync server. Check your connection.', true);
-    return;
-  }
-
-  const localHasData = stateHasData(state);
-  const remoteHasData = remote.state && stateHasData(remote.state);
-
-  if (remoteHasData && localHasData) {
-    _conflictCtx = { code, oldCfg, remote };
-    openConflictModal(state, state.updatedAt, remote.state, remote.updatedAt);
-    return;
-  }
-
-  if (remoteHasData) {
-    applyRemoteState(remote.state, remote.updatedAt);
-    render(); updateBadges();
-    setSyncMsg('Pulled from cloud. Sync active.', false);
-  } else {
-    const ok = localHasData ? await syncPush() : true;
-    setSyncMsg(ok ? 'Sync active. ' + (localHasData ? 'Local data backed up.' : 'Cloud is empty — make a change to start syncing.') : 'Push failed.', !ok);
-  }
-  document.getElementById('sync-disable-btn').style.display = '';
-}
-
-function handleSyncDisable() {
-  const cfg = getSyncConfig();
-  const codeMsg = cfg && cfg.key ? `\n\nYour code is: ${cfg.key}\nSave it somewhere if you want to rejoin this sync later.` : '';
-  if (!confirm('Disable sync on this device? Your local data stays. Other devices using this code keep syncing.' + codeMsg)) return;
-  setSyncConfig(null);
-  setSyncMsg('Sync disabled.', false);
-  const inp = document.getElementById('sync-code-input'); if (inp) inp.value = '';
-  document.getElementById('sync-disable-btn').style.display = 'none';
-  const el = document.getElementById('sync-indicator');
-  if (el) el.hidden = true;
-}
-
-document.addEventListener('click', e => {
-  const btn = e.target.closest('[data-action]');
-  if (!btn) return;
-  const act = btn.dataset.action;
-  if (act === 'open-sync') {
-    const menu = document.getElementById('header-menu');
-    if (menu) menu.hidden = true;
-    openSyncModal();
-  } else if (act === 'set-theme') {
-    applyTheme(btn.dataset.themeName);
-    const menu = document.getElementById('header-menu');
-    if (menu) menu.hidden = true;
-  } else if (act === 'sync-save') {
-    handleSyncSave();
-  } else if (act === 'sync-generate') {
-    handleSyncGenerate();
-  } else if (act === 'sync-disable') {
-    handleSyncDisable();
-  } else if (act === 'sync-copy') {
-    handleSyncCopy();
-  } else if (act === 'conflict-use-remote') {
-    handleConflictUseRemote();
-  } else if (act === 'conflict-keep-local') {
-    handleConflictKeepLocal();
-  } else if (act === 'conflict-cancel') {
-    handleConflictCancel();
-  }
-});
-
-updateThemeMenuMarkers();
 render();
-if (syncEnabled()) {
-  setSyncBadge('syncing', 'syncing');
-  syncStartup();
-}
 </script>
 </body>
 </html>
