@@ -2122,7 +2122,11 @@ function renderOverview() {
 // ──── Render: income ───────────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
-  const sources = state.income.slice().sort((a,b) => monthlyEq(b.amount, b.frequency) - monthlyEq(a.amount, a.frequency));
+  const sources = state.income.slice().sort((a, b) => {
+    const ad = a.receivedAt || a.createdAt || '';
+    const bd = b.receivedAt || b.createdAt || '';
+    return bd.localeCompare(ad);
+  });
   const yearHist = getCalendarYearHistory();
   const monthsWithData = yearHist.filter(h => h.income > 0);
   const maxVal = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(h => h.income)) : 0;
@@ -2225,10 +2229,35 @@ function renderExpenses() {
     ? blk('Due this week', fmtMoney(dueThisWeek, {round:true}), `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med', color: 'warning' })
     : blk('Annual total', fmtMoney(totalAnnual, {round:true}), 'Projected recurring', { size: 'med' });
 
+  // Itemized list of bills due in the next 7 days (only when "Due this week" block is shown)
+  let weekItemsHTML = '';
+  if (dueCount > 0) {
+    const dueItems = state.bills
+      .filter(b => b.dueDate && b.dueDate <= weekIso && !b.paid)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+    weekItemsHTML = sh('Due soon', { meta: `next 7 days` }) +
+      dueItems.map(b => {
+        const overdue = isOverdue(b.dueDate);
+        const today = isTodayDate(b.dueDate);
+        const cat = (CATEGORIES[b.category] || CATEGORIES.other);
+        let pillHTML = '';
+        if (overdue) pillHTML = pill('Overdue', 'r', { action: 'pay-bill', id: b.id });
+        else if (today) pillHTML = pill('Today', 'y', { action: 'pay-bill', id: b.id });
+        else {
+          const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
+          if (days === 1) pillHTML = pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id });
+        }
+        const valCls = overdue || today ? 'negative' : '';
+        const inlinePill = pillHTML ? ' ' + pillHTML : '';
+        return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${inlinePill}</div><div class="m">${cap(cat.label)} · ${compactDate(b.dueDate)}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
+      }).join('');
+  }
+
   const billsSorted = state.bills.slice().sort((a, b) => {
     if (a.paid !== b.paid) return a.paid ? 1 : -1;
-    const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
-    return ad.localeCompare(bd);
+    const aa = parseFloat(String(a.amount).replace(/[^\d.-]/g, '')) || 0;
+    const ba = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
+    return ba - aa;
   });
 
   let billsHTML;
@@ -2268,7 +2297,7 @@ function renderExpenses() {
   const savings = getSavingsTarget().total;
   const netForPie = Math.max(0, incTot - total - savings);
   const pieHTML = buildPieChart(incTot, catData, savings, netForPie);
-  return `${totalBlock}${weekBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
+  return `${totalBlock}${weekBlock}${weekItemsHTML}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
 }
 
 
