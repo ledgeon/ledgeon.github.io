@@ -91,6 +91,37 @@ main { flex: 1; }
 .sync-ind.syncing { background: var(--accent-soft); color: var(--accent); }
 .sync-ind.ok      { background: var(--positive-soft); color: var(--positive); }
 .sync-ind.err     { background: var(--negative-soft); color: var(--negative); }
+
+.conflict-card {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.conflict-card-h {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.conflict-card-ts {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.conflict-card-sub {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+.conflict-card-summary {
+  font-size: 11.5px;
+  color: var(--ink-2);
+  margin-top: 4px;
+}
 .mmeta {
   font-size: 11px; font-weight: 600;
   color: var(--ink-3);
@@ -1361,6 +1392,33 @@ main > * { animation: fadeIn 0.12s ease-out; }
       <button type="button" data-action="close-modal">close</button>
       <button type="button" id="sync-now-btn" data-action="sync-now" style="display:none">Sync now</button>
       <button type="button" class="primary" data-action="sync-save">Save &amp; sync</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-sync-conflict">
+  <div class="modal-bd" data-action="conflict-cancel"></div>
+  <div class="modal-c">
+    <div class="modal-t">sync conflict</div>
+    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5;">
+      Both this device and the cloud have data under this code. Pick which copy to keep — the other will be replaced. There's no merge or undo.
+    </div>
+    <div class="conflict-card">
+      <div class="conflict-card-h">This device</div>
+      <div class="conflict-card-ts" id="conflict-local-rel">—</div>
+      <div class="conflict-card-sub" id="conflict-local-abs">—</div>
+      <div class="conflict-card-summary" id="conflict-local-summary">—</div>
+    </div>
+    <div class="conflict-card">
+      <div class="conflict-card-h">The cloud</div>
+      <div class="conflict-card-ts" id="conflict-remote-rel">—</div>
+      <div class="conflict-card-sub" id="conflict-remote-abs">—</div>
+      <div class="conflict-card-summary" id="conflict-remote-summary">—</div>
+    </div>
+    <div class="factions" style="flex-wrap: wrap; gap: 6px;">
+      <button type="button" data-action="conflict-cancel">Cancel</button>
+      <button type="button" data-action="conflict-keep-local">Keep this device</button>
+      <button type="button" class="primary" data-action="conflict-use-remote">Use cloud</button>
     </div>
   </div>
 </div>
@@ -3021,34 +3079,116 @@ async function handleSyncCopy() {
   }
 }
 
+let _conflictCtx = null;
+
+function relativeTime(ts) {
+  if (!ts) return 'unknown time';
+  const abs = Math.abs(Date.now() - ts);
+  const min = Math.floor(abs / 60000);
+  const hr = Math.floor(abs / 3600000);
+  const day = Math.floor(abs / 86400000);
+  if (abs < 60000)   return 'just now';
+  if (min < 60)      return `${min} min${min === 1 ? '' : 's'} ago`;
+  if (hr < 24)       return `${hr} hr${hr === 1 ? '' : 's'} ago`;
+  if (day < 30)      return `${day} day${day === 1 ? '' : 's'} ago`;
+  return new Date(ts).toLocaleDateString();
+}
+
+function summarizeStateForConflict(s) {
+  if (!s) return 'no data';
+  const parts = [];
+  if (s.bills?.length)  parts.push(`${s.bills.length} ${s.bills.length === 1 ? 'expense' : 'expenses'}`);
+  if (s.income?.length) parts.push(`${s.income.length} income`);
+  if (s.goals?.length)  parts.push(`${s.goals.length} ${s.goals.length === 1 ? 'goal' : 'goals'}`);
+  if (s.petty?.length)  parts.push(`${s.petty.length} petty`);
+  if (s.tasks?.length)  parts.push(`${s.tasks.length} ${s.tasks.length === 1 ? 'task' : 'tasks'}`);
+  return parts.length ? parts.join(' · ') : 'empty';
+}
+
+function openConflictModal(localState, localUpdatedAt, remoteState, remoteUpdatedAt) {
+  document.getElementById('conflict-local-rel').textContent = relativeTime(localUpdatedAt || 0);
+  document.getElementById('conflict-local-abs').textContent = localUpdatedAt ? new Date(localUpdatedAt).toLocaleString() : '—';
+  document.getElementById('conflict-local-summary').textContent = summarizeStateForConflict(localState);
+  document.getElementById('conflict-remote-rel').textContent = relativeTime(remoteUpdatedAt || 0);
+  document.getElementById('conflict-remote-abs').textContent = remoteUpdatedAt ? new Date(remoteUpdatedAt).toLocaleString() : '—';
+  document.getElementById('conflict-remote-summary').textContent = summarizeStateForConflict(remoteState);
+  document.getElementById('modal-sync-conflict').classList.add('open');
+}
+
+function closeConflictModal() {
+  document.getElementById('modal-sync-conflict').classList.remove('open');
+}
+
+async function handleConflictUseRemote() {
+  if (!_conflictCtx) return;
+  const { remote } = _conflictCtx;
+  applyRemoteState(remote.state, remote.updatedAt);
+  render(); updateBadges();
+  setSyncMsg('Pulled cloud data. Sync active.', false);
+  document.getElementById('sync-disable-btn').style.display = '';
+  document.getElementById('sync-now-btn').style.display = '';
+  setSyncBadge('ok', 'synced');
+  closeConflictModal();
+  _conflictCtx = null;
+}
+
+async function handleConflictKeepLocal() {
+  if (!_conflictCtx) return;
+  const ok = await syncPush();
+  setSyncMsg(ok ? 'Pushed this device to cloud. Sync active.' : 'Push failed.', !ok);
+  document.getElementById('sync-disable-btn').style.display = '';
+  document.getElementById('sync-now-btn').style.display = '';
+  closeConflictModal();
+  _conflictCtx = null;
+}
+
+function handleConflictCancel() {
+  if (!_conflictCtx) return;
+  setSyncConfig(_conflictCtx.oldCfg);
+  document.getElementById('sync-code-input').value = (_conflictCtx.oldCfg && _conflictCtx.oldCfg.key) || '';
+  setSyncMsg('Sync not started. Both copies left as-is.', false);
+  closeConflictModal();
+  if (syncEnabled()) {
+    setSyncBadge('ok', 'synced');
+    document.getElementById('sync-disable-btn').style.display = '';
+    document.getElementById('sync-now-btn').style.display = '';
+  } else {
+    const el = document.getElementById('sync-indicator');
+    if (el) el.hidden = true;
+    document.getElementById('sync-disable-btn').style.display = 'none';
+    document.getElementById('sync-now-btn').style.display = 'none';
+  }
+  _conflictCtx = null;
+}
+
 async function handleSyncSave() {
   const raw = document.getElementById('sync-code-input').value;
   const code = normalizeSyncCode(raw);
   if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Sync code must be at least ${SYNC_CODE_MIN} characters. Tap "Generate new code" if you don't have one yet.`, true); return; }
 
+  const oldCfg = getSyncConfig();
   setSyncConfig({ key: code });
   document.getElementById('sync-code-input').value = code;
   setSyncMsg('Saved. Checking cloud…', false);
 
   const remote = await syncPull();
-  if (!remote) { setSyncMsg('Could not reach the sync server. Check your connection.', true); return; }
+  if (!remote) {
+    setSyncConfig(oldCfg);
+    document.getElementById('sync-code-input').value = (oldCfg && oldCfg.key) || code;
+    setSyncMsg('Could not reach the sync server. Check your connection.', true);
+    return;
+  }
 
   const localHasData = stateHasData(state);
   const remoteHasData = remote.state && stateHasData(remote.state);
 
   if (remoteHasData && localHasData) {
-    const remoteTs = remote.updatedAt ? new Date(remote.updatedAt).toLocaleString() : 'unknown';
-    const localTs = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : 'unknown';
-    const useRemote = confirm(`Both this device and the cloud have data under this code.\n\nRemote: ${remoteTs}\nLocal:  ${localTs}\n\nOK = use remote (replaces local)\nCancel = push local (replaces remote)`);
-    if (useRemote) {
-      applyRemoteState(remote.state, remote.updatedAt);
-      render(); updateBadges();
-      setSyncMsg('Pulled from cloud. Sync active.', false);
-    } else {
-      const ok = await syncPush();
-      setSyncMsg(ok ? 'Pushed local to cloud. Sync active.' : 'Push failed.', !ok);
-    }
-  } else if (remoteHasData) {
+    _conflictCtx = { code, oldCfg, remote };
+    openConflictModal(state, state.updatedAt, remote.state, remote.updatedAt);
+    return;
+  }
+
+  if (remoteHasData) {
     applyRemoteState(remote.state, remote.updatedAt);
     render(); updateBadges();
     setSyncMsg('Pulled from cloud. Sync active.', false);
@@ -3110,6 +3250,12 @@ document.addEventListener('click', e => {
     handleSyncDisable();
   } else if (act === 'sync-copy') {
     handleSyncCopy();
+  } else if (act === 'conflict-use-remote') {
+    handleConflictUseRemote();
+  } else if (act === 'conflict-keep-local') {
+    handleConflictKeepLocal();
+  } else if (act === 'conflict-cancel') {
+    handleConflictCancel();
   }
 });
 
