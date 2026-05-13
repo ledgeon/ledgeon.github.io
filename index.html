@@ -1390,7 +1390,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
     <div class="factions">
       <button type="button" class="danger" id="sync-disable-btn" data-action="sync-disable" style="display:none">Disable</button>
       <button type="button" data-action="close-modal">close</button>
-      <button type="button" id="sync-now-btn" data-action="sync-now" style="display:none">Sync now</button>
       <button type="button" class="primary" data-action="sync-save">Save &amp; sync</button>
     </div>
   </div>
@@ -2681,6 +2680,9 @@ function openModal(type, id = null) {
     const item = tArr.find(x => x.id === id);
     if (item) {
       Object.keys(item).forEach(k => { if (f.elements[k]) f.elements[k].value = item[k]; });
+      if (type === 'expenses' || type === 'tasks') {
+        if (f.elements['date']) f.elements['date'].value = item.dueDate || '';
+      }
       if (type === 'income') {
         f.elements['amount'].value = item.baseAmount !== undefined ? item.baseAmount : item.amount;
         if (item.hours != null && !isNaN(item.hours) && item.hours > 0) {
@@ -3049,7 +3051,6 @@ function openSyncModal() {
   document.getElementById('sync-code-input').value = cfg.key || '';
   const enabled = syncEnabled();
   document.getElementById('sync-disable-btn').style.display = enabled ? '' : 'none';
-  document.getElementById('sync-now-btn').style.display = enabled ? '' : 'none';
   if (enabled) {
     const ts = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : '—';
     setSyncMsg(`Sync active · last local change: ${ts}`, false);
@@ -3126,7 +3127,6 @@ async function handleConflictUseRemote() {
   render(); updateBadges();
   setSyncMsg('Pulled cloud data. Sync active.', false);
   document.getElementById('sync-disable-btn').style.display = '';
-  document.getElementById('sync-now-btn').style.display = '';
   setSyncBadge('ok', 'synced');
   closeConflictModal();
   _conflictCtx = null;
@@ -3137,7 +3137,6 @@ async function handleConflictKeepLocal() {
   const ok = await syncPush();
   setSyncMsg(ok ? 'Pushed this device to cloud. Sync active.' : 'Push failed.', !ok);
   document.getElementById('sync-disable-btn').style.display = '';
-  document.getElementById('sync-now-btn').style.display = '';
   closeConflictModal();
   _conflictCtx = null;
 }
@@ -3151,12 +3150,10 @@ function handleConflictCancel() {
   if (syncEnabled()) {
     setSyncBadge('ok', 'synced');
     document.getElementById('sync-disable-btn').style.display = '';
-    document.getElementById('sync-now-btn').style.display = '';
   } else {
     const el = document.getElementById('sync-indicator');
     if (el) el.hidden = true;
     document.getElementById('sync-disable-btn').style.display = 'none';
-    document.getElementById('sync-now-btn').style.display = 'none';
   }
   _conflictCtx = null;
 }
@@ -3197,26 +3194,6 @@ async function handleSyncSave() {
     setSyncMsg(ok ? 'Sync active. ' + (localHasData ? 'Local data backed up.' : 'Cloud is empty — make a change to start syncing.') : 'Push failed.', !ok);
   }
   document.getElementById('sync-disable-btn').style.display = '';
-  document.getElementById('sync-now-btn').style.display = '';
-}
-
-async function handleSyncNow() {
-  if (!syncEnabled()) return;
-  setSyncMsg('Syncing…', false);
-  const remote = await syncPull();
-  if (!remote) { setSyncMsg('Sync failed.', true); return; }
-  const localUpdated = state.updatedAt || 0;
-  const remoteUpdated = remote.updatedAt || 0;
-  if (remote.state && stateHasData(remote.state) && remoteUpdated > localUpdated) {
-    applyRemoteState(remote.state, remoteUpdated);
-    render(); updateBadges();
-    setSyncMsg('Pulled newer data from cloud.', false);
-  } else if (localUpdated > remoteUpdated) {
-    const ok = await syncPush();
-    setSyncMsg(ok ? 'Pushed local to cloud.' : 'Push failed.', !ok);
-  } else {
-    setSyncMsg('Already in sync.', false);
-  }
 }
 
 function handleSyncDisable() {
@@ -3227,7 +3204,6 @@ function handleSyncDisable() {
   setSyncMsg('Sync disabled.', false);
   const inp = document.getElementById('sync-code-input'); if (inp) inp.value = '';
   document.getElementById('sync-disable-btn').style.display = 'none';
-  document.getElementById('sync-now-btn').style.display = 'none';
   const el = document.getElementById('sync-indicator');
   if (el) el.hidden = true;
 }
@@ -3244,8 +3220,6 @@ document.addEventListener('click', e => {
     handleSyncSave();
   } else if (act === 'sync-generate') {
     handleSyncGenerate();
-  } else if (act === 'sync-now') {
-    handleSyncNow();
   } else if (act === 'sync-disable') {
     handleSyncDisable();
   } else if (act === 'sync-copy') {
