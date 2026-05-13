@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="icon.png">
 <style>
 /* ════════════════════════════════════════════════════════════════
    SLATE · design tokens (from preview 01 verbatim)
@@ -242,6 +241,7 @@ main { flex: 1; }
 }
 .row .v.positive { color: var(--positive); }
 .row .v.negative { color: var(--negative); }
+.row .v.warning { color: var(--warning); }
 .row .v.muted { color: var(--ink-4); text-decoration: line-through; }
 .row.strong .v { font-weight: 700; }
 .row.strong .l { font-weight: 600; }
@@ -361,8 +361,6 @@ main { flex: 1; }
   padding: 12px 16px 14px;
   border-bottom: 1px solid var(--border);
 }
-/* Each month is a SINGLE column containing both its bar AND its
-   label. They share one flex item so they cannot drift apart. */
 .chart-cols {
   display: flex;
   gap: 3px;
@@ -1129,7 +1127,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <button data-tab="tasks">Tasks<span class="badge badge-t" style="display:none">0</span></button>
 </nav>
 
-<!-- modals -->
 <div class="modal" id="modal-income">
   <div class="modal-bd" data-action="close-modal"></div>
   <div class="modal-c">
@@ -1201,6 +1198,17 @@ main > * { animation: fadeIn 0.12s ease-out; }
       <div class="frow">
         <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
       </div>
+      
+      <div class="tip-box" style="margin-top: 6px; margin-bottom: 0;">
+        <label class="tip-toggle">
+          <input type="checkbox" name="isDebt" id="isDebtToggle"> Track as debt (Balance & APR)
+        </label>
+        <div class="tip-input-grp" id="debtInputGroup" style="display:none;">
+          <input type="number" step="0.01" class="input" name="balance" placeholder="Current Balance" style="flex:1;">
+          <input type="number" step="0.01" class="input" name="apr" placeholder="APR %" style="width: 80px;">
+        </div>
+      </div>
+
       <div id="payment-history-section" style="display:none"></div>
       <div class="factions">
         <button type="button" data-action="close-modal">cancel</button>
@@ -1504,12 +1512,17 @@ function getCalendarYearHistory() {
 function getIncomeStats() {
   const now = new Date(); const curY = now.getFullYear(); const curM = now.getMonth();
   let rawInc = []; let rawBills = [];
+  
+  // Exclude current incomplete month from averages
   for (let i = 1; i <= 12; i++) {
     let m = curM - i; let y = curY; if (m < 0) { m += 12; y -= 1; }
     const st = getMonthlyStats(y, m);
-    if (st.income > 0) rawInc.push(st.income);
-    if (st.bills > 0) rawBills.push(st.bills);
+    if (st.income > 0 || st.bills > 0) {
+      rawInc.push(st.income);
+      rawBills.push(st.bills);
+    }
   }
+  
   let validInc = rawInc.length > 1 ? rawInc.filter(inc => inc >= Math.max(...rawInc) * 0.5) : rawInc;
   if (validInc.length === 0) { const cur = getMonthlyStats(curY, curM); if (cur.income > 0) validInc.push(cur.income); }
   const avgMonthly = validInc.length ? validInc.reduce((a,b)=>a+b,0) / validInc.length : 0;
@@ -1774,12 +1787,51 @@ function renderOverview() {
     : `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out`;
   const heroNet = blk('Net this month', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), heroSub, { color: net >= 0 ? 'positive' : 'negative' });
 
-  let avgBlock = '';
-  if (avgIn > 0) {
-    avgBlock = blk('Monthly average', (avgSurplus >= 0 ? '+' : '−') + fmtMoney(Math.abs(avgSurplus), {round:true}),
-      `${fmtMoney(avgIn, {round:true})} in · ${fmtMoney(avgOut, {round:true})} out`,
-      { size: 'med', color: avgSurplus >= 0 ? 'positive' : 'negative' });
+  // --- NEW: Net Flow Chart (Income Tab Style) ---
+  const yearHist = getCalendarYearHistory();
+  const monthsWithData = yearHist.filter(h => h.income > 0 || h.bills > 0);
+  
+  let chartHTML = '';
+  if (monthsWithData.length === 0) {
+    chartHTML = `<div class="chart-empty">No complete months to display yet.</div>`;
+  } else {
+    const maxAbsNet = Math.max(1, ...monthsWithData.map(m => Math.abs(m.income - m.bills)));
+    
+    const colsFlow = yearHist.map(h => {
+      const hasData = h.income > 0 || h.bills > 0;
+      const cNet = h.income - h.bills;
+      const hPct = hasData ? (Math.abs(cNet) / maxAbsNet) * 100 : 0;
+      const isPos = cNet >= 0;
+      
+      let topHalf = '';
+      let botHalf = '';
+      
+      if (!hasData) {
+        topHalf = `<div style="height: 50%; width: 100%;"></div>`;
+        botHalf = `<div style="height: 50%; width: 100%;"></div>`;
+      } else if (isPos) {
+        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%;"><div class="bar" style="height: ${Math.max(5, hPct)}%; background: var(--accent); width: 100%;"></div></div>`;
+        botHalf = `<div style="height: 50%; width: 100%;"></div>`;
+      } else {
+        topHalf = `<div style="height: 50%; width: 100%;"></div>`;
+        botHalf = `<div style="height: 50%; display: flex; align-items: flex-start; width: 100%;"><div class="bar" style="height: ${Math.max(5, hPct)}%; background: var(--negative); width: 100%; border-radius: 0 0 2px 2px;"></div></div>`;
+      }
+
+      const colCls = h.current ? ' cur' : '';
+      return `<div class="chart-col${colCls}">
+        <div class="bar-track" style="flex-direction: column; justify-content: center; position: relative;">
+          <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border-light); z-index: 0;"></div>
+          <div style="position: relative; z-index: 1; height: 100%; width: 100%; display: flex; flex-direction: column;">
+            ${topHalf}${botHalf}
+          </div>
+        </div>
+        <div class="label">${h.label}</div>
+      </div>`;
+    }).join('');
+
+    chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}<div class="chart"><div class="chart-cols">${colsFlow}</div></div>`;
   }
+  // ------------------------------------
 
   const periodSection = sh('Period', { monthNav: monthNav(year, month) }) +
     row('Income', '+' + fmtMoney(cur.income, {round:true}), 'positive') +
@@ -1834,7 +1886,7 @@ function renderOverview() {
       (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : '');
   }
 
-  return `${heroNet}${periodSection}${queueHTML}${tasksHTML}`;
+  return `${heroNet}${chartHTML}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
 // ──── Render: income ───────────────────────────────────────
@@ -2122,7 +2174,81 @@ function renderBudget() {
     }).join('');
   }
 
-  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
+  // --- NEW: Debt Strategy Simulator ---
+  let debtHTML = '';
+  const debts = state.bills.filter(b => b.balance > 0 && !b.paid);
+  
+  if (debts.length > 0) {
+    let totalBalance = 0;
+    let totalMinPayments = 0;
+    let monthlyInterestBurn = 0;
+    
+    debts.forEach(d => {
+      const bal = parseFloat(d.balance) || 0;
+      const apr = parseFloat(d.apr) || 0;
+      const minPay = monthlyEq(d.amount, d.recurring);
+      totalBalance += bal;
+      totalMinPayments += minPay;
+      monthlyInterestBurn += bal * (apr / 1200);
+    });
+
+    const dti = inc > 0 ? (totalMinPayments / inc) * 100 : 0;
+    let dtiColor = 'positive'; let dtiText = 'Comfortable';
+    if (dti > 43) { dtiColor = 'negative'; dtiText = 'Distressed'; }
+    else if (dti > 36) { dtiColor = 'negative'; dtiText = 'Stretched'; }
+    else if (dti > 20) { dtiColor = 'warning'; dtiText = 'Manageable'; }
+
+    const debtSub = monthlyInterestBurn > 0 
+      ? `Losing <span class="negative">${fmtMoney(monthlyInterestBurn, {round:true})}/mo</span> to interest` 
+      : '0% Interest';
+    const debtBlock = blk('Total Debt', fmtMoney(totalBalance, {round:true}), debtSub, { color: 'negative' });
+
+    let simDebts = debts.map(d => ({ 
+      bal: parseFloat(d.balance)||0, 
+      apr: parseFloat(d.apr)||0, 
+      min: monthlyEq(d.amount, d.recurring) 
+    }));
+    let infinite = simDebts.some(d => d.min <= d.bal * (d.apr/1200) && d.bal > 0 && d.apr > 0);
+
+    let payoffText = '';
+    if (infinite) {
+      payoffText = `<div class="note"><span class="negative" style="font-weight:600;">Warning:</span> Minimum payments do not cover interest on all accounts. Balances will grow forever.</div>`;
+    } else {
+      let months = 0; let totalInterest = 0;
+      while(simDebts.some(d => d.bal > 0) && months < 1200) {
+        months++;
+        simDebts.forEach(d => {
+          if (d.bal > 0) {
+            const interest = d.bal * (d.apr/1200);
+            totalInterest += interest;
+            d.bal += interest;
+            d.bal -= d.min;
+            if (d.bal < 0) d.bal = 0;
+          }
+        });
+      }
+      
+      if (months >= 1200) {
+        payoffText = `<div class="note">Payoff exceeds 100 years at current pace. Consider increasing your payments.</div>`;
+      } else {
+        const d = new Date(); d.setMonth(d.getMonth() + months);
+        payoffText = `<div class="note">At current payments, debt-free by <span style="font-weight:600; color:var(--ink)">${d.toLocaleDateString('en-US',{month:'short', year:'numeric'})}</span>. Total interest cost: <span class="negative">${fmtMoney(totalInterest, {round:true})}</span>.</div>`;
+      }
+    }
+
+    const debtList = debts.slice().sort((a,b)=> (parseFloat(b.apr)||0) - (parseFloat(a.apr)||0)).map(d => {
+      return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${d.id}"><div><div class="n">${escHTML(d.name)}</div><div class="m">${fmtMoney(d.balance)} @ ${d.apr}% APR</div></div><span class="v negative">${fmtMoney(monthlyEq(d.amount, d.recurring), {round:true})}/mo</span></div>`;
+    }).join('');
+
+    debtHTML = `${sh('Debt & Leverage')}
+    <div class="row"><span class="l">Debt-to-Income (DTI)</span><span class="v ${dtiColor}">${dti.toFixed(1)}% · ${dtiText}</span></div>
+    ${debtBlock}
+    ${payoffText}
+    ${debtList}`;
+  }
+  // ------------------------------------------
+
+  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}${debtHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
@@ -2361,6 +2487,11 @@ document.addEventListener('change', e => {
     if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
     else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
   }
+  else if (e.target.id === 'isDebtToggle') {
+    const g = document.getElementById('debtInputGroup');
+    if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
+    else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
+  }
   else if (e.target.id === 'tax-pct-input') {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
@@ -2390,6 +2521,11 @@ function openModal(type, id = null) {
         f.elements['tipsValue'].value = item.tipsValue || 6;
         f.elements['tipsType'].value = item.tipsType || 'percent';
         f.elements['tipsEnabled'].dispatchEvent(new Event('change', { bubbles: true }));
+      } else if (type === 'expenses') {
+        f.elements['balance'].value = item.balance || '';
+        f.elements['apr'].value = item.apr || '';
+        f.elements['isDebt'].checked = !!item.balance;
+        f.elements['isDebt'].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   }
@@ -2518,6 +2654,16 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.name = fd.get('name'); item.amount = pAmt(fd.get('amount'));
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
       item.dueDate = fd.get('date') || null; if (!isEdit) item.paid = false;
+      
+      // Update debt fields
+      if (f.elements['isDebtToggle'].checked) {
+        item.balance = pAmt(fd.get('balance'));
+        item.apr = parseFloat(fd.get('apr')) || 0;
+      } else {
+        delete item.balance;
+        delete item.apr;
+      }
+
     } else if (type === 'tasks') {
       item.text = fd.get('text'); item.priority = fd.get('priority');
       item.dueDate = fd.get('date') || null; if (!isEdit) item.done = false;
