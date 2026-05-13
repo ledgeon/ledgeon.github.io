@@ -56,27 +56,6 @@
   --warning-soft:  #422006;
 }
 
-[data-theme="sepia"] {
-  --bg:            #f4ecd8;
-  --bg-subtle:     #ede2c4;
-  --bg-hover:      #e4d6ad;
-  --border:        #d4c19a;
-  --border-light:  #e7d8b6;
-  --ink:           #3a2e1c;
-  --ink-2:         #6b573d;
-  --ink-3:         #8a7758;
-  --ink-4:         #ab9978;
-  --accent:        #b85c38;
-  --accent-soft:   #f5d9c5;
-  --accent-strong: #8e4128;
-  --positive:      #4d6e36;
-  --positive-soft: #d9e0c0;
-  --negative:      #a04030;
-  --negative-soft: #f0d4cc;
-  --warning:       #9d6b1f;
-  --warning-soft:  #f0db9a;
-}
-
 [data-theme="nord"] {
   --bg:            #2e3440;
   --bg-subtle:     #3b4252;
@@ -98,25 +77,46 @@
   --warning-soft:  #423b2a;
 }
 
-[data-theme="mint"] {
-  --bg:            #f4faf6;
-  --bg-subtle:     #ecf5ef;
-  --bg-hover:      #dceee2;
-  --border:        #c9e0d2;
-  --border-light:  #e2eee7;
-  --ink:           #1c3a2a;
-  --ink-2:         #3a5a48;
-  --ink-3:         #5e7b6a;
-  --ink-4:         #8aa094;
-  --accent:        #0f766e;
-  --accent-soft:   #ccfbf1;
-  --accent-strong: #115e59;
-  --positive:      #047857;
-  --positive-soft: #d1fae5;
+[data-theme="rose"] {
+  --bg:            #fff5f6;
+  --bg-subtle:     #fdeaec;
+  --bg-hover:      #f8d8dd;
+  --border:        #ecc6cc;
+  --border-light:  #f5dde1;
+  --ink:           #3a2229;
+  --ink-2:         #6b4754;
+  --ink-3:         #8a6772;
+  --ink-4:         #b5919b;
+  --accent:        #be185d;
+  --accent-soft:   #fce7f3;
+  --accent-strong: #9d174d;
+  --positive:      #15803d;
+  --positive-soft: #dcfce7;
   --negative:      #b91c1c;
   --negative-soft: #fee2e2;
-  --warning:       #92400e;
+  --warning:       #b45309;
   --warning-soft:  #fef3c7;
+}
+
+[data-theme="gruvbox"] {
+  --bg:            #282828;
+  --bg-subtle:     #32302f;
+  --bg-hover:      #3c3836;
+  --border:        #504945;
+  --border-light:  #3c3836;
+  --ink:           #ebdbb2;
+  --ink-2:         #d5c4a1;
+  --ink-3:         #a89984;
+  --ink-4:         #7c6f64;
+  --accent:        #fabd2f;
+  --accent-soft:   #3d3422;
+  --accent-strong: #d79921;
+  --positive:      #b8bb26;
+  --positive-soft: #2a3018;
+  --negative:      #fb4934;
+  --negative-soft: #3d231d;
+  --warning:       #fe8019;
+  --warning-soft:  #3a2818;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1295,9 +1295,9 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <div class="menu-label">Theme</div>
   <button data-action="set-theme" data-theme-name="light">Light</button>
   <button data-action="set-theme" data-theme-name="dark">Dark</button>
-  <button data-action="set-theme" data-theme-name="sepia">Sepia</button>
   <button data-action="set-theme" data-theme-name="nord">Nord</button>
-  <button data-action="set-theme" data-theme-name="mint">Mint</button>
+  <button data-action="set-theme" data-theme-name="rose">Rose</button>
+  <button data-action="set-theme" data-theme-name="gruvbox">Gruvbox</button>
   <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
@@ -1646,7 +1646,7 @@ function getTheme() {
   try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
 }
 function applyTheme(name) {
-  if (!['light', 'dark', 'sepia', 'nord', 'mint'].includes(name)) name = 'light';
+  if (!['light', 'dark', 'nord', 'rose', 'gruvbox'].includes(name)) name = 'light';
   if (name === 'light') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
@@ -2208,18 +2208,18 @@ function renderOverview() {
       }
     });
     if (cumPoints.length > 1) {
-      const cumMax = Math.max(0, ...cumPoints.map(p => p.val));
-      const cumMin = Math.min(0, ...cumPoints.map(p => p.val));
-      const cumRange = Math.max(1, cumMax - cumMin);
+      // Anchor the cumulative line's zero to the chart's midpoint (same as the bars' zero axis),
+      // so the line crossing zero visually corresponds to YTD = 0.
+      const maxAbsCum = Math.max(1, ...cumPoints.map(p => Math.abs(p.val)));
       const padPct = 8;
       const xs = cumPoints.map(p => ((p.i + 0.5) / 12) * 100);
-      const ys = cumPoints.map(p => padPct + (100 - 2 * padPct) * (1 - (p.val - cumMin) / cumRange));
+      const ys = cumPoints.map(p => 50 - (p.val / maxAbsCum) * (50 - padPct));
       const ptsArr = xs.map((x, i) => ({ x, y: ys[i] }));
       const pathD = smoothPath(ptsArr);
       const last = cumPoints[cumPoints.length - 1];
       const sign = last.val >= 0 ? '+' : '−';
       const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
     }
 
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
@@ -2347,7 +2347,7 @@ function renderIncome() {
         .filter(b => b.recurring && b.recurring !== 'once')
         .reduce((s, b) => s + monthlyEq(parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0, b.recurring), 0);
       const monthlyFixedStr = fmtMoney(monthlyFixed, { round: true });
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
     }
 
     chartHTML = `
