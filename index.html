@@ -288,46 +288,6 @@ main { flex: 1; }
 .row .v.negative { color: var(--negative); }
 .row .v.warning { color: var(--warning); }
 .row .v.muted { color: var(--ink-4); text-decoration: line-through; }
-
-/* ── COMPACT DUE LIST (small itemized list under Due this week) ── */
-.due-list { padding: 4px 16px 8px; }
-.due-item {
-  display: grid;
-  grid-template-columns: 64px 1fr auto;
-  gap: 10px;
-  padding: 4px 0;
-  align-items: baseline;
-  font-size: 12.5px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-.due-item:hover { background: var(--bg-subtle); }
-.due-item .d {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--ink-3);
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-}
-.due-item .n {
-  font-weight: 500;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.due-item .v {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  white-space: nowrap;
-}
-.due-item.urgent .d, .due-item.urgent .v { color: var(--negative); }
-.due-item.soon .d { color: var(--warning); }
-@media (max-width: 480px) {
-  .due-list { padding: 4px 14px 8px; }
-  .due-item { grid-template-columns: 58px 1fr auto; gap: 8px; }
-}
 .row.strong .v { font-weight: 700; }
 .row.strong .l { font-weight: 600; }
 
@@ -2112,20 +2072,22 @@ function renderOverview() {
   let queueHTML = '';
   if (upcoming.length > 0) {
     const items = upcoming.slice(0, 5);
-    const rows = items.map(b => {
-      const overdue = isOverdue(b.dueDate);
-      const today = isTodayDate(b.dueDate);
-      const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-      let label;
-      if (overdue) label = `${Math.abs(days)}d late`;
-      else if (today) label = 'Today';
-      else if (days === 1) label = 'Tomorrow';
-      else label = compactDate(b.dueDate);
-      const cls = overdue ? ' urgent' : (today || days === 1) ? ' soon' : '';
-      return `<div class="due-item${cls}" data-action="edit" data-type="expenses" data-id="${b.id}"><span class="d">${label}</span><span class="n">${escHTML(b.name)}</span><span class="v">${fmtMoney(b.amount, {round:true})}</span></div>`;
-    }).join('');
-    const more = upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : '';
-    queueHTML = sh('Upcoming', { meta: `${upcoming.length} in 14 days` }) + `<div class="due-list">${rows}</div>` + more;
+    queueHTML = sh('Upcoming', { meta: `${upcoming.length} in 14 days` }) +
+      items.map(b => {
+        const overdue = isOverdue(b.dueDate);
+        const today = isTodayDate(b.dueDate);
+        const cat = (CATEGORIES[b.category] || CATEGORIES.other);
+        let pillHTML = '';
+        if (overdue) pillHTML = pill('Overdue', 'r');
+        else if (today) pillHTML = pill('Today', 'y');
+        else if (b.dueDate) {
+          const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
+          if (days === 1) pillHTML = pill('Tomorrow', 'y');
+        }
+        const valCls = overdue ? 'negative' : today ? 'negative' : '';
+        return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${pillHTML ? ' ' + pillHTML : ''}</div><div class="m">${cap(cat.label)} · ${compactDate(b.dueDate)}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
+      }).join('') +
+      (upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : '');
   }
 
   let tasksHTML = '';
@@ -2267,32 +2229,10 @@ function renderExpenses() {
     ? blk('Due this week', fmtMoney(dueThisWeek, {round:true}), `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med', color: 'warning' })
     : blk('Annual total', fmtMoney(totalAnnual, {round:true}), 'Projected recurring', { size: 'med' });
 
-  // Itemized list of bills due in the next 7 days (only when "Due this week" block is shown)
-  let weekItemsHTML = '';
-  if (dueCount > 0) {
-    const dueItems = state.bills
-      .filter(b => b.dueDate && b.dueDate <= weekIso && !b.paid)
-      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-    const rows = dueItems.map(b => {
-      const overdue = isOverdue(b.dueDate);
-      const today = isTodayDate(b.dueDate);
-      const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-      let label;
-      if (overdue) label = `${Math.abs(days)}d late`;
-      else if (today) label = 'Today';
-      else if (days === 1) label = 'Tomorrow';
-      else label = compactDate(b.dueDate);
-      const cls = overdue ? ' urgent' : (today || days === 1) ? ' soon' : '';
-      return `<div class="due-item${cls}" data-action="edit" data-type="expenses" data-id="${b.id}"><span class="d">${label}</span><span class="n">${escHTML(b.name)}</span><span class="v">${fmtMoney(b.amount, {round:true})}</span></div>`;
-    }).join('');
-    weekItemsHTML = sh('Due soon', { meta: `next 7 days` }) + `<div class="due-list">${rows}</div>`;
-  }
-
   const billsSorted = state.bills.slice().sort((a, b) => {
     if (a.paid !== b.paid) return a.paid ? 1 : -1;
-    const aa = parseFloat(String(a.amount).replace(/[^\d.-]/g, '')) || 0;
-    const ba = parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0;
-    return ba - aa;
+    const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
+    return ad.localeCompare(bd);
   });
 
   let billsHTML;
@@ -2332,7 +2272,7 @@ function renderExpenses() {
   const savings = getSavingsTarget().total;
   const netForPie = Math.max(0, incTot - total - savings);
   const pieHTML = buildPieChart(incTot, catData, savings, netForPie);
-  return `${totalBlock}${weekBlock}${weekItemsHTML}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
+  return `${totalBlock}${weekBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
 }
 
 
