@@ -77,6 +77,19 @@ main { flex: 1; }
   margin-right: 8px;
 }
 .mhdr-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.sync-ind {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-hover);
+  color: var(--ink-3);
+}
+.sync-ind.syncing { background: var(--accent-soft); color: var(--accent); }
+.sync-ind.ok      { background: var(--positive-soft); color: var(--positive); }
+.sync-ind.err     { background: var(--negative-soft); color: var(--negative); }
 .mmeta {
   font-size: 11px; font-weight: 600;
   color: var(--ink-3);
@@ -1136,10 +1149,12 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <header class="mhdr">
   <h1 class="mtitle" id="mtitle">Ledgeon</h1>
   <div class="mhdr-r">
+    <span id="sync-indicator" class="mmeta sync-ind" hidden></span>
     <button class="mhdr-menu-btn" data-action="toggle-menu" aria-label="Menu">⋯</button>
   </div>
 </header>
 <div class="mhdr-menu" id="header-menu" hidden>
+  <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
   <button data-action="export">Export data</button>
   <button class="danger" data-action="reset">Reset everything</button>
@@ -1321,6 +1336,33 @@ main > * { animation: fadeIn 0.12s ease-out; }
   </div>
 </div>
 
+<div class="modal" id="modal-sync">
+  <div class="modal-bd" data-action="close-modal"></div>
+  <div class="modal-c">
+    <div class="modal-t">cloud sync</div>
+    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 4px; line-height: 1.5;">
+      Use the same sync code on each device to keep them in sync. Generate one on your first device, then copy it to your others. Conflicts resolve to the most recent change.
+    </div>
+    <div class="frow"><div class="fcol">
+      <label class="flbl">sync code</label>
+      <div style="display: flex; gap: 6px;">
+        <input type="text" class="input" id="sync-key-input" placeholder="e.g. K7H2N4" autocomplete="off" spellcheck="false" maxlength="20" style="flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-transform: uppercase; text-align: center; font-weight: 600;">
+        <button type="button" id="sync-copy-btn" data-action="sync-copy" title="Copy code" style="background: var(--bg-hover); color: var(--ink-2); padding: 0 12px; border-radius: 6px; font-size: 12px; font-weight: 600;">Copy</button>
+      </div>
+    </div></div>
+    <div class="frow"><div class="fcol">
+      <button type="button" data-action="sync-generate" style="background: var(--bg-hover); color: var(--ink-2); padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; width: 100%;">Generate new code</button>
+    </div></div>
+    <div id="sync-msg" style="font-size: 12px; color: var(--ink-3); margin: 4px 0 12px; min-height: 16px; line-height: 1.5;"></div>
+    <div class="factions">
+      <button type="button" class="danger" id="sync-disable-btn" data-action="sync-disable" style="display:none">Disable</button>
+      <button type="button" data-action="close-modal">close</button>
+      <button type="button" id="sync-now-btn" data-action="sync-now" style="display:none">Sync now</button>
+      <button type="button" class="primary" data-action="sync-save">Save &amp; sync</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -1341,6 +1383,8 @@ $$$  ██████
 const STORAGE_KEY = 'ledgeon-state-v5';
 const TAB_KEY = 'ledgeon-tab';
 const TAX_KEY = 'ledgeon-tax-pct';
+const SYNC_CONFIG_KEY = 'ledgeon-sync-config';
+const SYNC_WORKER_URL = 'https://ledgeon-sync.danielssouthworth.workers.dev';
 const TABS = ['overview', 'income', 'expenses', 'budget', 'tasks'];
 
 const CATEGORIES = {
@@ -1366,7 +1410,7 @@ const PRESET_BILLS = [
 ];
 
 // ──── State ──────────────────────────────────────────────────
-let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [] };
+let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [], updatedAt: 0 };
 const possibleKeys = ['ledgeon-state-v5', 'ledgeon-state-v4', 'ledgeon-prompt-v1', 'ledgeon-state-v3'];
 for (const k of possibleKeys) {
   try {
@@ -1382,6 +1426,7 @@ for (const k of possibleKeys) {
           goals:    Array.isArray(v.goals)    ? v.goals    : [],
           petty:    Array.isArray(v.petty)    ? v.petty    : [],
           payments: Array.isArray(v.payments) ? v.payments : [],
+          updatedAt: typeof v.updatedAt === 'number' ? v.updatedAt : 0,
         };
         break;
       }
@@ -1418,7 +1463,11 @@ function getTaxPct() { const v = parseFloat(localStorage.getItem(TAX_KEY)); retu
 function setTaxPct(v) { localStorage.setItem(TAX_KEY, String(v)); }
 
 // ──── Helpers ────────────────────────────────────────────────
-function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {} }
+function saveState() {
+  state.updatedAt = Date.now();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {}
+  schedulePush();
+}
 function nextId(col) {
   const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm' }[col];
   let max = 0;
@@ -2794,7 +2843,278 @@ document.getElementById('preset-apply-btn').addEventListener('click', () => {
   render();
 });
 
+// ──── Cloud sync ─────────────────────────────────────────────
+let pushTimer = null;
+
+// Code alphabet excludes ambiguous chars (0/O, 1/I/L)
+const SYNC_CODE_ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const SYNC_CODE_LENGTH = 6;
+const SYNC_CODE_MIN = 4;
+
+function normalizeSyncCode(s) {
+  return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+function generateSyncCode() {
+  const bytes = new Uint8Array(SYNC_CODE_LENGTH);
+  crypto.getRandomValues(bytes);
+  let out = '';
+  for (let i = 0; i < SYNC_CODE_LENGTH; i++) out += SYNC_CODE_ALPHABET[bytes[i] % SYNC_CODE_ALPHABET.length];
+  return out;
+}
+
+function getSyncConfig() {
+  try { return JSON.parse(localStorage.getItem(SYNC_CONFIG_KEY)) || null; } catch { return null; }
+}
+function setSyncConfig(cfg) {
+  if (cfg) localStorage.setItem(SYNC_CONFIG_KEY, JSON.stringify(cfg));
+  else localStorage.removeItem(SYNC_CONFIG_KEY);
+}
+function syncEnabled() {
+  const c = getSyncConfig();
+  return !!(c && c.key);
+}
+
+async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function syncUrlBase() { return SYNC_WORKER_URL.replace(/\/+$/, ''); }
+
+function setSyncBadge(kind, text) {
+  const el = document.getElementById('sync-indicator');
+  if (!el) return;
+  if (!syncEnabled()) { el.hidden = true; return; }
+  el.hidden = false;
+  el.classList.remove('syncing', 'ok', 'err');
+  if (kind) el.classList.add(kind);
+  el.textContent = text;
+}
+
+async function syncRequest(method, body) {
+  const cfg = getSyncConfig();
+  if (!cfg) throw new Error('no-config');
+  const hash = await sha256Hex(normalizeSyncCode(cfg.key));
+  const opts = { method };
+  if (body !== undefined) {
+    opts.headers = { 'Content-Type': 'application/json' };
+    opts.body = body;
+  }
+  const res = await fetch(`${syncUrlBase()}/sync/${hash}`, opts);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function syncPull() {
+  if (!syncEnabled()) return null;
+  setSyncBadge('syncing', 'syncing');
+  try {
+    const data = await syncRequest('GET');
+    setSyncBadge('ok', 'synced');
+    return data;
+  } catch (e) {
+    setSyncBadge('err', 'sync error');
+    console.warn('Sync pull failed:', e);
+    return null;
+  }
+}
+
+async function syncPush() {
+  if (!syncEnabled()) return false;
+  setSyncBadge('syncing', 'syncing');
+  try {
+    const payload = JSON.stringify({ state, updatedAt: state.updatedAt || Date.now() });
+    await syncRequest('PUT', payload);
+    setSyncBadge('ok', 'synced');
+    return true;
+  } catch (e) {
+    setSyncBadge('err', 'sync error');
+    console.warn('Sync push failed:', e);
+    return false;
+  }
+}
+
+function schedulePush() {
+  if (!syncEnabled()) return;
+  if (pushTimer) clearTimeout(pushTimer);
+  pushTimer = setTimeout(syncPush, 2000);
+}
+
+function stateHasData(s) {
+  if (!s) return false;
+  return !!(s.bills?.length || s.income?.length || s.tasks?.length || s.goals?.length || s.petty?.length || s.payments?.length);
+}
+
+function applyRemoteState(remoteState, remoteUpdatedAt) {
+  state = {
+    tasks:    Array.isArray(remoteState.tasks)    ? remoteState.tasks    : [],
+    bills:    Array.isArray(remoteState.bills)    ? remoteState.bills    : [],
+    events:   Array.isArray(remoteState.events)   ? remoteState.events   : [],
+    income:   Array.isArray(remoteState.income)   ? remoteState.income   : [],
+    goals:    Array.isArray(remoteState.goals)    ? remoteState.goals    : [],
+    petty:    Array.isArray(remoteState.petty)    ? remoteState.petty    : [],
+    payments: Array.isArray(remoteState.payments) ? remoteState.payments : [],
+    updatedAt: remoteUpdatedAt || Date.now(),
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+}
+
+async function syncStartup() {
+  if (!syncEnabled()) return;
+  const remote = await syncPull();
+  if (!remote) return;
+  const localUpdated = state.updatedAt || 0;
+  const remoteUpdated = remote.updatedAt || 0;
+  if (remote.state && stateHasData(remote.state) && remoteUpdated > localUpdated) {
+    applyRemoteState(remote.state, remoteUpdated);
+    render(); updateBadges();
+    setSyncBadge('ok', 'synced');
+  } else if (localUpdated > remoteUpdated) {
+    await syncPush();
+  } else {
+    setSyncBadge('ok', 'synced');
+  }
+}
+
+function setSyncMsg(text, isErr) {
+  const m = document.getElementById('sync-msg');
+  if (!m) return;
+  m.style.color = isErr ? 'var(--negative)' : 'var(--ink-3)';
+  m.textContent = text;
+}
+
+function openSyncModal() {
+  const cfg = getSyncConfig() || {};
+  document.getElementById('sync-key-input').value = cfg.key ? cfg.key : '';
+  const enabled = syncEnabled();
+  document.getElementById('sync-disable-btn').style.display = enabled ? '' : 'none';
+  document.getElementById('sync-now-btn').style.display = enabled ? '' : 'none';
+  if (enabled) {
+    const ts = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : '—';
+    setSyncMsg(`Sync enabled · last local change: ${ts}`, false);
+  } else {
+    setSyncMsg('', false);
+  }
+  document.getElementById('modal-sync').classList.add('open');
+}
+
+async function handleSyncSave() {
+  const raw = document.getElementById('sync-key-input').value;
+  const code = normalizeSyncCode(raw);
+  if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Sync code must be at least ${SYNC_CODE_MIN} characters. Tap "Generate new code" if you don't have one yet.`, true); return; }
+  setSyncConfig({ key: code });
+  document.getElementById('sync-key-input').value = code;
+  setSyncMsg('Saved. Checking cloud…', false);
+
+  const remote = await syncPull();
+  if (!remote) { setSyncMsg('Could not reach the sync server. Check your connection.', true); return; }
+
+  const localHasData = stateHasData(state);
+  const remoteHasData = remote.state && stateHasData(remote.state);
+
+  if (remoteHasData && localHasData) {
+    const remoteTs = remote.updatedAt ? new Date(remote.updatedAt).toLocaleString() : 'unknown';
+    const localTs = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : 'unknown';
+    const useRemote = confirm(`Both this device and the cloud have data.\n\nRemote: ${remoteTs}\nLocal: ${localTs}\n\nOK = use remote (overwrites local)\nCancel = push local (overwrites remote)`);
+    if (useRemote) {
+      applyRemoteState(remote.state, remote.updatedAt);
+      render(); updateBadges();
+      setSyncMsg('Pulled from cloud. Sync enabled.', false);
+    } else {
+      const ok = await syncPush();
+      setSyncMsg(ok ? 'Pushed local to cloud. Sync enabled.' : 'Push failed.', !ok);
+    }
+  } else if (remoteHasData) {
+    applyRemoteState(remote.state, remote.updatedAt);
+    render(); updateBadges();
+    setSyncMsg('Pulled from cloud. Sync enabled.', false);
+  } else {
+    const ok = localHasData ? await syncPush() : true;
+    setSyncMsg(ok ? 'Sync enabled. ' + (localHasData ? 'Local data pushed.' : 'Cloud is empty — make a change to start syncing.') : 'Push failed.', !ok);
+  }
+  document.getElementById('sync-disable-btn').style.display = '';
+  document.getElementById('sync-now-btn').style.display = '';
+}
+
+function handleSyncGenerate() {
+  const code = generateSyncCode();
+  document.getElementById('sync-key-input').value = code;
+  setSyncMsg('New code generated. Tap "Save & sync" to enable, then copy it to your other devices.', false);
+}
+
+async function handleSyncCopy() {
+  const raw = document.getElementById('sync-key-input').value;
+  const code = normalizeSyncCode(raw);
+  if (!code) { setSyncMsg('Nothing to copy yet.', true); return; }
+  const formatted = code;
+  try {
+    await navigator.clipboard.writeText(formatted);
+    setSyncMsg('Copied to clipboard.', false);
+  } catch {
+    // Fallback for older browsers / non-secure contexts
+    const inp = document.getElementById('sync-key-input');
+    inp.select(); inp.setSelectionRange(0, 9999);
+    try { document.execCommand('copy'); setSyncMsg('Copied to clipboard.', false); }
+    catch { setSyncMsg('Copy failed. Select the code manually.', true); }
+  }
+}
+
+async function handleSyncNow() {
+  if (!syncEnabled()) return;
+  setSyncMsg('Syncing…', false);
+  const remote = await syncPull();
+  if (!remote) { setSyncMsg('Sync failed.', true); return; }
+  const localUpdated = state.updatedAt || 0;
+  const remoteUpdated = remote.updatedAt || 0;
+  if (remote.state && stateHasData(remote.state) && remoteUpdated > localUpdated) {
+    applyRemoteState(remote.state, remoteUpdated);
+    render(); updateBadges();
+    setSyncMsg('Pulled newer data from cloud.', false);
+  } else if (localUpdated > remoteUpdated) {
+    const ok = await syncPush();
+    setSyncMsg(ok ? 'Pushed local to cloud.' : 'Push failed.', !ok);
+  } else {
+    setSyncMsg('Already in sync.', false);
+  }
+}
+
+function handleSyncDisable() {
+  if (!confirm('Disable sync on this device? Your local data stays. Other devices keep syncing.')) return;
+  setSyncConfig(null);
+  setSyncMsg('Sync disabled.', false);
+  document.getElementById('sync-disable-btn').style.display = 'none';
+  document.getElementById('sync-now-btn').style.display = 'none';
+  const el = document.getElementById('sync-indicator');
+  if (el) el.hidden = true;
+}
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const act = btn.dataset.action;
+  if (act === 'open-sync') {
+    const menu = document.getElementById('header-menu');
+    if (menu) menu.hidden = true;
+    openSyncModal();
+  } else if (act === 'sync-save') {
+    handleSyncSave();
+  } else if (act === 'sync-now') {
+    handleSyncNow();
+  } else if (act === 'sync-disable') {
+    handleSyncDisable();
+  } else if (act === 'sync-generate') {
+    handleSyncGenerate();
+  } else if (act === 'sync-copy') {
+    handleSyncCopy();
+  }
+});
+
 render();
+if (syncEnabled()) {
+  setSyncBadge('syncing', 'syncing');
+  syncStartup();
+}
 </script>
 </body>
 </html>
