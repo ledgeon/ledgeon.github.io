@@ -3,736 +3,737 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a0a0a">
-<title>Ledgeon // Terminal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#ffffff">
+<title>Ledgeon</title>
 <style>
-/* ════════════════════════════════════════════════════════════════
-   TERMINAL · design tokens (from layout 02 preview)
-   ════════════════════════════════════════════════════════════════ */
 :root {
-  --bg:            #0a0a0a;
-  --bg-soft:       #0e0e0e;
-  --bg-tint:       #131313;
-  --border:        #1f1f1f;
-  --border-strong: #2a2a2a;
-  --dotted:        #1a1a1a;
-  --ink:           #b8b8b8;
-  --ink-strong:    #ddd;
-  --ink-mute:      #888;
-  --ink-faint:     #666;
-  --ink-dim:       #444;
-  --lime:          #a5d645;
-  --red:           #ff5560;
-  --yel:           #ffd400;
-  --magenta:       #ff5cf0;
+  --bg:            #ffffff;
+  --bg-subtle:     #f7f7f8;
+  --bg-hover:      #f2f2f4;
+  --border:        #e5e5ea;
+  --border-light:  #efeff2;
+  --ink:           #1c1c1e;
+  --ink-2:         #48484a;
+  --ink-3:         #8e8e93;
+  --ink-4:         #aeaeb2;
+  --accent:        #2563eb;
+  --accent-soft:   #eff5ff;
+  --positive:      #16a34a;
+  --positive-soft: #ecfdf3;
+  --negative:      #dc2626;
+  --negative-soft: #fef2f2;
+  --warning:       #d97706;
+  --warning-soft:  #fef3e2;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   background: var(--bg); color: var(--ink);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 11px; line-height: 1.5;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px; line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
 }
 body {
   display: flex; flex-direction: column;
   min-height: 100vh; min-height: 100dvh;
-  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
   max-width: 720px;
   margin: 0 auto;
 }
 button { cursor: pointer; font: inherit; color: inherit; background: none; border: none; padding: 0; }
 input, select, textarea { font: inherit; color: inherit; }
-
 main { flex: 1; }
 
 /* ── HEADER ─────────────────────────────────────────────── */
 .mhdr {
-  padding: 9px 12px;
-  padding-top: calc(9px + env(safe-area-inset-top));
-  border-bottom: 1px solid var(--border);
+  padding: 13px 16px;
+  padding-top: calc(13px + env(safe-area-inset-top));
+  border-bottom: 0.5px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
-  background: var(--bg-soft);
+  background: var(--bg);
   position: sticky; top: 0; z-index: 50;
 }
 .mtitle {
-  font-size: 12px; font-weight: 700;
-  color: var(--lime);
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  font-size: 17px; font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--ink);
 }
-.mtitle::before { content: '> '; color: var(--ink-faint); }
-.mhdr-r { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.mhdr-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .mmeta {
-  font-size: 8.5px;
-  color: var(--ink-faint);
-  padding: 1px 5px;
-  border: 1px solid var(--border-strong);
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 400;
 }
 .mhdr-menu-btn {
-  background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  padding: 1px 6px;
-  letter-spacing: 0.5px;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  color: var(--ink-2);
+  font-size: 16px;
   line-height: 1;
-  min-height: 22px;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.mhdr-menu-btn:hover { border-color: var(--lime); color: var(--lime); }
+.mhdr-menu-btn:hover { background: var(--bg-hover); }
 
 .mhdr-menu {
   position: fixed;
-  top: calc(44px + env(safe-area-inset-top));
+  top: calc(50px + env(safe-area-inset-top));
   right: 12px;
   background: var(--bg);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   z-index: 60;
-  min-width: 160px;
-  font-family: 'JetBrains Mono', monospace;
+  min-width: 180px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08), 0 0 0 0.5px var(--border);
+  padding: 4px;
 }
 .mhdr-menu[hidden] { display: none; }
 .mhdr-menu button {
-  padding: 9px 14px;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--ink-mute);
-  font-size: 11px;
+  padding: 9px 12px;
+  background: none;
+  color: var(--ink);
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0.5px;
   text-align: left;
-  text-transform: lowercase;
   width: 100%;
+  border-radius: 6px;
 }
-.mhdr-menu button:last-child { border-bottom: none; }
-.mhdr-menu button:hover { background: var(--bg-soft); color: var(--lime); }
-.mhdr-menu button.danger { color: var(--red); }
-.mhdr-menu button.danger:hover { background: var(--bg-soft); color: var(--red); }
+.mhdr-menu button:hover { background: var(--bg-subtle); }
+.mhdr-menu button.danger { color: var(--negative); }
+.mhdr-menu button.danger:hover { background: var(--negative-soft); }
 
 /* ── HERO BLOCK ─────────────────────────────────────────── */
 .blk {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
+  padding: 18px 16px;
+  border-bottom: 0.5px solid var(--border-light);
 }
+.blk + .blk { border-top: none; }
 .blk-l {
-  font-size: 8.5px;
-  color: var(--ink-faint);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 500;
+  letter-spacing: 0.1px;
 }
 .blk-v {
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 700;
-  color: var(--lime);
   letter-spacing: -0.8px;
-  margin-top: 3px;
+  color: var(--ink);
+  margin-top: 4px;
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.1;
   word-break: break-word;
 }
-.blk-v.r { color: var(--red); }
-.blk-v.y { color: var(--yel); }
-.blk-v.w { color: var(--ink-strong); }
-.blk-v.med { font-size: 22px; }
-.blk-v .dim { color: var(--ink-faint); font-size: 0.75em; font-weight: 500; }
+.blk-v.positive { color: var(--positive); }
+.blk-v.negative { color: var(--negative); }
+.blk-v.warning { color: var(--warning); }
+.blk-v.med { font-size: 26px; }
+.blk-v .dim { color: var(--ink-3); font-size: 0.65em; font-weight: 500; }
 .blk-s {
-  font-size: 9px;
-  color: var(--ink-mute);
-  margin-top: 3px;
-  letter-spacing: 0.4px;
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 4px;
 }
-.blk-s .lnk { color: var(--lime); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.blk-s .lnk { color: var(--accent); cursor: pointer; font-weight: 500; }
+.blk-s .lnk:hover { text-decoration: underline; }
 
 /* ── SECTION HEADER ─────────────────────────────────────── */
 .sh {
-  padding: 4px 12px;
-  font-size: 8.5px;
-  color: var(--ink-faint);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  background: var(--bg-tint);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center;
-  gap: 8px; flex-wrap: wrap;
-  min-height: 22px;
+  padding: 18px 16px 8px;
+  display: flex; align-items: baseline;
+  gap: 10px; flex-wrap: wrap;
 }
-.sh .x {
-  color: var(--lime);
-  margin-left: auto;
+.sh h3 {
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 1.2px;
+  color: var(--ink-2);
+  letter-spacing: 0.1px;
+}
+.sh .sh-meta {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-left: 0;
 }
 .sh .add {
-  background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-size: 8.5px;
-  padding: 1px 5px;
-  letter-spacing: 0.5px;
-  text-transform: lowercase;
+  background: var(--bg-subtle);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
   margin-left: auto;
-  min-height: 18px;
 }
-.sh:has(.x) .add { margin-left: 4px; }
-.sh .add:hover { border-color: var(--lime); color: var(--lime); }
+.sh .add:hover { background: var(--accent-soft); }
 .sh .month-nav {
   margin-left: auto;
-  display: inline-flex; gap: 2px;
-  align-items: center;
+  display: inline-flex; align-items: center;
+  gap: 1px;
+  background: var(--bg-subtle);
+  border-radius: 7px;
+  padding: 2px;
 }
-.sh:has(.x) .month-nav { margin-left: 4px; }
 .sh .month-nav .nav-arrow {
   background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-size: 11px;
-  padding: 0;
-  width: 16px; height: 16px;
-  display: inline-flex; align-items: center; justify-content: center;
-  line-height: 1;
-}
-.sh .month-nav .nav-arrow:hover { border-color: var(--lime); color: var(--lime); }
-.sh .month-nav .label {
-  color: var(--lime);
-  padding: 0 6px;
-  letter-spacing: 1px;
+  color: var(--ink-2);
+  font-size: 13px;
   font-weight: 600;
+  padding: 0;
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+}
+.sh .month-nav .nav-arrow:hover { background: var(--bg-hover); color: var(--ink); }
+.sh .month-nav .label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0 6px;
+  letter-spacing: 0.2px;
 }
 .sh .month-nav .today-btn {
-  background: var(--lime);
-  color: var(--bg);
-  border: 1px solid var(--lime);
-  font-size: 9px;
-  padding: 0 4px;
-  margin-left: 3px;
-  height: 16px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-weight: 700;
-  line-height: 1;
+  background: var(--accent);
+  color: white;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-left: 4px;
 }
 
-/* ── ROWS (compact key:value pairs) ─────────────────────── */
+/* ── ROW (label : value) ────────────────────────────────── */
 .row {
   display: grid;
   grid-template-columns: 1fr auto;
-  padding: 4px 12px;
-  font-size: 11px;
-  border-bottom: 1px dotted var(--dotted);
+  padding: 9px 16px;
+  font-size: 15px;
+  border-bottom: 0.5px solid var(--border-light);
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
-.row.b { background: var(--bg-soft); }
-.row .l { color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.row .l .pre { color: var(--ink-faint); }
-.row .l .pre.r { color: var(--red); }
-.row .l .pre.g { color: var(--lime); }
-.row .l .pre.y { color: var(--yel); }
+.row .l { color: var(--ink-2); }
 .row .v {
-  color: var(--ink-strong);
-  font-weight: 500;
   font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--ink);
   white-space: nowrap;
 }
-.row .v.g { color: var(--lime); }
-.row .v.r { color: var(--red); }
-.row .v.y { color: var(--yel); }
-.row .v.dim { color: var(--ink-dim); text-decoration: line-through; }
+.row .v.positive { color: var(--positive); }
+.row .v.negative { color: var(--negative); }
+.row .v.muted { color: var(--ink-3); text-decoration: line-through; }
+.row.strong .v { font-weight: 600; }
+.row.strong .l { color: var(--ink); font-weight: 500; }
 
-/* ── LIST ITEMS (editable rows w/ actions) ──────────────── */
+/* ── LIST ITEM (editable: name + meta + value + actions) ── */
 .li {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  padding: 7px 12px;
-  border-bottom: 1px dotted var(--dotted);
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 0.5px solid var(--border-light);
   align-items: center;
-  font-size: 11px;
 }
-.li.dim { background: var(--bg-soft); }
+.li.muted { opacity: 0.55; }
 .li-info { min-width: 0; }
 .li-n {
-  color: var(--ink-strong);
+  font-size: 15px;
   font-weight: 500;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 6px;
 }
-.li.dim .li-n { color: var(--ink-dim); text-decoration: line-through; }
-.li-n .pre { color: var(--ink-faint); margin-right: 3px; }
-.li-n .pre.r { color: var(--red); }
-.li-n .pre.g { color: var(--lime); }
-.li-n .pre.y { color: var(--yel); }
+.li.muted .li-n { color: var(--ink-3); text-decoration: line-through; }
 .li-meta {
-  font-size: 8.5px;
-  color: var(--ink-faint);
+  font-size: 13px;
+  color: var(--ink-3);
   margin-top: 2px;
-  letter-spacing: 0.6px;
-  text-transform: lowercase;
   display: flex;
-  gap: 4px;
+  gap: 5px;
   flex-wrap: wrap;
   align-items: center;
 }
-.li-meta .dot { color: var(--ink-dim); }
-.li-meta .r { color: var(--red); }
-.li-meta .y { color: var(--yel); }
-.li-meta .g { color: var(--lime); }
-.li-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.li-meta .dot { color: var(--ink-4); }
+.li-meta .neg { color: var(--negative); font-weight: 500; }
+.li-meta .warn { color: var(--warning); font-weight: 500; }
+.li-meta .pos { color: var(--positive); font-weight: 500; }
+.li-r { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 .li-v {
-  color: var(--ink-strong);
+  font-size: 15px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
   white-space: nowrap;
-  font-size: 11.5px;
 }
-.li-v.g { color: var(--lime); }
-.li-v.r { color: var(--red); }
-.li-v.dim { color: var(--ink-dim); text-decoration: line-through; }
-.li-acts { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+.li-v.positive { color: var(--positive); }
+.li-v.negative { color: var(--negative); }
+.li-v.muted { color: var(--ink-3); text-decoration: line-through; }
+.li-acts { display: flex; gap: 4px; }
 .li-acts button {
-  background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8.5px;
-  padding: 1px 5px;
-  letter-spacing: 0.5px;
-  text-transform: lowercase;
-  min-height: 18px;
-  line-height: 1.4;
+  background: var(--bg-subtle);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 5px;
+  min-height: 24px;
 }
-.li-acts button:hover { border-color: var(--lime); color: var(--lime); }
-.li-acts button.ok { border-color: var(--lime); color: var(--lime); }
-.li-acts button.ok:hover { background: var(--lime); color: var(--bg); }
-.li-acts button.err { color: var(--ink-mute); }
-.li-acts button.err:hover { border-color: var(--red); color: var(--red); }
+.li-acts button:hover { background: var(--bg-hover); color: var(--ink); }
+.li-acts button.primary { background: var(--accent-soft); color: var(--accent); }
+.li-acts button.primary:hover { background: #e0ebff; }
+.li-acts button.danger { color: var(--ink-2); }
+.li-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
-/* ── METER (ascii-bar progress for categories/budgets) ──── */
+/* status pill for inline meta */
+.pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+}
+.pill.neg { background: var(--negative-soft); color: var(--negative); }
+.pill.warn { background: var(--warning-soft); color: var(--warning); }
+.pill.pos { background: var(--positive-soft); color: var(--positive); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+.pill.muted { background: var(--bg-subtle); color: var(--ink-3); }
+
+/* ── CATEGORY BAR / METER ───────────────────────────────── */
 .meter {
   display: grid;
-  grid-template-columns: 64px 1fr 50px;
-  gap: 8px;
-  padding: 4px 12px;
+  grid-template-columns: 96px 1fr 56px;
+  gap: 12px;
+  padding: 8px 16px;
   align-items: center;
-  font-size: 10.5px;
-  border-bottom: 1px dotted var(--dotted);
+  font-size: 13.5px;
+  border-bottom: 0.5px solid var(--border-light);
 }
 .meter-l {
-  color: var(--ink-mute);
-  font-size: 9.5px;
-  text-transform: lowercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--ink-2);
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .meter-b {
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--lime);
-  font-size: 10px;
-  letter-spacing: -1.2px;
-  white-space: nowrap;
+  height: 8px;
+  background: var(--bg-hover);
+  border-radius: 4px;
   overflow: hidden;
+  position: relative;
 }
+.meter-f {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+}
+.meter-f.warn { background: var(--warning); }
+.meter-f.neg { background: var(--negative); }
 .meter-v {
-  color: var(--ink-strong);
+  color: var(--ink);
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  font-size: 10.5px;
+  font-size: 13.5px;
   text-align: right;
-  white-space: nowrap;
 }
 
-/* ── ASCII CHART (income trend) ─────────────────────────── */
-.ascii-chart {
-  padding: 8px 12px 12px;
-  font-size: 10.5px;
-  color: var(--lime);
-  line-height: 1.5;
-  white-space: pre;
-  font-family: 'JetBrains Mono', monospace;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
+/* ── INCOME TREND BAR CHART ─────────────────────────────── */
+.chart {
+  padding: 12px 16px 16px;
+  border-bottom: 0.5px solid var(--border-light);
 }
-.ascii-chart .cur { color: var(--magenta); }
-.ascii-empty {
-  padding: 18px 12px;
+.chart-bars {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  align-items: end;
+  height: 64px;
+  margin-bottom: 6px;
+}
+.chart-bar {
+  background: var(--accent);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  width: 100%;
+}
+.chart-bar.current { background: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.chart-bar.empty { background: transparent; min-height: 0; }
+.chart-labels {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  font-size: 11px;
   text-align: center;
-  font-size: 10.5px;
-  color: var(--ink-faint);
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border);
+  color: var(--ink-3);
+  letter-spacing: 0.2px;
+}
+.chart-labels .current { color: var(--accent); font-weight: 600; }
+.chart-empty {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-3);
+  border-bottom: 0.5px solid var(--border-light);
 }
 
 /* ── GOAL ───────────────────────────────────────────────── */
 .goal {
-  padding: 9px 12px;
-  border-bottom: 1px dotted var(--dotted);
+  padding: 12px 16px;
+  border-bottom: 0.5px solid var(--border-light);
 }
 .goal-h {
   display: flex; justify-content: space-between;
-  font-size: 10.5px;
-  margin-bottom: 5px;
+  font-size: 14px;
+  margin-bottom: 6px;
+  align-items: baseline;
 }
-.goal-h span:first-child { color: var(--ink-mute); }
-.goal-h span:last-child { color: var(--lime); font-weight: 600; }
+.goal-h .n { color: var(--ink); font-weight: 500; }
+.goal-h .p { color: var(--accent); font-weight: 600; font-size: 13px; }
 .goal-bar {
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--lime);
-  font-size: 10px;
-  letter-spacing: -1.2px;
-  white-space: nowrap;
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: 3px;
   overflow: hidden;
 }
-.goal-meta {
-  font-size: 9px;
-  color: var(--ink-faint);
-  margin-top: 4px;
-  letter-spacing: 0.5px;
+.goal-bar-f {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
 }
-.goal-meta .req { color: var(--red); }
+.goal-meta {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+  align-items: center;
+}
+.goal-meta .req { color: var(--warning); font-weight: 500; }
 .goal-acts {
-  display: flex; gap: 4px;
-  margin-top: 7px;
+  display: flex; gap: 6px;
+  margin-top: 10px;
   justify-content: flex-end;
 }
 .goal-acts button {
-  background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8.5px;
-  padding: 1px 6px;
-  letter-spacing: 0.5px;
-  text-transform: lowercase;
-  min-height: 20px;
+  background: var(--bg-subtle);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  min-height: 26px;
 }
-.goal-acts button:hover { border-color: var(--lime); color: var(--lime); }
-.goal-acts button.ok { border-color: var(--lime); color: var(--lime); }
-.goal-acts button.ok:hover { background: var(--lime); color: var(--bg); }
-.goal-acts button.err:hover { border-color: var(--red); color: var(--red); }
+.goal-acts button.primary { background: var(--accent-soft); color: var(--accent); }
+.goal-acts button.primary:hover { background: #e0ebff; }
+.goal-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
+.goal-acts button:hover:not(.primary):not(.danger) { background: var(--bg-hover); color: var(--ink); }
 
-/* ── TASK ──────────────────────────────────────────────── */
+/* ── TASK ───────────────────────────────────────────────── */
 .task {
   display: grid;
-  grid-template-columns: 13px 1fr auto;
-  gap: 10px;
-  padding: 7px 12px;
-  border-bottom: 1px dotted var(--dotted);
+  grid-template-columns: 18px 1fr auto;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 0.5px solid var(--border-light);
   align-items: center;
-  font-size: 11px;
 }
-.task.dim { background: var(--bg-soft); }
 .task-cb {
-  width: 13px; height: 13px;
-  border: 1px solid var(--ink-mute);
-  display: inline-block;
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--ink-4);
+  border-radius: 5px;
   position: relative;
-  flex-shrink: 0;
   cursor: pointer;
+  flex-shrink: 0;
+  background: var(--bg);
+  transition: all 0.12s;
 }
-.task-cb:hover { border-color: var(--lime); }
-.task-cb.done { background: var(--lime); border-color: var(--lime); }
+.task-cb:hover { border-color: var(--accent); }
+.task-cb.done { background: var(--accent); border-color: var(--accent); }
 .task-cb.done::after {
-  content: '✓';
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: var(--bg); line-height: 1;
-  font-weight: 700;
+  content: '';
+  position: absolute;
+  left: 5px; top: 2.5px;
+  width: 5px; height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 .task-info { min-width: 0; }
-.task-n { color: var(--ink-strong); }
-.task.done .task-n { color: var(--ink-dim); text-decoration: line-through; }
+.task-n {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.task.done .task-n { color: var(--ink-3); text-decoration: line-through; }
 .task-meta {
-  font-size: 8.5px;
-  color: var(--ink-faint);
+  font-size: 13px;
+  color: var(--ink-3);
   margin-top: 2px;
-  letter-spacing: 0.6px;
-  text-transform: lowercase;
   display: flex;
-  gap: 4px;
+  gap: 5px;
   flex-wrap: wrap;
+  align-items: center;
 }
-.task-meta .pri-h { color: var(--red); }
-.task-meta .pri-m { color: var(--yel); }
-.task-meta .pri-l { color: var(--ink-mute); }
-.task-meta .overdue { color: var(--red); }
-.task-meta .today { color: var(--yel); }
-.task-acts { display: flex; gap: 3px; flex-shrink: 0; }
+.task-meta .pri-h { color: var(--negative); font-weight: 500; }
+.task-meta .pri-m { color: var(--warning); font-weight: 500; }
+.task-meta .overdue { color: var(--negative); font-weight: 500; }
+.task-meta .today { color: var(--warning); font-weight: 500; }
+.task-meta .dot { color: var(--ink-4); }
+.task-acts { display: flex; gap: 4px; flex-shrink: 0; }
 .task-acts button {
-  background: none;
-  border: 1px solid var(--border-strong);
-  color: var(--ink-mute);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8.5px;
-  padding: 1px 5px;
-  letter-spacing: 0.5px;
-  text-transform: lowercase;
-  min-height: 18px;
+  background: var(--bg-subtle);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 5px;
+  min-height: 24px;
 }
-.task-acts button:hover { border-color: var(--lime); color: var(--lime); }
-.task-acts button.err:hover { border-color: var(--red); color: var(--red); }
+.task-acts button:hover { background: var(--bg-hover); color: var(--ink); }
+.task-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
 /* ── NOTE / EMPTY ───────────────────────────────────────── */
 .note {
-  font-size: 10px;
-  padding: 8px 12px;
-  color: var(--ink-mute);
-  background: var(--bg-soft);
-  border-bottom: 1px solid var(--border);
-  letter-spacing: 0.3px;
+  font-size: 13.5px;
+  padding: 10px 16px;
+  color: var(--ink-3);
+  background: var(--bg-subtle);
+  border-bottom: 0.5px solid var(--border-light);
 }
-.note::before { content: '// '; color: var(--ink-faint); }
-.note .lnk {
-  color: var(--lime); cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.note .lnk:hover { text-decoration: none; }
+.note .lnk { color: var(--accent); cursor: pointer; font-weight: 500; }
+.note .lnk:hover { text-decoration: underline; }
 .empty {
-  padding: 18px 12px;
+  padding: 28px 16px;
   text-align: center;
-  font-size: 10.5px;
-  color: var(--ink-faint);
-  letter-spacing: 0.3px;
-  background: var(--bg-soft);
-  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  color: var(--ink-3);
+  border-bottom: 0.5px solid var(--border-light);
 }
-.empty::before { content: '// '; color: var(--ink-dim); }
-.empty .lnk {
-  color: var(--lime); cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
+.empty .lnk { color: var(--accent); cursor: pointer; font-weight: 500; }
+.empty .lnk:hover { text-decoration: underline; }
 
 .tax-pct-input {
-  width: 36px;
-  background: var(--bg);
-  border: 1px solid var(--border-strong);
-  color: var(--lime);
-  padding: 1px 4px;
-  font: inherit; font-size: 10px; font-weight: 600;
+  width: 44px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--ink);
+  padding: 2px 6px;
+  font: inherit; font-size: 13px; font-weight: 600;
   text-align: center;
   outline: none;
+  font-variant-numeric: tabular-nums;
 }
-.tax-pct-input:focus { border-color: var(--lime); }
+.tax-pct-input:focus { border-color: var(--accent); }
 
 /* ── BOTTOM NAV ─────────────────────────────────────────── */
 nav.mnav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
   max-width: 720px; margin: 0 auto;
   display: grid; grid-template-columns: repeat(5, 1fr);
-  background: var(--bg-soft);
-  border-top: 1px solid var(--border);
+  background: var(--bg);
+  border-top: 0.5px solid var(--border);
   padding-bottom: env(safe-area-inset-bottom);
 }
 nav.mnav button {
   background: none;
-  border: none;
-  border-right: 1px solid var(--border);
-  color: var(--ink-dim);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
-  padding: 12px 4px;
-  letter-spacing: 1px;
-  text-transform: lowercase;
-  min-height: 40px;
-  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-3);
+  font-size: 11.5px;
   font-weight: 500;
+  padding: 9px 4px 11px;
+  min-height: 56px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px;
+  letter-spacing: 0.1px;
+  position: relative;
 }
-nav.mnav button:last-child { border-right: none; }
-nav.mnav button.active { color: var(--lime); font-weight: 700; }
-nav.mnav button.active::before { content: '['; margin-right: 1px; }
-nav.mnav button.active::after { content: ']'; margin-left: 1px; }
-nav.mnav button:hover:not(.active) { color: var(--ink-mute); }
+nav.mnav button .nav-ic {
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  color: currentColor;
+}
+nav.mnav button .nav-ic svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+nav.mnav button.active { color: var(--accent); font-weight: 600; }
+nav.mnav button.active .nav-ic svg { stroke-width: 2; }
 nav.mnav button .badge {
-  display: inline-block;
-  color: var(--red);
-  font-size: 8.5px;
-  margin-left: 3px;
+  position: absolute;
+  top: 6px;
+  left: calc(50% + 5px);
+  background: var(--negative);
+  color: white;
+  font-size: 10px;
   font-weight: 700;
+  padding: 0 5px;
+  min-width: 16px; height: 16px;
+  border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  letter-spacing: 0;
 }
-nav.mnav button .badge::before { content: '('; color: var(--ink-faint); }
-nav.mnav button .badge::after { content: ')'; color: var(--ink-faint); }
-nav.mnav button.active .badge { color: var(--bg); background: var(--lime); padding: 0 3px; }
-nav.mnav button.active .badge::before, nav.mnav button.active .badge::after { content: none; }
 
 /* ── MODAL ──────────────────────────────────────────────── */
-.modal {
-  display: none; position: fixed; inset: 0; z-index: 100;
-  align-items: center; justify-content: center;
-  padding: 14px;
-}
+.modal { display: none; position: fixed; inset: 0; z-index: 100; align-items: center; justify-content: center; padding: 14px; }
 .modal.open { display: flex; }
-.modal-bd {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.75);
-}
+.modal-bd { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); }
 .modal-c {
   position: relative;
   background: var(--bg);
-  border: 1px solid var(--border-strong);
+  border-radius: 14px;
   width: 100%; max-width: 460px;
   max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
 }
 .modal-t {
-  padding: 11px 14px;
-  font-size: 10px;
-  color: var(--lime);
-  letter-spacing: 1.6px;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg-soft);
-  font-weight: 700;
+  padding: 16px 18px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 0.5px solid var(--border);
+  letter-spacing: -0.2px;
 }
-.modal-t::before { content: '> '; color: var(--ink-faint); }
-.modal form { padding: 14px; }
-.modal #preset-list { padding: 12px 14px; }
-.modal-c > div[style*="font-size"] { padding: 12px 14px 0 !important; color: var(--ink-mute); font-size: 10.5px !important; }
+.modal form { padding: 16px 18px; }
+.modal #preset-list { padding: 14px 18px; }
+.modal-c > div[style*="font-size"] { padding: 14px 18px 0 !important; color: var(--ink-3); font-size: 13.5px !important; }
 
-.frow { display: flex; gap: 8px; margin-bottom: 11px; flex-wrap: wrap; }
+.frow { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
 .fcol { flex: 1; min-width: 130px; }
 .flbl {
   display: block;
-  color: var(--ink-faint);
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
   margin-bottom: 5px;
 }
 
 .input, .select, textarea {
   width: 100%;
-  background: var(--bg-soft);
-  border: 1px solid var(--border-strong);
-  color: var(--ink-strong);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 15px;
+  padding: 9px 12px;
   outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
 }
 .input:focus, .select:focus, textarea:focus {
-  border-color: var(--lime);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
-.input::placeholder { color: var(--ink-dim); }
+.input::placeholder { color: var(--ink-4); }
 
 .hours-input {
-  display: flex; align-items: center; gap: 6px;
-  background: var(--bg-soft);
-  border: 1px solid var(--border-strong);
-  color: var(--ink-strong);
-  padding: 0 10px; height: 36px;
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 0 11px; height: 38px;
 }
-.hours-input:focus-within { border-color: var(--lime); }
+.hours-input:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
 .hours-input input {
   background: transparent;
   border: none;
-  color: var(--ink-strong);
-  font: inherit; font-size: 12px;
+  color: var(--ink);
+  font: inherit; font-size: 15px;
   padding: 0; outline: none;
-  width: 28px; text-align: center;
+  width: 30px; text-align: center;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 500;
   -moz-appearance: textfield;
 }
 .hours-input input::-webkit-outer-spin-button,
 .hours-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .hours-input span {
-  color: var(--ink-mute);
-  font-size: 10px;
-  text-transform: lowercase;
+  color: var(--ink-3);
+  font-size: 13px;
 }
 
 .tip-box {
-  background: var(--bg-soft);
-  padding: 10px 12px;
-  border: 1px solid var(--border-strong);
-  margin-bottom: 11px;
+  background: var(--bg-subtle);
+  padding: 11px 13px;
+  border-radius: 9px;
+  margin-bottom: 12px;
 }
 .tip-toggle {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px;
-  color: var(--ink-strong);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
   cursor: pointer;
 }
 .tip-toggle input[type="checkbox"] {
-  width: 13px; height: 13px;
-  accent-color: var(--lime);
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 .tip-input-grp {
-  display: none; gap: 6px; align-items: center;
-  margin-top: 8px;
+  display: none; gap: 7px; align-items: center;
+  margin-top: 9px;
   opacity: 0; transition: opacity 0.2s;
 }
-.tip-input-grp input { width: 60px; padding: 5px 7px; font-size: 11px; }
-.tip-input-grp select { width: 64px; padding: 5px 7px; font-size: 11px; }
+.tip-input-grp input { width: 68px; padding: 6px 9px; font-size: 14px; }
+.tip-input-grp select { width: 72px; padding: 6px 9px; font-size: 14px; }
 
 .factions {
-  display: flex; justify-content: flex-end; gap: 6px;
-  margin-top: 12px; padding-top: 11px;
-  border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  margin-top: 14px; padding-top: 12px;
+  border-top: 0.5px solid var(--border);
 }
 .factions button {
-  padding: 7px 13px;
-  border: 1px solid var(--border-strong);
-  background: var(--bg);
-  color: var(--ink-mute);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.4px;
-  text-transform: lowercase;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--bg-subtle);
+  color: var(--ink);
+  font-size: 14px;
   font-weight: 500;
 }
-.factions button:hover { border-color: var(--lime); color: var(--lime); }
+.factions button:hover { background: var(--bg-hover); }
 .factions button.primary {
-  background: var(--lime);
-  color: var(--bg);
-  border-color: var(--lime);
-  font-weight: 700;
+  background: var(--accent);
+  color: white;
 }
-.factions button.primary:hover {
-  background: transparent;
-  color: var(--lime);
-}
+.factions button.primary:hover { background: #1d4fd6; }
 .factions button:disabled { opacity: 0.4; cursor: not-allowed; }
-.factions button:disabled:hover { background: var(--bg); border-color: var(--border-strong); color: var(--ink-mute); }
+.factions button:disabled:hover { background: var(--bg-subtle); color: var(--ink); }
 
 .preset-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 11px;
-  border: 1px solid var(--border-strong);
-  margin-bottom: 5px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  margin-bottom: 6px;
   cursor: pointer;
-  font-size: 11px;
-  background: var(--bg-soft);
+  font-size: 14px;
+  background: var(--bg);
+  transition: all 0.1s;
 }
-.preset-row:hover { border-color: var(--lime); }
+.preset-row:hover { border-color: var(--ink-4); }
 .preset-row .box {
-  width: 13px; height: 13px;
-  border: 1px solid var(--ink-mute);
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--ink-4);
+  border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.preset-row.sel { border-color: var(--lime); }
-.preset-row.sel .box { background: var(--lime); border-color: var(--lime); }
-.preset-row.sel .box::after { content: '✓'; color: var(--bg); font-size: 9px; font-weight: 700; }
+.preset-row.sel { border-color: var(--accent); background: var(--accent-soft); }
+.preset-row.sel .box { background: var(--accent); border-color: var(--accent); }
+.preset-row.sel .box::after {
+  content: '';
+  width: 4px; height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  margin-bottom: 2px;
+}
 .preset-row.exists { opacity: 0.35; pointer-events: none; }
-.preset-row .nm { flex: 1; color: var(--ink-strong); }
+.preset-row .nm { flex: 1; color: var(--ink); font-weight: 500; }
 .preset-row .pct {
-  font-size: 9px;
+  font-size: 12.5px;
   text-align: right;
-  color: var(--ink-mute);
+  color: var(--ink-3);
 }
 
 main > * { animation: fadeIn 0.12s ease-out; }
@@ -742,35 +743,31 @@ main > * { animation: fadeIn 0.12s ease-out; }
    MOBILE
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  html, body { font-size: 11px; }
-  .mhdr { padding: 8px 11px; padding-top: calc(8px + env(safe-area-inset-top)); }
-  .mtitle { font-size: 11.5px; }
-  .blk { padding: 9px 11px; }
-  .blk-v { font-size: 24px; }
-  .blk-v.med { font-size: 20px; }
-  .sh { padding: 4px 11px; font-size: 8px; letter-spacing: 1.4px; }
-  .row { padding: 4px 11px; }
-  .li { padding: 7px 11px; }
-  .task { padding: 7px 11px; }
-  .goal { padding: 9px 11px; }
-  .meter { grid-template-columns: 56px 1fr 44px; gap: 6px; padding: 4px 11px; font-size: 10px; }
-  .meter-b { font-size: 9.5px; }
-  .ascii-chart { font-size: 9.5px; padding: 8px 11px 11px; line-height: 1.4; }
-  .note, .empty { padding: 14px 11px; }
+  html, body { font-size: 15px; }
+  .mhdr { padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top)); }
+  .mtitle { font-size: 17px; }
+  .blk { padding: 16px 14px; }
+  .blk-v { font-size: 30px; }
+  .blk-v.med { font-size: 24px; }
+  .sh { padding: 16px 14px 7px; }
+  .row { padding: 9px 14px; }
+  .li { padding: 11px 14px; }
+  .task { padding: 11px 14px; }
+  .goal { padding: 12px 14px; }
+  .meter { grid-template-columns: 80px 1fr 50px; gap: 10px; padding: 8px 14px; }
+  .chart { padding: 12px 14px 14px; }
+  .note, .empty { padding: 14px; }
   .modal { padding: 10px; }
   .modal-c { max-height: 92vh; }
-  .input, .select, textarea { font-size: 14px; padding: 9px 11px; }
+  .input, .select, textarea { font-size: 15px; padding: 10px 12px; }
   .hours-input { height: 40px; }
-  .hours-input input { font-size: 14px; }
+  .hours-input input { font-size: 15px; }
 }
 
 @media (max-width: 380px) {
-  .mtitle { font-size: 11px; letter-spacing: 1px; }
-  .mmeta { font-size: 8px; }
-  .blk-v { font-size: 22px; }
-  .meter { grid-template-columns: 48px 1fr 40px; gap: 5px; font-size: 9.5px; }
-  .meter-b { font-size: 9px; letter-spacing: -1.4px; }
-  nav.mnav button { font-size: 9px; letter-spacing: 0.6px; padding: 12px 1px; }
+  .meter { grid-template-columns: 68px 1fr 44px; gap: 8px; }
+  nav.mnav button { font-size: 10.5px; }
+  .blk-v { font-size: 28px; }
 }
 </style>
 </head>
@@ -782,26 +779,26 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <input type="file" id="file-import" style="display:none" accept=".json">
 
 <header class="mhdr">
-  <h1 class="mtitle" id="mtitle">ledgeon</h1>
+  <h1 class="mtitle" id="mtitle">Ledgeon</h1>
   <div class="mhdr-r">
-    <span class="mmeta" id="mmeta">oct.25</span>
-    <button class="mhdr-menu-btn" data-action="toggle-menu" aria-label="Menu">[≡]</button>
+    <span class="mmeta" id="mmeta">October</span>
+    <button class="mhdr-menu-btn" data-action="toggle-menu" aria-label="Menu">⋯</button>
   </div>
 </header>
 <div class="mhdr-menu" id="header-menu" hidden>
-  <button data-action="import">import</button>
-  <button data-action="export">export</button>
-  <button class="danger" data-action="reset">reset</button>
+  <button data-action="import">Import data</button>
+  <button data-action="export">Export data</button>
+  <button class="danger" data-action="reset">Reset everything</button>
 </div>
 
 <main id="content"></main>
 
 <nav class="mnav" id="tabs">
-  <button data-tab="overview">over</button>
-  <button data-tab="income">inc</button>
-  <button data-tab="expenses">exp<span class="badge badge-e" style="display:none">0</span></button>
-  <button data-tab="budget">bud</button>
-  <button data-tab="tasks">tsk<span class="badge badge-t" style="display:none">0</span></button>
+  <button data-tab="overview">Overview</button>
+  <button data-tab="income">Income</button>
+  <button data-tab="expenses">Expenses<span class="badge badge-e" style="display:none">0</span></button>
+  <button data-tab="budget">Budget</button>
+  <button data-tab="tasks">Tasks<span class="badge badge-t" style="display:none">0</span></button>
 </nav>
 
 <!-- modals -->
@@ -1378,78 +1375,62 @@ function getRecentTransactions() {
 }
 
 // ──── UI helpers ─────────────────────────────────────────
-function sh(name, opts = {}) {
-  const meta = opts.meta ? `<span class="x">${opts.meta}</span>` : '';
+function sh(title, opts = {}) {
+  const meta = opts.meta ? `<span class="sh-meta">${opts.meta}</span>` : '';
   const add = opts.add ? `<button class="add" data-action="${opts.add.action}"${opts.add.type ? ` data-type="${opts.add.type}"` : ''}>${opts.add.label}</button>` : '';
   const monthN = opts.monthNav || '';
-  return `<div class="sh">${name}${meta}${add}${monthN}</div>`;
+  return `<div class="sh"><h3>${title}</h3>${meta}${add}${monthN}</div>`;
 }
 function row(label, value, valCls = '', opts = {}) {
-  const cls = opts.alt ? 'row b' : 'row';
+  const cls = opts.strong ? 'row strong' : 'row';
   return `<div class="${cls}"><span class="l">${label}</span><span class="v ${valCls}">${value}</span></div>`;
 }
 function blk(label, value, sub, opts = {}) {
   const valCls = (opts.color || '') + (opts.size === 'med' ? ' med' : '');
   return `<div class="blk"><div class="blk-l">${label}</div><div class="blk-v ${valCls}">${value}</div>${sub ? `<div class="blk-s">${sub}</div>` : ''}</div>`;
 }
+function pill(text, type) {
+  return `<span class="pill ${type || ''}">${text}</span>`;
+}
 function monthNav(year, month) {
   const isCurr = year === new Date().getFullYear() && month === new Date().getMonth();
-  const lbl = new Date(year, month).toLocaleString('en-US',{month:'short'}).toLowerCase() + '.' + String(year).slice(-2);
+  const lbl = new Date(year, month).toLocaleString('en-US',{month:'short', year:'2-digit'});
   return `<span class="month-nav">` +
     `<button class="nav-arrow" data-action="prev-month">‹</button>` +
     `<span class="label">${lbl}</span>` +
     `<button class="nav-arrow" data-action="next-month">›</button>` +
-    (!isCurr ? `<button class="today-btn" data-action="curr-month">[t]</button>` : '') +
+    (!isCurr ? `<button class="today-btn" data-action="curr-month">Today</button>` : '') +
   `</span>`;
-}
-
-// terminal-style helpers
-function termName(s) {
-  return String(s || '').toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_.]/g, '').slice(0, 20);
-}
-function termMoney(amt, opts = {}) {
-  // formats like "$1,200" or "+$1,200" or "-$1,200"
-  const fm = fmtMoney(amt, opts);
-  return fm;
 }
 function compactDate(iso) {
   if (!iso) return '';
   const t = todayStart();
   const d = new Date(iso + 'T00:00:00');
   const diff = Math.round((d - t) / 86400000);
-  if (diff === 0) return 'today';
-  if (diff === 1) return 'tmrw';
-  if (diff === -1) return 'yest';
-  if (diff > 0 && diff <= 30) return diff + 'd';
-  if (diff < 0 && diff >= -30) return Math.abs(diff) + 'd_ago';
-  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }).toLowerCase().replace(' ', '_');
-}
-function asciiBar(value, maxVal, width = 16) {
-  if (maxVal <= 0 || value <= 0) return '░'.repeat(width);
-  const filled = Math.max(1, Math.round((value / maxVal) * width));
-  const empty = width - filled;
-  return '█'.repeat(filled) + '░'.repeat(Math.max(0, empty));
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff === -1) return 'Yesterday';
+  if (diff > 0 && diff <= 14) return `In ${diff} days`;
+  if (diff < 0 && diff >= -14) return `${Math.abs(diff)} days ago`;
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// build an editable list item (.li) row
 function liItem(fields, opts = {}) {
-  const prefix = fields.prefix
-    ? `<span class="pre ${fields.prefix.cls || ''}">${fields.prefix.text}</span>`
-    : '';
   const metaParts = (fields.metaParts || []).filter(Boolean);
   const metaInner = metaParts.map((p, i) => {
     const isObj = typeof p === 'object';
+    if (isObj && p.pill) return p.html || pill(p.text, p.pill);
     const text = isObj ? p.text : p;
-    const cls = isObj ? p.cls : '';
-    return (i > 0 ? '<span class="dot">·</span>' : '') + `<span class="${cls || ''}">${text}</span>`;
+    const cls = isObj ? (p.cls || '') : '';
+    return (i > 0 ? '<span class="dot">·</span>' : '') + `<span class="${cls}">${text}</span>`;
   }).join('');
   const acts = (fields.acts || []).map(a =>
     `<button class="${a.cls || ''}" data-action="${a.action}"${a.id ? ` data-id="${a.id}"` : ''}${a.type ? ` data-type="${a.type}"` : ''}>${a.label}</button>`
   ).join('');
-  const dimCls = opts.dim ? ' dim' : '';
+  const dimCls = opts.dim ? ' muted' : '';
   return `<div class="li${dimCls}">
     <div class="li-info">
-      <div class="li-n">${prefix}${fields.name}</div>
+      <div class="li-n">${fields.name}${fields.pill ? ' ' + fields.pill : ''}</div>
       ${metaInner ? `<div class="li-meta">${metaInner}</div>` : ''}
     </div>
     <div class="li-r">
@@ -1468,7 +1449,6 @@ function renderOverview() {
   const pettySpent = state.petty.filter(p => p.date && p.date.startsWith(monthKey))
     .reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
   const net = cur.income - cur.bills - pettySpent;
-  const savingsPct = cur.income > 0 ? Math.max(0, (cur.income - cur.bills - pettySpent) / cur.income * 100) : 0;
 
   const avgIn = stats.avgMonthly;
   const avgOut = stats.avgMonthlyBills > 0 ? stats.avgMonthlyBills : (state.bills.length > 0 ? cur.bills : 0);
@@ -1482,68 +1462,76 @@ function renderOverview() {
     return ad.localeCompare(bd);
   });
 
-  // SUMMARY section
-  const summaryHTML =
-    row('income', '+ ' + fmtMoney(cur.income, {round:true}), 'g') +
-    row('expenses', '− ' + fmtMoney(cur.bills, {round:true}), 'r') +
-    (pettySpent > 0 ? row('petty', '− ' + fmtMoney(pettySpent, {round:true}), 'r') : '') +
-    row('net', (net >= 0 ? '+ ' : '− ') + fmtMoney(Math.abs(net), {round:true}), net >= 0 ? 'g' : 'r', { alt: true });
+  // hero: net for this month
+  const heroNet = blk(
+    'Net this month',
+    (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}),
+    `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out`,
+    { color: net >= 0 ? 'positive' : 'negative' }
+  );
 
-  // RUNRATE section
-  let runrateHTML = '';
-  if (avgIn > 0 || avgOut > 0) {
-    runrateHTML = sh('runrate', '12mo_avg') +
-      row('avg.inc', fmtMoney(avgIn, {round:true})) +
-      row('avg.exp', fmtMoney(avgOut, {round:true})) +
-      row('surplus', (avgSurplus >= 0 ? '+ ' : '− ') + fmtMoney(Math.abs(avgSurplus), {round:true}), avgSurplus >= 0 ? 'g' : 'r') +
-      row('proj.ann', fmtMoney(stats.projAnnual, {round:true}), 'y', { alt: true });
+  // hero: monthly average
+  let avgBlock = '';
+  if (avgIn > 0) {
+    avgBlock = blk(
+      'Monthly average',
+      (avgSurplus >= 0 ? '+' : '−') + fmtMoney(Math.abs(avgSurplus), {round:true}),
+      `${fmtMoney(avgIn, {round:true})} in · ${fmtMoney(avgOut, {round:true})} out`,
+      { size: 'med', color: avgSurplus >= 0 ? 'positive' : 'negative' }
+    );
   }
 
-  // QUEUE section
+  // upcoming bills section
   let queueHTML = '';
   if (upcoming.length > 0) {
     const items = upcoming.slice(0, 5);
-    queueHTML = sh('queue', upcoming.length + 'bill' + (upcoming.length !== 1 ? 's' : '')) +
+    queueHTML = sh('Upcoming bills', { meta: `${upcoming.length} due in 14 days` }) +
       items.map(b => {
         const overdue = isOverdue(b.dueDate);
         const today = isTodayDate(b.dueDate);
-        const compact = compactDate(b.dueDate);
-        const prefix = overdue ? '[!] ' : today ? '[T] ' : '';
-        const prefixCls = overdue ? 'r' : today ? 'y' : '';
-        const valCls = overdue ? 'r' : today ? 'y' : '';
-        const name = termName(b.name);
-        const label = `<span class="pre ${prefixCls}">${prefix}</span>${name}.${compact}`;
-        return row(label, fmtMoney(b.amount, {round:true}), valCls);
+        const cat = (CATEGORIES[b.category] || CATEGORIES.other);
+        const dateLabel = compactDate(b.dueDate);
+        const datePill = overdue ? pill(dateLabel, 'neg') : today ? pill(dateLabel, 'warn') : `<span>${dateLabel}</span>`;
+        return `<div class="row">
+          <span class="l">${escHTML(b.name)} <span style="color: var(--ink-3); font-weight: 400; font-size: 13px;">· ${cat.label}</span></span>
+          <span class="v ${overdue ? 'negative' : ''}">${fmtMoney(b.amount, {round:true})}</span>
+        </div>`;
       }).join('') +
-      (upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view_all</span></div>` : '');
+      (upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : '');
   }
 
-  // TASKS section
+  // upcoming tasks
   let tasksHTML = '';
   if (openTasks.length > 0) {
     const items = openTasks.slice(0, 4);
-    tasksHTML = sh('tasks', openTasks.length + 'open') +
+    tasksHTML = sh('Open tasks', { meta: `${openTasks.length} total` }) +
       items.map(t => {
         const overdue = t.dueDate && isOverdue(t.dueDate);
         const today = t.dueDate && isTodayDate(t.dueDate);
         const pri = t.priority || '';
-        const prefix = overdue ? '[!] ' : today ? '[T] ' : pri === 'high' ? '[H] ' : '';
-        const prefixCls = overdue ? 'r' : today ? 'y' : pri === 'high' ? 'r' : '';
-        const valTxt = overdue ? 'OVERDUE' : today ? 'TODAY' : t.dueDate ? compactDate(t.dueDate).toUpperCase() : (pri || '-').toUpperCase();
-        const valCls = overdue ? 'r' : today ? 'y' : pri === 'high' ? 'r' : pri === 'med' ? 'y' : '';
-        const name = termName(t.text);
-        const label = `<span class="pre ${prefixCls}">${prefix}</span>${name}`;
-        return row(label, valTxt, valCls);
+        const meta = [];
+        if (overdue) meta.push(pill('Overdue', 'neg'));
+        else if (today) meta.push(pill('Today', 'warn'));
+        else if (t.dueDate) meta.push(`<span>${compactDate(t.dueDate)}</span>`);
+        if (pri === 'high') meta.push(pill('High', 'neg'));
+        else if (pri === 'med') meta.push(pill('Medium', 'warn'));
+        const metaHTML = meta.length ? `<div class="task-meta">${meta.join(' ')}</div>` : '';
+        return `<div class="row">
+          <span class="l">${escHTML(t.text)}</span>
+          <span class="v">${metaHTML || '—'}</span>
+        </div>`;
       }).join('') +
-      (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view_all</span></div>` : '');
+      (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : '');
   }
 
-  const monthLabel = new Date(year, month).toLocaleString('en-US',{month:'long'}).toLowerCase();
-
   return `
-    ${sh('summary', monthLabel, { monthNav: monthNav(year, month) })}
-    ${summaryHTML}
-    ${runrateHTML}
+    ${heroNet}
+    ${avgBlock}
+    ${sh('Period', { monthNav: monthNav(year, month) })}
+    ${row('Income', '+' + fmtMoney(cur.income, {round:true}), 'positive')}
+    ${row('Expenses', '−' + fmtMoney(cur.bills, {round:true}), 'negative')}
+    ${pettySpent > 0 ? row('Petty cash', '−' + fmtMoney(pettySpent, {round:true}), 'negative') : ''}
+    ${row('Net', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), net >= 0 ? 'positive' : 'negative', { strong: true })}
     ${queueHTML}
     ${tasksHTML}
   `;
@@ -1557,40 +1545,51 @@ function renderIncome() {
   const monthsWithData = yearHist.filter(h => h.income > 0);
   const maxVal = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(h => h.income)) : 0;
 
-  // hero blocks
   const ytdBlock = blk(
-    'ytd_income',
+    'Year to date',
     fmtMoney(stats.ytdIncome, {round:true}),
     stats.ytdHours > 0
       ? `${fmtHM(stats.ytdHours)} · $${stats.ytdHourly.toFixed(2)}/hr${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}`
-      : 'no hours logged'
+      : 'No hours logged'
   );
   const avgBlock = blk(
-    'avg_monthly',
+    'Monthly average',
     fmtMoney(stats.avgMonthly, {round:true}),
-    stats.avgMonthly > 0 ? `proj.ann · ${fmtMoney(stats.projAnnual, {round:true})}` : null,
+    null,
     { size: 'med' }
   );
+  const projBlock = blk(
+    'Projected annual',
+    fmtMoney(stats.projAnnual, {round:true}),
+    'Based on year to date',
+    { size: 'med', color: 'warning' }
+  );
 
-  // ASCII chart
+  // chart
   let chartHTML;
   if (monthsWithData.length === 0) {
-    chartHTML = `<div class="ascii-empty">// no income recorded this year yet</div>`;
+    chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
   } else {
-    const lines = monthsWithData.map(h => {
-      const lbl = h.label.toLowerCase().padEnd(3, ' ');
-      const bar = asciiBar(h.income, maxVal, 14);
-      const val = '$' + fmtMoney(h.income, {round:true}).replace('$', '').padStart(6, ' ');
-      const lineClass = h.current ? 'cur' : '';
-      return `<span class="${lineClass}">${lbl} ${bar} ${val}</span>`;
-    }).join('\n');
-    chartHTML = `<div class="ascii-chart">${lines}</div>`;
+    const bars = yearHist.map(h => {
+      if (h.income <= 0) return `<div class="chart-bar empty"></div>`;
+      const heightPct = maxVal > 0 ? Math.max(5, (h.income / maxVal) * 100) : 0;
+      const cls = h.current ? ' current' : '';
+      return `<div class="chart-bar${cls}" style="height:${heightPct}%"></div>`;
+    }).join('');
+    const labels = yearHist.map(h => {
+      const cls = h.current ? ' class="current"' : '';
+      return `<div${cls}>${h.label}</div>`;
+    }).join('');
+    chartHTML = `<div class="chart">
+      <div class="chart-bars">${bars}</div>
+      <div class="chart-labels">${labels}</div>
+    </div>`;
   }
 
   // sources list
   let sourcesHTML;
   if (sources.length === 0) {
-    sourcesHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="income">add_income</span></div>`;
+    sourcesHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="income">Add your first income source</span></div>`;
   } else {
     sourcesHTML = sources.map(i => {
       const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -1598,19 +1597,18 @@ function renderIncome() {
       const hrs = Number(i.hours) || 0;
       const freq = i.frequency || 'once';
       const monthly = freq === 'once' ? amt : monthlyEq(amt, freq);
-      const tipsBadge = (i.tipsEnabled && amt > base) ? { text: '+tips', cls: 'y' } : null;
-      const metaParts = [freq.slice(0, 4)];
-      if (hrs > 0) metaParts.push(fmtHM(hrs).toLowerCase());
-      if (freq !== 'once') metaParts.push(fmtMoney(monthly, {round:true}) + '/mo');
-      if (tipsBadge) metaParts.push(tipsBadge);
+      const metaParts = [freq.charAt(0).toUpperCase() + freq.slice(1)];
+      if (hrs > 0) metaParts.push(fmtHM(hrs));
+      if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
+      if (i.tipsEnabled && amt > base) metaParts.push({ text: `+tips`, cls: 'pos' });
       return liItem({
-        name: termName(i.source),
+        name: escHTML(i.source),
         metaParts,
         amt: fmtMoney(amt, {round:true}),
-        amtCls: 'g',
+        amtCls: 'positive',
         acts: [
-          { action: 'edit', type: 'income', id: i.id, label: 'edit' },
-          { cls: 'err', action: 'rm', type: 'income', id: i.id, label: 'rm' },
+          { action: 'edit', type: 'income', id: i.id, label: 'Edit' },
+          { cls: 'danger', action: 'rm', type: 'income', id: i.id, label: 'Delete' },
         ],
       });
     }).join('');
@@ -1619,9 +1617,10 @@ function renderIncome() {
   return `
     ${ytdBlock}
     ${avgBlock}
-    ${sh('trend', String(new Date().getFullYear()))}
+    ${projBlock}
+    ${sh('Income trend', { meta: `${new Date().getFullYear()}` })}
     ${chartHTML}
-    ${sh('sources', sources.length + (sources.length === 1 ? '_source' : '_sources'), { add: { action: 'open-modal', type: 'income', label: '+add' } })}
+    ${sh('Sources', { meta: sources.length + (sources.length === 1 ? ' source' : ' sources'), add: { action: 'open-modal', type: 'income', label: '+ Add' } })}
     ${sourcesHTML}
   `;
 }
@@ -1651,31 +1650,30 @@ function renderExpenses() {
   const totalAnnual = recurring.reduce((s, b) => s + b._annual, 0);
   const pctOfIncome = incTot > 0 ? (total / incTot) * 100 : 0;
 
-  // hero blocks
   const totalBlock = blk(
-    'monthly_total',
+    'This month',
     fmtMoney(total, {round:true}),
     incTot > 0
       ? `${pctOfIncome.toFixed(0)}% of income · ${paidCount}/${paidCount + unpaidCount} paid`
       : `${paidCount}/${paidCount + unpaidCount} paid`,
-    { color: 'r' }
+    { color: 'negative' }
   );
   const weekBlock = dueCount > 0
-    ? blk('due_this_week', fmtMoney(dueThisWeek, {round:true}), `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med', color: 'r' })
-    : blk('annual_total', fmtMoney(totalAnnual, {round:true}), 'projected recurring', { size: 'med', color: 'y' });
+    ? blk('Due this week', fmtMoney(dueThisWeek, {round:true}), `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med', color: 'warning' })
+    : blk('Annual total', fmtMoney(totalAnnual, {round:true}), 'Projected recurring', { size: 'med', color: 'warning' });
 
-  // category meters
+  // categories
   let catHTML = '';
   if (catData.length && total > 0) {
-    catHTML = sh('categories', '% of income') +
+    catHTML = sh('By category', { meta: '% of income' }) +
       catData.map(c => {
         const rawPct = incTot > 0 ? (c.total / incTot) * 100 : 0;
-        const barWidth = 22;
-        const bar = asciiBar(c.total, incTot || total, barWidth);
+        const widthPct = Math.min(100, rawPct);
         const pctTxt = incTot > 0 ? rawPct.toFixed(0) + '%' : '—';
+        const fillCls = rawPct > 30 ? 'neg' : rawPct > 15 ? 'warn' : '';
         return `<div class="meter">
-          <span class="meter-l">${(c.label || '').toLowerCase()}</span>
-          <span class="meter-b">${bar}</span>
+          <span class="meter-l">${c.label}</span>
+          <span class="meter-b"><span class="meter-f ${fillCls}" style="width:${widthPct}%"></span></span>
           <span class="meter-v">${pctTxt}</span>
         </div>`;
       }).join('');
@@ -1691,9 +1689,9 @@ function renderExpenses() {
   let billsHTML;
   if (state.bills.length === 0) {
     if (incTot > 0) {
-      billsHTML = `<div class="empty"><span class="lnk" data-action="open-presets">load_presets</span> · <span class="lnk" data-action="open-modal" data-type="expenses">add_manually</span></div>`;
+      billsHTML = `<div class="empty"><span class="lnk" data-action="open-presets">Load presets</span> or <span class="lnk" data-action="open-modal" data-type="expenses">add manually</span></div>`;
     } else {
-      billsHTML = `<div class="empty">add income first</div>`;
+      billsHTML = `<div class="empty">Add income first</div>`;
     }
   } else {
     billsHTML = billsSorted.map(b => {
@@ -1701,25 +1699,29 @@ function renderExpenses() {
       const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
       const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
       const cat = (CATEGORIES[b.category] || CATEGORIES.other);
-      const compact = b.dueDate ? compactDate(b.dueDate) : '';
-      const prefix = isPaid ? { text: '[✓] ', cls: 'g' }
-        : overdue ? { text: '[!] ', cls: 'r' }
-        : today ? { text: '[T] ', cls: 'y' }
-        : null;
-      const metaParts = [b.recurring || 'once', cat.label.toLowerCase()];
-      if (compact) metaParts.push({ text: compact, cls: overdue ? 'r' : today ? 'y' : '' });
+      const metaParts = [cat.label, b.recurring || 'once'];
+      if (b.dueDate) {
+        if (isPaid) metaParts.push({ text: 'Paid', cls: 'pos' });
+        else if (overdue) metaParts.push({ text: 'Overdue', cls: 'neg' });
+        else if (today) metaParts.push({ text: 'Today', cls: 'warn' });
+        else metaParts.push(compactDate(b.dueDate));
+      }
+      let pillHTML = '';
+      if (isPaid) pillHTML = pill('Paid', 'pos');
+      else if (overdue) pillHTML = pill('Overdue', 'neg');
+      else if (today) pillHTML = pill('Today', 'warn');
       return liItem({
-        name: termName(b.name),
-        prefix,
+        name: escHTML(b.name),
+        pill: pillHTML,
         metaParts,
         amt: fmtMoney(b.amount, {round:true}),
-        amtCls: isPaid ? 'dim' : overdue ? 'r' : '',
+        amtCls: isPaid ? 'muted' : overdue ? 'negative' : '',
         acts: [
           isPaid
-            ? { action: 'unpay-bill', id: b.id, label: 'undo' }
-            : { cls: 'ok', action: 'pay-bill', id: b.id, label: 'pay' },
-          { action: 'edit', type: 'expenses', id: b.id, label: 'edit' },
-          { cls: 'err', action: 'rm', type: 'expenses', id: b.id, label: 'rm' },
+            ? { action: 'unpay-bill', id: b.id, label: 'Undo' }
+            : { cls: 'primary', action: 'pay-bill', id: b.id, label: 'Mark paid' },
+          { action: 'edit', type: 'expenses', id: b.id, label: 'Edit' },
+          { cls: 'danger', action: 'rm', type: 'expenses', id: b.id, label: 'Delete' },
         ],
       }, { dim: isPaid });
     }).join('');
@@ -1729,7 +1731,7 @@ function renderExpenses() {
     ${totalBlock}
     ${weekBlock}
     ${catHTML}
-    ${sh('bills', state.bills.length + (state.bills.length === 1 ? '_bill' : '_bills'), { add: { action: 'open-modal', type: 'expenses', label: '+add' } })}
+    ${sh('Expenses', { meta: state.bills.length + (state.bills.length === 1 ? ' expense' : ' expenses'), add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}
     ${billsHTML}
   `;
 }
@@ -1741,7 +1743,7 @@ function renderBudget() {
   const stats = getIncomeStats();
   let inc = stats.avgMonthly;
   let fixed = cur.bills;
-  let basisLabel = inc > 0 ? 'monthly_avg' : null;
+  let basisLabel = inc > 0 ? 'Monthly average' : null;
   if (inc === 0) {
     inc = cur.income;
     if (inc === 0) {
@@ -1751,7 +1753,7 @@ function renderBudget() {
   }
 
   if (inc === 0) {
-    return `${blk('budget', 'no_data', `<span class="lnk" data-action="open-modal" data-type="income">add_income</span>`)}`;
+    return `${blk('Budget', 'No data', `<span class="lnk" data-action="open-modal" data-type="income">Add income</span> to get started`)}`;
   }
 
   const savingsInfo = getSavingsTarget();
@@ -1774,93 +1776,78 @@ function renderBudget() {
   const sevenDayCutoff = isoDate(new Date(todayStart().getTime() - 6 * 86400000));
   const txns = getRecentTransactions().filter(t => t.date && t.date >= sevenDayCutoff);
 
-  // hero blocks
   const availBlock = blk(
-    'available',
+    'Available',
     fmtMoney(monthlyAllowance, {round:true}),
     `${fmtMoney(weeklyAllowance, {round:true})}/wk · ${fmtMoney(dailyAllowance, {round:true})}/day`
   );
 
-  // allocation
+  const weekBlock = blk(
+    'This week',
+    fmtMoney(weekSpent, {round:true}),
+    `of ${fmtMoney(weeklyAllowance, {round:true})} allowance · ${weekPct.toFixed(0)}% used`,
+    { size: 'med', color: weekPct > 100 ? 'negative' : weekPct > 80 ? 'warning' : '' }
+  );
+
   const allocationHTML =
-    row('income.avg', '+ ' + fmtMoney(inc, {round:true}), 'g') +
-    row('− expenses', fmtMoney(fixed, {round:true}), 'r') +
-    (savings > 0 ? row('− savings', fmtMoney(savings, {round:true}), 'r') : '') +
-    row('= available', fmtMoney(monthlyAllowance, {round:true}), 'g', { alt: true });
+    row('Income', '+' + fmtMoney(inc, {round:true}), 'positive') +
+    row('Expenses', '−' + fmtMoney(fixed, {round:true}), 'negative') +
+    (savings > 0 ? row('Savings goals', '−' + fmtMoney(savings, {round:true}), 'negative') : '') +
+    row('Available', fmtMoney(monthlyAllowance, {round:true}), 'positive', { strong: true });
 
-  // week meter
-  const weekBar = asciiBar(weekSpent, weeklyAllowance || 1, 22);
-  const weekMeterHTML = `<div class="meter">
-    <span class="meter-l">used</span>
-    <span class="meter-b">${weekBar}</span>
-    <span class="meter-v">${weekPct.toFixed(0)}%</span>
-  </div>`;
-
-  // transactions
   let txnHTML = '';
   if (txns.length === 0) {
-    txnHTML = `<div class="empty">no activity in last 7 days · <span class="lnk" data-action="open-modal" data-type="petty">log_one</span></div>`;
+    txnHTML = `<div class="empty">No activity in the last 7 days · <span class="lnk" data-action="open-modal" data-type="petty">Log an expense</span></div>`;
   } else {
     txnHTML = txns.map(t => {
-      const cat = t.kind === 'income' ? { label: 'income' } : (CATEGORIES[t.category] || CATEGORIES.other);
+      const cat = t.kind === 'income' ? { label: 'Income' } : (CATEGORIES[t.category] || CATEGORIES.other);
       const isInc = t.sign === 'in';
       const sign = isInc ? '+' : '−';
       const dateLabel = t.date ? compactDate(t.date) : '—';
-      const prefix = t.kind === 'payment'
-        ? { text: '[$] ', cls: '' }
-        : t.kind === 'income'
-          ? { text: '[+] ', cls: 'g' }
-          : { text: '[~] ', cls: '' };
       return liItem({
-        name: termName(t.name),
-        prefix,
-        metaParts: [cat.label.toLowerCase(), dateLabel],
+        name: escHTML(t.name),
+        metaParts: [cat.label, dateLabel],
         amt: sign + fmtMoney(t.amount, {round:true}).replace('−', '').replace('+', ''),
-        amtCls: isInc ? 'g' : 'r',
+        amtCls: isInc ? 'positive' : 'negative',
         acts: [
-          ...(t.canEdit ? [{ action: 'edit', type: t.refType, id: t.refId, label: 'edit' }] : []),
-          { cls: 'err', action: 'rm', type: t.refType, id: t.refId, label: 'rm' },
+          ...(t.canEdit ? [{ action: 'edit', type: t.refType, id: t.refId, label: 'Edit' }] : []),
+          { cls: 'danger', action: 'rm', type: t.refType, id: t.refId, label: 'Delete' },
         ],
       });
     }).join('');
   }
 
-  // goals
   let goalsHTML = '';
   if (state.goals.length === 0) {
-    goalsHTML = `<div class="empty">no goals · <span class="lnk" data-action="open-modal" data-type="goals">add_one</span></div>`;
+    goalsHTML = `<div class="empty">No savings goals · <span class="lnk" data-action="open-modal" data-type="goals">Add one</span></div>`;
   } else {
     goalsHTML = state.goals.map(g => {
       const target = parseFloat(g.targetAmount) || 0;
       const saved = parseFloat(g.currentAmount) || 0;
       const p = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-      const bar = asciiBar(saved, target || 1, 26);
-      const dateStr = g.targetDate ? ' · by ' + compactDate(g.targetDate) : '';
-      const reqStr = g._reqMo > 0 ? ` · <span class="req">${fmtMoney(g._reqMo, {round:true})}/mo req</span>` : '';
+      const dateStr = g.targetDate ? ` · By ${compactDate(g.targetDate)}` : '';
+      const reqStr = g._reqMo > 0 ? ` · <span class="req">${fmtMoney(g._reqMo, {round:true})}/mo to reach</span>` : '';
       return `<div class="goal">
-        <div class="goal-h"><span>${termName(g.name)}</span><span>${p.toFixed(0)}%</span></div>
-        <div class="goal-bar">${bar}</div>
-        <div class="goal-meta">${fmtMoney(saved, {round:true})} / ${fmtMoney(target, {round:true})}${dateStr}${reqStr}</div>
+        <div class="goal-h"><span class="n">${escHTML(g.name)}</span><span class="p">${p.toFixed(0)}%</span></div>
+        <div class="goal-bar"><div class="goal-bar-f" style="width:${p}%"></div></div>
+        <div class="goal-meta"><span>${fmtMoney(saved, {round:true})} of ${fmtMoney(target, {round:true})}</span>${dateStr ? `<span class="dot">·</span><span>By ${g.targetDate ? compactDate(g.targetDate) : '—'}</span>` : ''}${reqStr ? `<span class="dot">·</span>${reqStr}` : ''}</div>
         <div class="goal-acts">
-          <button class="ok" data-action="goal-add" data-id="${g.id}">+fund</button>
-          <button data-action="edit" data-type="goals" data-id="${g.id}">edit</button>
-          <button class="err" data-action="rm" data-type="goals" data-id="${g.id}">rm</button>
+          <button class="primary" data-action="goal-add" data-id="${g.id}">Add funds</button>
+          <button data-action="edit" data-type="goals" data-id="${g.id}">Edit</button>
+          <button class="danger" data-action="rm" data-type="goals" data-id="${g.id}">Delete</button>
         </div>
       </div>`;
     }).join('');
   }
 
-  const basisMetaTxt = basisLabel ? `basis:${basisLabel}` : '';
-
   return `
     ${availBlock}
-    ${sh('allocation', basisMetaTxt, { monthNav: monthNav(year, month) })}
+    ${weekBlock}
+    ${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}
     ${allocationHTML}
-    ${sh('week.spent', fmtMoney(weekSpent, {round:true}) + '_/_' + fmtMoney(weeklyAllowance, {round:true}))}
-    ${weekMeterHTML}
-    ${sh('recent', 'last_7d · ' + txns.length, { add: { action: 'open-modal', type: 'petty', label: '+log' } })}
+    ${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}
     ${txnHTML}
-    ${sh('goals', state.goals.length + (state.goals.length === 1 ? '_goal' : '_goals'), { add: { action: 'open-modal', type: 'goals', label: '+add' } })}
+    ${sh('Savings goals', { meta: state.goals.length + (state.goals.length === 1 ? ' goal' : ' goals'), add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}
     ${goalsHTML}
   `;
 }
@@ -1880,56 +1867,52 @@ function renderTasks() {
     return ad.localeCompare(bd);
   });
 
-  // hero blocks
   const openBlock = blk(
-    'queue.status',
+    'Open tasks',
     String(open.length),
-    total > 0 ? `${done.length}/${total} done · ${completionPct.toFixed(0)}%` : 'add a task to start',
-    { color: 'y' }
+    total > 0 ? `${done.length} of ${total} done · ${completionPct.toFixed(0)}%` : 'Add a task to start',
+    { color: open.length === 0 ? 'positive' : '' }
   );
 
   let urgentBlock = '';
   if (overdue.length > 0) {
-    urgentBlock = blk('overdue', String(overdue.length), todayCnt.length > 0 ? `${todayCnt.length} due today` : 'needs attention', { color: 'r', size: 'med' });
+    urgentBlock = blk('Overdue', String(overdue.length), todayCnt.length > 0 ? `${todayCnt.length} due today` : 'Needs attention', { color: 'negative', size: 'med' });
   } else if (todayCnt.length > 0) {
-    urgentBlock = blk('due_today', String(todayCnt.length), 'tap to check off', { color: 'y', size: 'med' });
+    urgentBlock = blk('Due today', String(todayCnt.length), 'Tap to mark complete', { color: 'warning', size: 'med' });
   } else if (open.length > 0) {
-    urgentBlock = blk('on_track', 'OK', 'nothing overdue', { color: 'g', size: 'med' });
+    urgentBlock = blk('On track', 'All caught up', 'Nothing overdue or due today', { color: 'positive', size: 'med' });
   }
 
-  // task list
   let listHTML;
   if (sorted.length === 0) {
-    listHTML = `<div class="empty">no tasks · <span class="lnk" data-action="open-modal" data-type="tasks">add_one</span></div>`;
+    listHTML = `<div class="empty">No tasks yet · <span class="lnk" data-action="open-modal" data-type="tasks">Add one</span></div>`;
   } else {
     listHTML = sorted.map(t => {
       const isOver = !t.done && isOverdue(t.dueDate);
       const isToday = !t.done && isTodayDate(t.dueDate);
       const pri = t.priority || '';
-      const priCls = pri === 'high' ? 'pri-h' : pri === 'med' ? 'pri-m' : 'pri-l';
       const metaParts = [];
-      if (pri) metaParts.push({ text: pri.toLowerCase(), cls: priCls });
-      if (t.dueDate) {
-        if (isOver) metaParts.push({ text: 'overdue', cls: 'overdue' });
-        else if (isToday) metaParts.push({ text: 'today', cls: 'today' });
-        else metaParts.push(compactDate(t.dueDate));
-      }
-      if (t.done) metaParts.push('done');
+      if (isOver) metaParts.push({ text: 'Overdue', cls: 'overdue' });
+      else if (isToday) metaParts.push({ text: 'Today', cls: 'today' });
+      else if (t.dueDate) metaParts.push(compactDate(t.dueDate));
+      if (pri === 'high') metaParts.push({ text: 'High', cls: 'pri-h' });
+      else if (pri === 'med') metaParts.push({ text: 'Medium', cls: 'pri-m' });
+      if (t.done) metaParts.push('Done');
       const metaInner = metaParts.map((p, i) => {
         const isObj = typeof p === 'object';
         const text = isObj ? p.text : p;
         const cls = isObj ? p.cls : '';
         return (i > 0 ? '<span class="dot">·</span>' : '') + `<span class="${cls}">${text}</span>`;
       }).join('');
-      return `<div class="task${t.done ? ' done dim' : ''}">
+      return `<div class="task${t.done ? ' done' : ''}">
         <span class="task-cb ${t.done ? 'done' : ''}" data-action="toggle-task" data-id="${t.id}"></span>
         <div class="task-info">
           <div class="task-n">${escHTML(t.text)}</div>
           ${metaInner ? `<div class="task-meta">${metaInner}</div>` : ''}
         </div>
         <div class="task-acts">
-          <button data-action="edit" data-type="tasks" data-id="${t.id}">edit</button>
-          <button class="err" data-action="rm" data-type="tasks" data-id="${t.id}">rm</button>
+          <button data-action="edit" data-type="tasks" data-id="${t.id}">Edit</button>
+          <button class="danger" data-action="rm" data-type="tasks" data-id="${t.id}">Delete</button>
         </div>
       </div>`;
     }).join('');
@@ -1938,7 +1921,7 @@ function renderTasks() {
   return `
     ${openBlock}
     ${urgentBlock}
-    ${sh('all', total + (total === 1 ? '_task' : '_tasks'), { add: { action: 'open-modal', type: 'tasks', label: '+add' } })}
+    ${sh('All tasks', { meta: total + (total === 1 ? ' task' : ' tasks'), add: { action: 'open-modal', type: 'tasks', label: '+ Add' } })}
     ${listHTML}
   `;
 }
@@ -1958,16 +1941,16 @@ function updateHeader() {
   const metaEl = document.getElementById('mmeta');
   if (!titleEl || !metaEl) return;
   const v = getViewMonth();
-  const monthTag = new Date(v.year, v.month).toLocaleString('en-US',{month:'short'}).toLowerCase() + '.' + String(v.year).slice(-2);
-  let title = 'ledgeon';
-  let meta = monthTag;
-  if (currentTab === 'income') { title = 'income'; meta = 'ytd'; }
-  else if (currentTab === 'expenses') { title = 'expenses'; }
-  else if (currentTab === 'budget') { title = 'budget'; meta = 'avg'; }
+  const monthName = new Date(v.year, v.month).toLocaleString('en-US',{month:'long'});
+  let title = 'Ledgeon';
+  let meta = monthName;
+  if (currentTab === 'income') { title = 'Income'; meta = 'Year to date'; }
+  else if (currentTab === 'expenses') { title = 'Expenses'; meta = monthName; }
+  else if (currentTab === 'budget') { title = 'Budget'; meta = 'Monthly average'; }
   else if (currentTab === 'tasks') {
-    title = 'tasks';
+    title = 'Tasks';
     const o = state.tasks.filter(t => !t.done).length;
-    meta = o + 'open';
+    meta = o + (o === 1 ? ' open' : ' open');
   }
   titleEl.textContent = title;
   metaEl.textContent = meta;
