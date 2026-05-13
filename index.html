@@ -2180,6 +2180,8 @@ function renderIncome() {
       const metaParts = [freq.charAt(0).toUpperCase() + freq.slice(1)];
       if (hrs > 0) metaParts.push(fmtHM(hrs));
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
+      const dateStr = i.receivedAt || i.createdAt;
+      if (dateStr) metaParts.push(freq === 'once' ? compactDate(dateStr) : `since ${compactDate(dateStr)}`);
       const hasTips = i.tipsEnabled && amt > base;
       const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
       return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="n">${escHTML(i.source)}${tipsPill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
