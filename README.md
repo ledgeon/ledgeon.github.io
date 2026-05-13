@@ -1,4 +1,4 @@
-# termdo — budget
+# ledgeon.github.io — budget
 
 A clean, dark, monospace budgeting and planning tool. Single-file static site, no build step, no backend. Your data lives in the browser's localStorage on whatever device you use it on.
 
