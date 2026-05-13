@@ -1255,7 +1255,15 @@ main > * { animation: fadeIn 0.12s ease-out; }
     <form data-type="expenses">
       <div class="frow">
         <div class="fcol"><label class="flbl">name</label><input type="text" class="input" name="name" required></div>
-        <div class="fcol" style="min-width: 100px;"><label class="flbl">amount</label><input type="text" class="input" name="amount" placeholder="0.00" required></div>
+        <div class="fcol" style="min-width: 100px;"><label class="flbl" id="expense-amount-label">amount</label><input type="text" class="input" name="amount" id="expense-amount-input" placeholder="0.00" required></div>
+      </div>
+      <div class="frow" style="margin-top: -4px;">
+        <div class="fcol">
+          <label class="tip-toggle" style="font-size: 12px; color: var(--ink-3);">
+            <input type="checkbox" name="isPercent" id="isPercentToggle"> Set as % of monthly average income
+          </label>
+          <div id="pct-preview" style="font-size: 11px; color: var(--ink-3); margin-top: 4px; display: none; font-style: italic;"></div>
+        </div>
       </div>
       <div class="frow">
         <div class="fcol"><label class="flbl">category</label>
@@ -1526,6 +1534,52 @@ function saveState() {
   state.updatedAt = Date.now();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); updateBadges(); } catch {}
   schedulePush();
+}
+
+// Recompute amount on any percent-based bills using the current monthly average income.
+// Does not call saveState — pure in-memory refresh, called at the top of render().
+function syncPercentBills() {
+  let avg = null;
+  for (const b of state.bills) {
+    if (b.isPercent && typeof b.pctValue === 'number') {
+      if (avg === null) avg = getIncomeStats().avgMonthly || 0;
+      b.amount = avg * b.pctValue / 100;
+    }
+  }
+}
+
+function updateExpensePercentUI() {
+  const toggle = document.getElementById('isPercentToggle');
+  const label  = document.getElementById('expense-amount-label');
+  const input  = document.getElementById('expense-amount-input');
+  const prev   = document.getElementById('pct-preview');
+  if (!toggle || !label || !input || !prev) return;
+  if (toggle.checked) {
+    label.textContent = '% of monthly income';
+    input.placeholder = 'e.g. 30';
+    prev.style.display = '';
+    updatePctPreview();
+  } else {
+    label.textContent = 'amount';
+    input.placeholder = '0.00';
+    prev.style.display = 'none';
+    prev.textContent = '';
+  }
+}
+
+function updatePctPreview() {
+  const input = document.getElementById('expense-amount-input');
+  const prev  = document.getElementById('pct-preview');
+  if (!input || !prev) return;
+  const pct = parseFloat(String(input.value).replace(/[^\d.-]/g, '')) || 0;
+  const avg = getIncomeStats().avgMonthly || 0;
+  if (pct > 0 && avg > 0) {
+    prev.textContent = `≈ ${fmtMoney(avg * pct / 100, {round:true})}/mo at current income`;
+  } else if (pct > 0) {
+    prev.textContent = `Will calculate once income is recorded`;
+  } else {
+    prev.textContent = '';
+  }
 }
 function nextId(col) {
   const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm' }[col];
@@ -2170,6 +2224,7 @@ function renderExpenses() {
       const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
       const cat = (CATEGORIES[b.category] || CATEGORIES.other);
       const metaParts = [cap(cat.label), cap(b.recurring || 'once')];
+      if (b.isPercent && typeof b.pctValue === 'number') metaParts.push(`${b.pctValue}% of income`);
       if (b.dueDate && !isPaid && !overdue && !today) metaParts.push(compactDate(b.dueDate));
 
       let pillHTML = '';
@@ -2510,6 +2565,7 @@ function updateHeader() {
 }
 
 function render() {
+  syncPercentBills();
   updateBadges();
   updateHeader();
   document.querySelectorAll('nav.mnav button').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
@@ -2663,9 +2719,18 @@ document.addEventListener('change', e => {
     if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
     else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
   }
+  else if (e.target.id === 'isPercentToggle') {
+    updateExpensePercentUI();
+  }
   else if (e.target.id === 'tax-pct-input') {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.id === 'expense-amount-input' && document.getElementById('isPercentToggle')?.checked) {
+    updatePctPreview();
   }
 });
 
@@ -2700,6 +2765,15 @@ function openModal(type, id = null) {
         f.elements['apr'].value = item.apr || '';
         f.elements['isDebt'].checked = !!item.balance;
         f.elements['isDebt'].dispatchEvent(new Event('change', { bubbles: true }));
+
+        // Percent-of-income mode
+        if (item.isPercent && typeof item.pctValue === 'number') {
+          f.elements['amount'].value = item.pctValue;
+          f.elements['isPercent'].checked = true;
+        } else {
+          f.elements['isPercent'].checked = false;
+        }
+        f.elements['isPercent'].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   }
@@ -2793,6 +2867,7 @@ function openModal(type, id = null) {
     }
   }
   document.getElementById('modal-' + type).classList.add('open');
+  if (type === 'expenses') updateExpensePercentUI();
   setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
@@ -2825,10 +2900,22 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.frequency = fd.get('frequency') || 'monthly';
       item.receivedAt = fd.get('receivedAt') || null;
     } else if (type === 'expenses') {
-      item.name = fd.get('name'); item.amount = pAmt(fd.get('amount'));
+      item.name = fd.get('name');
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
       item.dueDate = fd.get('date') || null; if (!isEdit) item.paid = false;
-      
+
+      const inputVal = pAmt(fd.get('amount'));
+      if (f.elements['isPercentToggle'].checked) {
+        item.isPercent = true;
+        item.pctValue = inputVal;
+        const avg = getIncomeStats().avgMonthly || 0;
+        item.amount = avg * inputVal / 100;
+      } else {
+        delete item.isPercent;
+        delete item.pctValue;
+        item.amount = inputVal;
+      }
+
       // Update debt fields
       if (f.elements['isDebtToggle'].checked) {
         item.balance = pAmt(fd.get('balance'));
