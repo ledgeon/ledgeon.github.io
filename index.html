@@ -2153,11 +2153,10 @@ function renderOverview() {
       const xs = cumPoints.map(p => ((p.i + 0.5) / 12) * 100);
       const ys = cumPoints.map(p => padPct + (100 - 2 * padPct) * (1 - (p.val - cumMin) / cumRange));
       const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
-      const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="2" fill="var(--ink-2)" vector-effect="non-scaling-stroke" />`).join('');
       const last = cumPoints[cumPoints.length - 1];
       const sign = last.val >= 0 ? '+' : '−';
       const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3,2" vector-effect="non-scaling-stroke" />${dots}</svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--ink-2); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--positive)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
     }
 
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
@@ -2280,8 +2279,7 @@ function renderIncome() {
       const xs = billsPts.map(p => ((p.i + 0.5) / 12) * 100);
       const ys = billsPts.map(p => 100 - (p.val / chartMax) * 100);
       const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
-      const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="2" fill="var(--negative)" vector-effect="non-scaling-stroke" />`).join('');
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />${dots}</svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">Expenses</div>`;
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">Expenses</div>`;
     }
 
     chartHTML = `
