@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="icon.png">
 <style>
 /* ════════════════════════════════════════════════════════════════
    SLATE · design tokens (from preview 01 verbatim)
@@ -1004,99 +1005,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .week-summary { padding: 13px 14px; }
   .week-summary-v { font-size: 20px; }
 }
-
-
-/* ── PAYMENT HISTORY (inside expense edit modal) ────────── */
-.history-section {
-  border-top: 1px solid var(--border);
-  margin-top: 14px;
-  padding-top: 14px;
-}
-.history-h {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 10px;
-  gap: 8px;
-}
-.history-h h4 {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0;
-}
-.history-h-meta {
-  font-size: 11px;
-  color: var(--ink-3);
-  font-weight: 500;
-  letter-spacing: 0.3px;
-}
-.history-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.history-stat {
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  padding: 8px 10px;
-  min-width: 0;
-}
-.history-stat-l {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  margin-bottom: 3px;
-  line-height: 1;
-}
-.history-stat-v {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.3px;
-  line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.history-list {
-  max-height: 180px;
-  overflow-y: auto;
-  border: 1px solid var(--border-light);
-  border-radius: 6px;
-  background: var(--bg);
-}
-.history-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 8px 11px;
-  font-size: 12.5px;
-  border-bottom: 1px solid var(--border-light);
-  gap: 8px;
-}
-.history-row:last-child { border-bottom: none; }
-.history-row .d { color: var(--ink-2); }
-.history-row .d .ago { color: var(--ink-4); font-size: 11px; margin-left: 6px; }
-.history-row .v {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  color: var(--ink);
-  white-space: nowrap;
-}
-
-@media (max-width: 380px) {
-  .history-stats { grid-template-columns: repeat(3, 1fr); gap: 4px; }
-  .history-stat { padding: 6px 7px; }
-  .history-stat-v { font-size: 13px; }
-}
 </style>
 </head>
 
@@ -1200,7 +1108,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
       <div class="frow">
         <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
       </div>
-      <div id="payment-history-section" style="display:none"></div>
       <div class="factions">
         <button type="button" data-action="close-modal">cancel</button>
         <button type="submit" class="primary">save</button>
@@ -2418,68 +2325,6 @@ function openModal(type, id = null) {
     const verb = id ? 'Edit' : 'Add';
     const typeLabel = ({expenses: 'expense', income: 'income source', tasks: 'task', goals: 'goal', petty: 'transaction'})[type] || type;
     _titleEl.textContent = verb + ' ' + typeLabel;
-  }
-  // Populate payment history (expense edit modal only)
-  const histSection = document.getElementById('payment-history-section');
-  if (histSection) {
-    if (type === 'expenses' && id) {
-      const payments = state.payments
-        .filter(p => p.billId === id)
-        .sort((a, b) => (b.date || b.createdAt || '').localeCompare(a.date || a.createdAt || ''));
-      if (payments.length > 0) {
-        const total = payments.reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-        const avg = total / payments.length;
-        const lastDateStr = payments[0].date || payments[0].createdAt;
-        const lastDate = lastDateStr ? new Date(lastDateStr + 'T00:00:00') : null;
-        const lastFmt = lastDate
-          ? lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-          : '—';
-        const today = todayStart();
-        const rows = payments.map(p => {
-          const amt = parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0;
-          const ds = p.date || p.createdAt;
-          if (!ds) return `<div class="history-row"><span class="d">—</span><span class="v">${fmtMoney(amt, {round:true})}</span></div>`;
-          const d = new Date(ds + 'T00:00:00');
-          const daysAgo = Math.round((today - d) / 86400000);
-          let agoStr = '';
-          if (daysAgo === 0) agoStr = 'today';
-          else if (daysAgo === 1) agoStr = 'yesterday';
-          else if (daysAgo > 1 && daysAgo < 30) agoStr = daysAgo + 'd ago';
-          else if (daysAgo >= 30 && daysAgo < 365) agoStr = Math.round(daysAgo / 30) + 'mo ago';
-          else if (daysAgo >= 365) agoStr = Math.round(daysAgo / 365) + 'y ago';
-          const dateFmt = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          return `<div class="history-row"><span class="d">${dateFmt}${agoStr ? `<span class="ago">${agoStr}</span>` : ''}</span><span class="v">${fmtMoney(amt, {round:true})}</span></div>`;
-        }).join('');
-        histSection.innerHTML = `<div class="history-section">
-          <div class="history-h">
-            <h4>Payment history</h4>
-            <span class="history-h-meta">Last paid ${lastFmt}</span>
-          </div>
-          <div class="history-stats">
-            <div class="history-stat">
-              <div class="history-stat-l">Count</div>
-              <div class="history-stat-v">${payments.length}</div>
-            </div>
-            <div class="history-stat">
-              <div class="history-stat-l">Total</div>
-              <div class="history-stat-v">${fmtMoney(total, {round:true})}</div>
-            </div>
-            <div class="history-stat">
-              <div class="history-stat-l">Average</div>
-              <div class="history-stat-v">${fmtMoney(avg, {round:true})}</div>
-            </div>
-          </div>
-          <div class="history-list">${rows}</div>
-        </div>`;
-        histSection.style.display = '';
-      } else {
-        histSection.innerHTML = '';
-        histSection.style.display = 'none';
-      }
-    } else {
-      histSection.innerHTML = '';
-      histSection.style.display = 'none';
-    }
   }
   document.getElementById('modal-' + type).classList.add('open');
   setTimeout(() => f.querySelector('input')?.focus(), 50);
