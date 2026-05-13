@@ -77,46 +77,46 @@
   --warning-soft:  #423b2a;
 }
 
-[data-theme="rose"] {
-  --bg:            #fff5f6;
-  --bg-subtle:     #fdeaec;
-  --bg-hover:      #f8d8dd;
-  --border:        #ecc6cc;
-  --border-light:  #f5dde1;
-  --ink:           #3a2229;
-  --ink-2:         #6b4754;
-  --ink-3:         #8a6772;
-  --ink-4:         #b5919b;
-  --accent:        #be185d;
-  --accent-soft:   #fce7f3;
-  --accent-strong: #9d174d;
+[data-theme="cobalt"] {
+  --bg:            #0f1729;
+  --bg-subtle:     #1a2238;
+  --bg-hover:      #25304a;
+  --border:        #2d3858;
+  --border-light:  #1f2940;
+  --ink:           #f0f6ff;
+  --ink-2:         #c9d6e8;
+  --ink-3:         #8a9cb8;
+  --ink-4:         #5a6c88;
+  --accent:        #60a5fa;
+  --accent-soft:   #1e3a5f;
+  --accent-strong: #3b82f6;
+  --positive:      #4ade80;
+  --positive-soft: #1a3f24;
+  --negative:      #f87171;
+  --negative-soft: #3f1d1d;
+  --warning:       #fbbf24;
+  --warning-soft:  #3f2d1a;
+}
+
+[data-theme="slate"] {
+  --bg:            #f8fafc;
+  --bg-subtle:     #f1f5f9;
+  --bg-hover:      #e2e8f0;
+  --border:        #cbd5e1;
+  --border-light:  #e2e8f0;
+  --ink:           #0f172a;
+  --ink-2:         #334155;
+  --ink-3:         #64748b;
+  --ink-4:         #94a3b8;
+  --accent:        #4f46e5;
+  --accent-soft:   #eef2ff;
+  --accent-strong: #4338ca;
   --positive:      #15803d;
   --positive-soft: #dcfce7;
   --negative:      #b91c1c;
   --negative-soft: #fee2e2;
   --warning:       #b45309;
   --warning-soft:  #fef3c7;
-}
-
-[data-theme="gruvbox"] {
-  --bg:            #282828;
-  --bg-subtle:     #32302f;
-  --bg-hover:      #3c3836;
-  --border:        #504945;
-  --border-light:  #3c3836;
-  --ink:           #ebdbb2;
-  --ink-2:         #d5c4a1;
-  --ink-3:         #a89984;
-  --ink-4:         #7c6f64;
-  --accent:        #fabd2f;
-  --accent-soft:   #3d3422;
-  --accent-strong: #d79921;
-  --positive:      #b8bb26;
-  --positive-soft: #2a3018;
-  --negative:      #fb4934;
-  --negative-soft: #3d231d;
-  --warning:       #fe8019;
-  --warning-soft:  #3a2818;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1294,10 +1294,10 @@ main > * { animation: fadeIn 0.12s ease-out; }
 <div class="mhdr-menu" id="header-menu" hidden>
   <div class="menu-label">Theme</div>
   <button data-action="set-theme" data-theme-name="light">Light</button>
+  <button data-action="set-theme" data-theme-name="slate">Slate</button>
   <button data-action="set-theme" data-theme-name="dark">Dark</button>
   <button data-action="set-theme" data-theme-name="nord">Nord</button>
-  <button data-action="set-theme" data-theme-name="rose">Rose</button>
-  <button data-action="set-theme" data-theme-name="gruvbox">Gruvbox</button>
+  <button data-action="set-theme" data-theme-name="cobalt">Cobalt</button>
   <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
@@ -1646,7 +1646,7 @@ function getTheme() {
   try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
 }
 function applyTheme(name) {
-  if (!['light', 'dark', 'nord', 'rose', 'gruvbox'].includes(name)) name = 'light';
+  if (!['light', 'slate', 'dark', 'nord', 'cobalt'].includes(name)) name = 'light';
   if (name === 'light') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
@@ -2219,7 +2219,7 @@ function renderOverview() {
       const last = cumPoints[cumPoints.length - 1];
       const sign = last.val >= 0 ? '+' : '−';
       const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
     }
 
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
@@ -2347,7 +2347,7 @@ function renderIncome() {
         .filter(b => b.recurring && b.recurring !== 'once')
         .reduce((s, b) => s + monthlyEq(parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0, b.recurring), 0);
       const monthlyFixedStr = fmtMoney(monthlyFixed, { round: true });
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
     }
 
     chartHTML = `
