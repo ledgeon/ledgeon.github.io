@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="icon.png">
 <script>try{var t=localStorage.getItem('ledgeon-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch{}</script>
 <style>
 /* ════════════════════════════════════════════════════════════════
@@ -496,7 +497,6 @@ main { flex: 1; }
 }
 .chart-col {
   flex: 1 1 0;
-  max-width: 36px;
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -2135,6 +2135,31 @@ function renderOverview() {
       </div>`;
     }).join('');
 
+    // Cumulative net line overlay (YTD running total of income - bills)
+    let cumLineSVG = '';
+    let running = 0;
+    const cumPoints = [];
+    chartDataRaw.forEach((h, i) => {
+      if (!h.empty) {
+        running += (h.income - h.bills);
+        cumPoints.push({ i, val: running });
+      }
+    });
+    if (cumPoints.length > 1) {
+      const cumMax = Math.max(0, ...cumPoints.map(p => p.val));
+      const cumMin = Math.min(0, ...cumPoints.map(p => p.val));
+      const cumRange = Math.max(1, cumMax - cumMin);
+      const padPct = 8;
+      const xs = cumPoints.map(p => ((p.i + 0.5) / 12) * 100);
+      const ys = cumPoints.map(p => padPct + (100 - 2 * padPct) * (1 - (p.val - cumMin) / cumRange));
+      const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
+      const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="2" fill="var(--ink-2)" vector-effect="non-scaling-stroke" />`).join('');
+      const last = cumPoints[cumPoints.length - 1];
+      const sign = last.val >= 0 ? '+' : '−';
+      const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--ink-2)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3,2" vector-effect="non-scaling-stroke" />${dots}</svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--ink-2); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+    }
+
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
       <div class="chart">
         <div class="chart-layout" style="height: 140px;">
@@ -2143,7 +2168,7 @@ function renderOverview() {
             <span>$0</span>
             <span>${minValStr}</span>
           </div>
-          <div class="chart-cols">${colsFlow}</div>
+          <div class="chart-cols" style="position: relative;">${cumLineSVG}${colsFlow}</div>
         </div>
       </div>`;
   }
@@ -2231,19 +2256,34 @@ function renderIncome() {
   if (monthsWithData.length === 0) {
     chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
   } else {
-    const maxValStr = maxVal > 0 ? fmtMoney(maxVal, {round:true}) : '';
-    const midValStr = maxVal > 0 ? fmtMoney(maxVal/2, {round:true}) : '';
+    // Scale chart to whichever is larger between income and bills across the year,
+    // so the expenses line fits without clipping.
+    const maxBills = Math.max(0, ...yearHist.map(h => h.bills || 0));
+    const chartMax = Math.max(maxVal, maxBills, 1);
+    const maxValStr = chartMax > 0 ? fmtMoney(chartMax, {round:true}) : '';
+    const midValStr = chartMax > 0 ? fmtMoney(chartMax/2, {round:true}) : '';
 
     const cols = yearHist.map(h => {
       const hasIncome = h.income > 0;
-      const heightPct = hasIncome && maxVal > 0 ? Math.max(3, (h.income / maxVal) * 100) : 0;
+      const heightPct = hasIncome && chartMax > 0 ? Math.max(3, (h.income / chartMax) * 100) : 0;
       const colCls = h.current ? ' cur' : '';
       const barInner = hasIncome
         ? `<div class="bar" style="height:${heightPct}%"></div>`
         : `<div class="bar empty"></div>`;
       return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
     }).join('');
-    
+
+    // Expenses line overlay — only points where there were actually any bills paid that month
+    const billsPts = yearHist.map((h, i) => h.bills > 0 ? ({ i, val: h.bills }) : null).filter(Boolean);
+    let billsLineSVG = '';
+    if (billsPts.length > 1) {
+      const xs = billsPts.map(p => ((p.i + 0.5) / 12) * 100);
+      const ys = billsPts.map(p => 100 - (p.val / chartMax) * 100);
+      const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
+      const dots = xs.map((x, i) => `<circle cx="${x}" cy="${ys[i]}" r="2" fill="var(--negative)" vector-effect="non-scaling-stroke" />`).join('');
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" />${dots}</svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">Expenses</div>`;
+    }
+
     chartHTML = `
       <div class="chart">
         <div class="chart-layout">
@@ -2252,7 +2292,7 @@ function renderIncome() {
             <span>${midValStr}</span>
             <span>$0</span>
           </div>
-          <div class="chart-cols">${cols}</div>
+          <div class="chart-cols" style="position: relative;">${billsLineSVG}${cols}</div>
         </div>
       </div>`;
   }
