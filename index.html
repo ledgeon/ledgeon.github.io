@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>try{var t=localStorage.getItem('ledgeon-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch{}</script>
 <style>
 /* ════════════════════════════════════════════════════════════════
    SLATE · design tokens (from preview 01 verbatim)
@@ -31,6 +32,48 @@
   --negative-soft: #fef2f2;
   --warning:       #b45309;
   --warning-soft:  #fef3c7;
+}
+
+[data-theme="dark"] {
+  --bg:            #0c0c0e;
+  --bg-subtle:     #161618;
+  --bg-hover:      #232327;
+  --border:        #2a2a30;
+  --border-light:  #1c1c20;
+  --ink:           #f4f4f5;
+  --ink-2:         #a1a1aa;
+  --ink-3:         #71717a;
+  --ink-4:         #52525b;
+  --accent:        #818cf8;
+  --accent-soft:   #1e1b4b;
+  --accent-strong: #6366f1;
+  --positive:      #4ade80;
+  --positive-soft: #052e16;
+  --negative:      #f87171;
+  --negative-soft: #450a0a;
+  --warning:       #fbbf24;
+  --warning-soft:  #422006;
+}
+
+[data-theme="sepia"] {
+  --bg:            #f4ecd8;
+  --bg-subtle:     #ede2c4;
+  --bg-hover:      #e4d6ad;
+  --border:        #d4c19a;
+  --border-light:  #e7d8b6;
+  --ink:           #3a2e1c;
+  --ink-2:         #6b573d;
+  --ink-3:         #8a7758;
+  --ink-4:         #ab9978;
+  --accent:        #b85c38;
+  --accent-soft:   #f5d9c5;
+  --accent-strong: #8e4128;
+  --positive:      #4d6e36;
+  --positive-soft: #d9e0c0;
+  --negative:      #a04030;
+  --negative-soft: #f0d4cc;
+  --warning:       #9d6b1f;
+  --warning-soft:  #f0db9a;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -165,6 +208,26 @@ main { flex: 1; }
 .mhdr-menu button:hover { background: var(--bg-hover); }
 .mhdr-menu button.danger { color: var(--negative); }
 .mhdr-menu button.danger:hover { background: var(--negative-soft); }
+.mhdr-menu .menu-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding: 8px 11px 4px;
+}
+.mhdr-menu .menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 4px;
+}
+.mhdr-menu button.current {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.mhdr-menu button.current::before { content: '✓  '; font-weight: 700; }
+.mhdr-menu button[data-action="set-theme"]:not(.current)::before { content: '\2003\2003'; }
 
 /* ── HERO BLOCK ─────────────────────────────────────────── */
 .blk {
@@ -226,7 +289,7 @@ main { flex: 1; }
   margin-left: auto;
   letter-spacing: 0.2px;
 }
-.sh .add:hover { background: #e0e7ff; }
+.sh .add:hover { background: var(--accent-soft); }
 .sh .month-nav {
   margin-left: auto;
   display: inline-flex; align-items: center;
@@ -359,9 +422,9 @@ main { flex: 1; }
   letter-spacing: 0.2px;
   min-height: 22px;
 }
-.li-acts button:hover { background: #e4e4e7; color: var(--ink); }
+.li-acts button:hover { background: var(--bg-hover); color: var(--ink); }
 .li-acts button.primary { background: var(--accent-soft); color: var(--accent); }
-.li-acts button.primary:hover { background: #e0e7ff; }
+.li-acts button.primary:hover { background: var(--accent-soft); }
 .li-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
 /* ── METER (category breakdown bars) ────────────────────── */
@@ -382,7 +445,7 @@ main { flex: 1; }
 .meter-b {
   display: block;
   height: 6px;
-  background: #f1f1f4;
+  background: var(--bg-hover);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -492,7 +555,7 @@ main { flex: 1; }
 .goal-h .p { font-size: 12px; font-weight: 700; color: var(--accent); letter-spacing: 0.2px; }
 .goal-bar {
   height: 6px;
-  background: #f1f1f4;
+  background: var(--bg-hover);
   border-radius: 3px;
   overflow: hidden;
 }
@@ -525,9 +588,9 @@ main { flex: 1; }
   min-height: 24px;
 }
 .goal-acts button.primary { background: var(--accent-soft); color: var(--accent); }
-.goal-acts button.primary:hover { background: #e0e7ff; }
+.goal-acts button.primary:hover { background: var(--accent-soft); }
 .goal-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
-.goal-acts button:hover:not(.primary):not(.danger) { background: #e4e4e7; color: var(--ink); }
+.goal-acts button:hover:not(.primary):not(.danger) { background: var(--bg-hover); color: var(--ink); }
 
 /* ── TASK ──────────────────────────────────────────────── */
 .task {
@@ -593,7 +656,7 @@ main { flex: 1; }
   letter-spacing: 0.2px;
   min-height: 22px;
 }
-.task-acts button:hover { background: #e4e4e7; color: var(--ink); }
+.task-acts button:hover { background: var(--bg-hover); color: var(--ink); }
 .task-acts button.danger:hover { background: var(--negative-soft); color: var(--negative); }
 
 /* ── NOTE / EMPTY ───────────────────────────────────────── */
@@ -809,7 +872,7 @@ nav.mnav button .badge {
   font-weight: 600;
   letter-spacing: 0.1px;
 }
-.factions button:hover { background: #e4e4e7; }
+.factions button:hover { background: var(--bg-hover); }
 .factions button.primary {
   background: var(--accent);
   color: white;
@@ -1187,6 +1250,11 @@ main > * { animation: fadeIn 0.12s ease-out; }
   </div>
 </header>
 <div class="mhdr-menu" id="header-menu" hidden>
+  <div class="menu-label">Theme</div>
+  <button data-action="set-theme" data-theme-name="light">Light</button>
+  <button data-action="set-theme" data-theme-name="dark">Dark</button>
+  <button data-action="set-theme" data-theme-name="sepia">Sepia</button>
+  <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
   <button data-action="export">Export data</button>
@@ -1452,6 +1520,7 @@ const TAB_KEY = 'ledgeon-tab';
 const TAX_KEY = 'ledgeon-tax-pct';
 const SYNC_CONFIG_KEY = 'ledgeon-sync-config';
 const SYNC_WORKER_URL = 'https://ledgeon-sync.danielssouthworth.workers.dev';
+const THEME_KEY = 'ledgeon-theme';
 const TABS = ['overview', 'income', 'expenses', 'budget', 'tasks'];
 
 const CATEGORIES = {
@@ -1528,6 +1597,23 @@ let viewMonth = null;
 
 function getTaxPct() { const v = parseFloat(localStorage.getItem(TAX_KEY)); return isNaN(v) ? 25 : v; }
 function setTaxPct(v) { localStorage.setItem(TAX_KEY, String(v)); }
+
+function getTheme() {
+  try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
+}
+function applyTheme(name) {
+  if (!['light', 'dark', 'sepia'].includes(name)) name = 'light';
+  if (name === 'light') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', name);
+  try { localStorage.setItem(THEME_KEY, name); } catch {}
+  updateThemeMenuMarkers();
+}
+function updateThemeMenuMarkers() {
+  const cur = getTheme();
+  document.querySelectorAll('[data-theme-name]').forEach(btn => {
+    btn.classList.toggle('current', btn.dataset.themeName === cur);
+  });
+}
 
 // ──── Helpers ────────────────────────────────────────────────
 function saveState() {
@@ -2259,6 +2345,9 @@ function renderExpenses() {
       else if (b.dueDate) {
         const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
         if (days === 1) pillHTML = pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id });
+        else pillHTML = pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
+      } else {
+        pillHTML = pill('Pay', 'muted', { action: 'pay-bill', id: b.id });
       }
 
       const valCls = isPaid ? 'muted' : overdue ? 'negative' : '';
@@ -3331,6 +3420,10 @@ document.addEventListener('click', e => {
     const menu = document.getElementById('header-menu');
     if (menu) menu.hidden = true;
     openSyncModal();
+  } else if (act === 'set-theme') {
+    applyTheme(btn.dataset.themeName);
+    const menu = document.getElementById('header-menu');
+    if (menu) menu.hidden = true;
   } else if (act === 'sync-save') {
     handleSyncSave();
   } else if (act === 'sync-generate') {
@@ -3348,6 +3441,7 @@ document.addEventListener('click', e => {
   }
 });
 
+updateThemeMenuMarkers();
 render();
 if (syncEnabled()) {
   setSyncBadge('syncing', 'syncing');
