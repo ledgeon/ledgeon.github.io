@@ -334,12 +334,14 @@ main { flex: 1; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .meter-b {
+  display: block;
   height: 6px;
   background: #f1f1f4;
   border-radius: 3px;
   overflow: hidden;
 }
 .meter-f {
+  display: block;
   height: 100%;
   background: var(--accent);
   border-radius: 3px;
@@ -359,14 +361,15 @@ main { flex: 1; }
   border-bottom: 1px solid var(--border);
 }
 .chart-bars {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  display: flex;
+  align-items: flex-end;
   gap: 3px;
-  align-items: end;
   height: 64px;
   margin-bottom: 6px;
 }
 .chart-bar {
+  flex: 1 1 0;
+  min-width: 0;
   background: var(--accent);
   border-radius: 2px 2px 0 0;
   min-height: 2px;
@@ -377,16 +380,15 @@ main { flex: 1; }
 }
 .chart-bar.empty { background: transparent; min-height: 0; }
 .chart-l {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  display: flex;
   gap: 3px;
   font-size: 9.5px;
   color: var(--ink-4);
-  text-align: center;
   letter-spacing: 0.3px;
   text-transform: uppercase;
   font-weight: 500;
 }
+.chart-l > div { flex: 1 1 0; min-width: 0; text-align: center; }
 .chart-l .cur { color: var(--accent); font-weight: 700; }
 .chart-empty {
   padding: 28px 16px;
@@ -806,6 +808,131 @@ main > * { animation: fadeIn 0.12s ease-out; }
   nav.mnav button { font-size: 10px; }
   .blk-v { font-size: 28px; }
 }
+
+
+/* ── Slate: preview-faithful clickable rows + pills ────── */
+.row.clickable { cursor: pointer; transition: background-color 0.1s; }
+.row.clickable:hover { background: var(--bg-subtle); }
+.row.dim { opacity: 0.55; }
+.row.dim .n { text-decoration: line-through; color: var(--ink-3); }
+.pill.clickable { cursor: pointer; transition: filter 0.12s, background-color 0.12s; }
+.pill.clickable:hover { filter: brightness(0.94); }
+.goal.clickable { cursor: pointer; transition: background-color 0.1s; }
+.goal.clickable:hover { background: var(--bg-subtle); }
+.factions [data-action="rm"] { margin-right: auto; }
+.factions button.danger {
+  background: transparent;
+  color: var(--negative);
+  border: 1px solid var(--border);
+}
+.factions button.danger:hover {
+  background: var(--negative-soft);
+  border-color: var(--negative);
+}
+
+
+/* ── PIE CHART (Budget tab) ─────────────────────────────── */
+.pie-wrap {
+  display: flex;
+  gap: 18px;
+  padding: 16px;
+  align-items: center;
+  border-bottom: 1px solid var(--border-light);
+}
+.pie {
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+.pie-hole {
+  position: absolute;
+  inset: 24%;
+  background: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.pie-hole-l {
+  font-size: 8.5px;
+  color: var(--ink-3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 600;
+  line-height: 1;
+}
+.pie-hole-v {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+  margin-top: 3px;
+  line-height: 1;
+}
+.pie-legend {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.pie-legend-row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.pie-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.pie-legend-label {
+  color: var(--ink);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pie-legend-label .pct {
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.pie-legend-amt {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pie-empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+@media (max-width: 640px) {
+  .pie-wrap { gap: 14px; padding: 14px; }
+  .pie { width: 110px; height: 110px; }
+  .pie-hole-v { font-size: 13px; }
+  .pie-legend-row { font-size: 11.5px; }
+}
+@media (max-width: 380px) {
+  .pie-wrap { flex-direction: column; align-items: stretch; gap: 14px; }
+  .pie { width: 140px; height: 140px; align-self: center; }
+}
 </style>
 </head>
 
@@ -1010,7 +1137,7 @@ $$$  ██████
 
      ledgeon`;
 
-const STORAGE_KEY = 'ledgeon-state-v4';
+const STORAGE_KEY = 'ledgeon-state-v5';
 const TAB_KEY = 'ledgeon-tab';
 const TAX_KEY = 'ledgeon-tax-pct';
 const TABS = ['overview', 'income', 'expenses', 'budget', 'tasks'];
@@ -1426,8 +1553,9 @@ function blk(label, value, sub, opts = {}) {
   const valCls = (opts.color || '') + (opts.size === 'med' ? ' med' : '');
   return `<div class="blk"><div class="blk-l">${label}</div><div class="blk-v ${valCls}">${value}</div>${sub ? `<div class="blk-s">${sub}</div>` : ''}</div>`;
 }
-function pill(text, type) {
-  return `<span class="pill ${type || ''}">${text}</span>`;
+function pill(text, type, clickable) {
+  const cls = `pill ${type || ''}${clickable ? ' clickable' : ''}`;
+  return `<span class="${cls}"${clickable ? ` data-action="${clickable.action}" data-id="${clickable.id}"` : ''}>${text}</span>`;
 }
 function monthNav(year, month) {
   const isCurr = year === new Date().getFullYear() && month === new Date().getMonth();
@@ -1439,6 +1567,7 @@ function monthNav(year, month) {
     (!isCurr ? `<button class="today-btn" data-action="curr-month">Today</button>` : '') +
   `</span>`;
 }
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 function compactDate(iso) {
   if (!iso) return '';
   const t = todayStart();
@@ -1450,30 +1579,6 @@ function compactDate(iso) {
   if (diff > 0 && diff <= 14) return `In ${diff} days`;
   if (diff < 0 && diff >= -14) return `${Math.abs(diff)} days ago`;
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function liItem(fields, opts = {}) {
-  const metaParts = (fields.metaParts || []).filter(Boolean);
-  const metaInner = metaParts.map((p, i) => {
-    const isObj = typeof p === 'object';
-    const text = isObj ? p.text : p;
-    const cls = isObj ? (p.cls || '') : '';
-    return (i > 0 ? '<span class="dot">·</span>' : '') + `<span class="${cls}">${text}</span>`;
-  }).join('');
-  const acts = (fields.acts || []).map(a =>
-    `<button class="${a.cls || ''}" data-action="${a.action}"${a.id ? ` data-id="${a.id}"` : ''}${a.type ? ` data-type="${a.type}"` : ''}>${a.label}</button>`
-  ).join('');
-  const dimCls = opts.dim ? ' dim' : '';
-  return `<div class="li${dimCls}">
-    <div class="li-info">
-      <div class="li-n">${fields.name}${fields.pill ? ' ' + fields.pill : ''}</div>
-      ${metaInner ? `<div class="li-meta">${metaInner}</div>` : ''}
-    </div>
-    <div class="li-r">
-      ${fields.amt != null ? `<div class="li-v ${fields.amtCls || ''}">${fields.amt}</div>` : ''}
-      ${acts ? `<div class="li-acts">${acts}</div>` : ''}
-    </div>
-  </div>`;
 }
 
 // ──── Render: overview ─────────────────────────────────────
@@ -1499,36 +1604,24 @@ function renderOverview() {
     return ad.localeCompare(bd);
   });
 
-  // hero: net for this month
   const heroSub = cur.income > 0
     ? `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out · <span class="a">${savedPct.toFixed(0)}% saved</span>`
     : `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out`;
-  const heroNet = blk(
-    'Net this month',
-    (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}),
-    heroSub,
-    { color: net >= 0 ? 'positive' : 'negative' }
-  );
+  const heroNet = blk('Net this month', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), heroSub, { color: net >= 0 ? 'positive' : 'negative' });
 
-  // hero: monthly average
   let avgBlock = '';
   if (avgIn > 0) {
-    avgBlock = blk(
-      'Monthly average',
-      (avgSurplus >= 0 ? '+' : '−') + fmtMoney(Math.abs(avgSurplus), {round:true}),
+    avgBlock = blk('Monthly average', (avgSurplus >= 0 ? '+' : '−') + fmtMoney(Math.abs(avgSurplus), {round:true}),
       `${fmtMoney(avgIn, {round:true})} in · ${fmtMoney(avgOut, {round:true})} out`,
-      { size: 'med', color: avgSurplus >= 0 ? 'positive' : 'negative' }
-    );
+      { size: 'med', color: avgSurplus >= 0 ? 'positive' : 'negative' });
   }
 
-  // Period section: detailed breakdown for selected month
   const periodSection = sh('Period', { monthNav: monthNav(year, month) }) +
     row('Income', '+' + fmtMoney(cur.income, {round:true}), 'positive') +
     row('Expenses', '−' + fmtMoney(cur.bills, {round:true}), 'negative') +
     (pettySpent > 0 ? row('Petty cash', '−' + fmtMoney(pettySpent, {round:true}), 'negative') : '') +
     row('Net', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), net >= 0 ? 'positive' : 'negative', { strong: true });
 
-  // upcoming bills section
   let queueHTML = '';
   if (upcoming.length > 0) {
     const items = upcoming.slice(0, 5);
@@ -1544,13 +1637,12 @@ function renderOverview() {
           const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
           if (days === 1) pillHTML = pill('Tomorrow', 'y');
         }
-        const valCls = overdue ? 'r' : today ? 'r' : '';
-        return `<div class="row"><div><div class="n">${escHTML(b.name)} ${pillHTML}</div><div class="m">${cat.label} · ${compactDate(b.dueDate)}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
+        const valCls = overdue ? 'negative' : today ? 'negative' : '';
+        return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${pillHTML ? ' ' + pillHTML : ''}</div><div class="m">${cap(cat.label)} · ${compactDate(b.dueDate)}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
       }).join('') +
       (upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : '');
   }
 
-  // upcoming tasks
   let tasksHTML = '';
   if (openTasks.length > 0) {
     const items = openTasks.slice(0, 4);
@@ -1572,18 +1664,12 @@ function renderOverview() {
         else if (pri === 'low') metaBits.push('Low');
         if (t.dueDate) metaBits.push(compactDate(t.dueDate));
         const metaText = metaBits.join(' · ') || '—';
-        return `<div class="row"><div><div class="n">${escHTML(t.text)} ${pillHTML}</div><div class="m">${metaText}</div></div><span class="v">—</span></div>`;
+        return `<div class="row clickable" data-action="edit" data-type="tasks" data-id="${t.id}"><div><div class="n">${escHTML(t.text)}</div><div class="m">${metaText}</div></div>${pillHTML || '<span class="v">—</span>'}</div>`;
       }).join('') +
       (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : '');
   }
 
-  return `
-    ${heroNet}
-    ${avgBlock}
-    ${periodSection}
-    ${queueHTML}
-    ${tasksHTML}
-  `;
+  return `${heroNet}${avgBlock}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
 // ──── Render: income ───────────────────────────────────────
@@ -1601,15 +1687,9 @@ function renderIncome() {
 
   let avgBlock = '';
   if (stats.avgMonthly > 0) {
-    avgBlock = blk(
-      'Monthly average',
-      fmtMoney(stats.avgMonthly, {round:true}),
-      null,
-      { size: 'med' }
-    );
+    avgBlock = blk('Monthly average', fmtMoney(stats.avgMonthly, {round:true}), null, { size: 'med' });
   }
 
-  // chart
   let chartHTML;
   if (monthsWithData.length === 0) {
     chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
@@ -1627,7 +1707,6 @@ function renderIncome() {
     chartHTML = `<div class="chart"><div class="chart-bars">${bars}</div><div class="chart-l">${labels}</div></div>`;
   }
 
-  // sources list
   let sourcesHTML;
   if (sources.length === 0) {
     sourcesHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="income">Add your first income source</span></div>`;
@@ -1642,28 +1721,12 @@ function renderIncome() {
       if (hrs > 0) metaParts.push(fmtHM(hrs));
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
       const hasTips = i.tipsEnabled && amt > base;
-      return liItem({
-        name: escHTML(i.source),
-        pill: hasTips ? pill('+tips', 'g') : '',
-        metaParts,
-        amt: fmtMoney(amt, {round:true}),
-        amtCls: 'positive',
-        acts: [
-          { action: 'edit', type: 'income', id: i.id, label: 'Edit' },
-          { cls: 'danger', action: 'rm', type: 'income', id: i.id, label: 'Delete' },
-        ],
-      });
+      const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
+      return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="n">${escHTML(i.source)}${tipsPill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
     }).join('');
   }
 
-  return `
-    ${ytdBlock}
-    ${avgBlock}
-    ${sh('Trend', { meta: String(new Date().getFullYear()) })}
-    ${chartHTML}
-    ${sh('Sources', { meta: sources.length + (sources.length === 1 ? ' active' : ' active'), add: { action: 'open-modal', type: 'income', label: '+ Add' } })}
-    ${sourcesHTML}
-  `;
+  return `${ytdBlock}${avgBlock}${sh('Trend', { meta: String(new Date().getFullYear()) })}${chartHTML}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -1700,24 +1763,6 @@ function renderExpenses() {
     ? blk('Due this week', fmtMoney(dueThisWeek, {round:true}), `${dueCount} expense${dueCount > 1 ? 's' : ''}`, { size: 'med', color: 'warning' })
     : blk('Annual total', fmtMoney(totalAnnual, {round:true}), 'Projected recurring', { size: 'med' });
 
-  // categories
-  let catHTML = '';
-  if (catData.length && total > 0) {
-    catHTML = sh('By category', { meta: '% of income' }) +
-      catData.map(c => {
-        const rawPct = incTot > 0 ? (c.total / incTot) * 100 : 0;
-        const widthPct = Math.min(100, rawPct);
-        const pctTxt = incTot > 0 ? rawPct.toFixed(0) + '%' : '—';
-        const fillCls = rawPct > 30 ? 'neg' : rawPct > 15 ? 'warn' : '';
-        return `<div class="meter">
-          <span class="meter-l">${c.label}</span>
-          <span class="meter-b"><span class="meter-f ${fillCls}" style="width:${widthPct}%"></span></span>
-          <span class="meter-v">${pctTxt}</span>
-        </div>`;
-      }).join('');
-  }
-
-  // bills list
   const billsSorted = state.bills.slice().sort((a, b) => {
     if (a.paid !== b.paid) return a.paid ? 1 : -1;
     const ad = a.dueDate || '9999'; const bd = b.dueDate || '9999';
@@ -1737,40 +1782,74 @@ function renderExpenses() {
       const overdue = b.dueDate && !b.paid && isOverdue(b.dueDate);
       const today = b.dueDate && !b.paid && isTodayDate(b.dueDate);
       const cat = (CATEGORIES[b.category] || CATEGORIES.other);
-      const metaParts = [cat.label, b.recurring || 'once'];
+      const metaParts = [cap(cat.label), cap(b.recurring || 'once')];
       if (b.dueDate && !isPaid && !overdue && !today) metaParts.push(compactDate(b.dueDate));
+
       let pillHTML = '';
-      if (isPaid) pillHTML = pill('Paid', 'g');
-      else if (overdue) pillHTML = pill('Overdue', 'r');
-      else if (today) pillHTML = pill('Today', 'y');
+      if (isPaid) pillHTML = pill('Paid', 'g', { action: 'unpay-bill', id: b.id });
+      else if (overdue) pillHTML = pill('Overdue', 'r', { action: 'pay-bill', id: b.id });
+      else if (today) pillHTML = pill('Today', 'y', { action: 'pay-bill', id: b.id });
       else if (b.dueDate) {
         const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-        if (days === 1) pillHTML = pill('Tomorrow', 'y');
+        if (days === 1) pillHTML = pill('Tomorrow', 'y', { action: 'pay-bill', id: b.id });
       }
-      return liItem({
-        name: escHTML(b.name),
-        pill: pillHTML,
-        metaParts,
-        amt: fmtMoney(b.amount, {round:true}),
-        amtCls: isPaid ? 'muted' : overdue ? 'negative' : '',
-        acts: [
-          isPaid
-            ? { action: 'unpay-bill', id: b.id, label: 'Undo' }
-            : { cls: 'primary', action: 'pay-bill', id: b.id, label: 'Mark paid' },
-          { action: 'edit', type: 'expenses', id: b.id, label: 'Edit' },
-          { cls: 'danger', action: 'rm', type: 'expenses', id: b.id, label: 'Delete' },
-        ],
-      }, { dim: isPaid });
+
+      const valCls = isPaid ? 'muted' : overdue ? 'negative' : '';
+      const dimCls = isPaid ? ' dim' : '';
+      const inlinePill = pillHTML ? ' ' + pillHTML : '';
+
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${inlinePill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
     }).join('');
   }
 
-  return `
-    ${totalBlock}
-    ${weekBlock}
-    ${catHTML}
-    ${sh('Bills', { meta: state.bills.length + (state.bills.length === 1 ? '' : ''), add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}
-    ${billsHTML}
-  `;
+  return `${totalBlock}${weekBlock}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
+}
+
+
+function buildPieChart(incTot, catData, savings, net) {
+  if (incTot <= 0) {
+    return `<div class="pie-empty">Add income to see your breakdown</div>`;
+  }
+  const slices = [];
+  catData.forEach(c => {
+    if (c.total > 0) {
+      slices.push({ label: cap(c.label), pct: (c.total / incTot) * 100, amount: c.total, color: c.color });
+    }
+  });
+  if (savings > 0) {
+    slices.push({ label: 'Savings', pct: (savings / incTot) * 100, amount: savings, color: '#4f46e5' });
+  }
+  if (net > 0) {
+    slices.push({ label: 'Available', pct: (net / incTot) * 100, amount: net, color: '#cbd5e1' });
+  } else if (net < 0) {
+    slices.push({ label: 'Over budget', pct: Math.min(100, Math.abs(net) / incTot * 100), amount: Math.abs(net), color: '#dc2626' });
+  }
+  if (slices.length === 0) {
+    return `<div class="pie-empty">No spending to show yet</div>`;
+  }
+  // build conic-gradient
+  let curr = 0;
+  const stops = slices.map(s => {
+    const start = curr;
+    const end = Math.min(360, curr + s.pct * 3.6);
+    curr = end;
+    return `${s.color} ${start.toFixed(2)}deg ${end.toFixed(2)}deg`;
+  }).join(', ');
+  // legend
+  const legendHTML = slices.map(s => `<div class="pie-legend-row">
+    <span class="pie-legend-dot" style="background:${s.color}"></span>
+    <span class="pie-legend-label">${s.label}<span class="pct">${s.pct.toFixed(0)}%</span></span>
+    <span class="pie-legend-amt">${fmtMoney(s.amount, {round:true})}</span>
+  </div>`).join('');
+  return `<div class="pie-wrap">
+    <div class="pie" style="background: conic-gradient(${stops})">
+      <div class="pie-hole">
+        <div class="pie-hole-l">Income</div>
+        <div class="pie-hole-v">${fmtMoney(incTot, {round:true})}</div>
+      </div>
+    </div>
+    <div class="pie-legend">${legendHTML}</div>
+  </div>`;
 }
 
 // ──── Render: budget ───────────────────────────────────────
@@ -1804,6 +1883,8 @@ function renderBudget() {
     } else g._reqMo = 0;
   });
 
+  const catData = aggregateBillsByCategory(state.bills, year, month);
+  const netForPie = Math.max(0, inc - fixed - savings);
   const monthlyAllowance = Math.max(0, inc - fixed - savings);
   const weeklyAllowance = monthlyAllowance / 4.333;
   const dailyAllowance = monthlyAllowance / 30;
@@ -1822,39 +1903,28 @@ function renderBudget() {
     (savings > 0 ? row('Savings goals', '−' + fmtMoney(savings, {round:true}), 'negative') : '') +
     row('Available', fmtMoney(monthlyAllowance, {round:true}), 'positive', { strong: true });
 
-  // week meter
   const weekUsedPctCapped = Math.min(100, weekPct);
   const weekFillCls = weekPct > 100 ? 'neg' : weekPct > 80 ? 'warn' : '';
-  const weekMeterHTML = `<div class="meter">
-    <span class="meter-l">Used</span>
-    <span class="meter-b"><span class="meter-f ${weekFillCls}" style="width:${weekUsedPctCapped}%"></span></span>
-    <span class="meter-v">${fmtMoney(weekSpent, {round:true})}</span>
-  </div>`;
+  const weekMeterHTML = `<div class="meter"><span class="meter-l">Used</span><span class="meter-b"><span class="meter-f ${weekFillCls}" style="width:${weekUsedPctCapped}%"></span></span><span class="meter-v">${fmtMoney(weekSpent, {round:true})}</span></div>`;
 
-  // recent activity
   let txnHTML = '';
   if (txns.length === 0) {
     txnHTML = `<div class="empty">No activity in the last 7 days · <span class="lnk" data-action="open-modal" data-type="petty">Log an expense</span></div>`;
   } else {
     txnHTML = txns.map(t => {
       const cat = t.kind === 'income' ? { label: 'Income' } : (CATEGORIES[t.category] || CATEGORIES.other);
+      const catLabel = cap(cat.label);
       const isInc = t.sign === 'in';
       const sign = isInc ? '+' : '−';
       const dateLabel = t.date ? compactDate(t.date) : '—';
-      return liItem({
-        name: escHTML(t.name),
-        metaParts: [cat.label, dateLabel],
-        amt: sign + fmtMoney(t.amount, {round:true}).replace('−', '').replace('+', ''),
-        amtCls: isInc ? 'positive' : 'negative',
-        acts: [
-          ...(t.canEdit ? [{ action: 'edit', type: t.refType, id: t.refId, label: 'Edit' }] : []),
-          { cls: 'danger', action: 'rm', type: t.refType, id: t.refId, label: 'Delete' },
-        ],
-      });
+      const amtText = sign + fmtMoney(t.amount, {round:true}).replace('−', '').replace('+', '');
+      const rowAttrs = t.canEdit
+        ? `class="row clickable" data-action="edit" data-type="${t.refType}" data-id="${t.refId}"`
+        : `class="row"`;
+      return `<div ${rowAttrs}><div><div class="n">${escHTML(t.name)}</div><div class="m">${catLabel} · ${dateLabel}</div></div><span class="v ${isInc ? 'positive' : 'negative'}">${amtText}</span></div>`;
     }).join('');
   }
 
-  // goals
   let goalsHTML = '';
   if (state.goals.length === 0) {
     goalsHTML = `<div class="empty">No savings goals · <span class="lnk" data-action="open-modal" data-type="goals">Add one</span></div>`;
@@ -1863,36 +1933,16 @@ function renderBudget() {
       const target = parseFloat(g.targetAmount) || 0;
       const saved = parseFloat(g.currentAmount) || 0;
       const p = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-      const dateStr = g.targetDate ? `By ${compactDate(g.targetDate)}` : null;
-      const reqStr = g._reqMo > 0 ? `<span class="req">${fmtMoney(g._reqMo, {round:true})}/mo to reach</span>` : null;
       const metaParts = [`${fmtMoney(saved, {round:true})} of ${fmtMoney(target, {round:true})}`];
-      if (dateStr) metaParts.push(dateStr);
-      if (reqStr) metaParts.push(reqStr);
+      if (g.targetDate) metaParts.push(`By ${compactDate(g.targetDate)}`);
+      if (g._reqMo > 0) metaParts.push(`<span class="req">${fmtMoney(g._reqMo, {round:true})}/mo to reach</span>`);
       const metaInner = metaParts.map((p, i) => (i > 0 ? '<span class="dot">·</span>' : '') + `<span>${p}</span>`).join('');
-      return `<div class="goal">
-        <div class="goal-h"><span class="n">${escHTML(g.name)}</span><span class="p">${p.toFixed(0)}%</span></div>
-        <div class="goal-bar"><div class="goal-bar-f" style="width:${p}%"></div></div>
-        <div class="goal-meta">${metaInner}</div>
-        <div class="goal-acts">
-          <button class="primary" data-action="goal-add" data-id="${g.id}">Add funds</button>
-          <button data-action="edit" data-type="goals" data-id="${g.id}">Edit</button>
-          <button class="danger" data-action="rm" data-type="goals" data-id="${g.id}">Delete</button>
-        </div>
-      </div>`;
+      return `<div class="goal"><div class="goal-h"><span class="n">${escHTML(g.name)}</span><span class="p">${p.toFixed(0)}%</span></div><div class="goal-bar"><div class="goal-bar-f" style="width:${p}%"></div></div><div class="goal-meta">${metaInner}</div><div class="goal-acts"><button class="primary" data-action="goal-add" data-id="${g.id}">Add funds</button><button data-action="edit" data-type="goals" data-id="${g.id}">Edit</button></div></div>`;
     }).join('');
   }
 
-  return `
-    ${availBlock}
-    ${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}
-    ${allocationHTML}
-    ${sh('This week', { meta: `${weekPct.toFixed(0)}% used` })}
-    ${weekMeterHTML}
-    ${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}
-    ${txnHTML}
-    ${sh('Savings goals', { meta: state.goals.length + (state.goals.length === 1 ? ' goal' : ' goals'), add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}
-    ${goalsHTML}
-  `;
+  const pieHTML = buildPieChart(inc, catData, savings, netForPie);
+  return `${availBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('This week', { meta: `${weekPct.toFixed(0)}% used` })}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
@@ -1932,45 +1982,33 @@ function renderTasks() {
       const isOver = !t.done && isOverdue(t.dueDate);
       const isToday = !t.done && isTodayDate(t.dueDate);
       const pri = t.priority || '';
-      let pillHTML = '';
-      if (t.done) pillHTML = pill('Done', 'g');
-      else if (isOver) pillHTML = pill('Overdue', 'r');
-      else if (isToday) pillHTML = pill('Today', 'y');
+
+      let rightHTML;
+      if (t.done) rightHTML = pill('Done', 'g', { action: 'toggle-task', id: t.id });
+      else if (isOver) rightHTML = pill('Overdue', 'r', { action: 'toggle-task', id: t.id });
+      else if (isToday) rightHTML = pill('Today', 'y', { action: 'toggle-task', id: t.id });
       else if (t.dueDate) {
         const days = Math.round((new Date(t.dueDate + 'T00:00:00') - todayStart()) / 86400000);
-        if (days === 1) pillHTML = pill('Tomorrow', 'y');
+        if (days === 1) rightHTML = pill('Tomorrow', 'y', { action: 'toggle-task', id: t.id });
+        else rightHTML = `<span class="pill muted clickable" data-action="toggle-task" data-id="${t.id}">Done?</span>`;
+      } else {
+        rightHTML = `<span class="pill muted clickable" data-action="toggle-task" data-id="${t.id}">Done?</span>`;
       }
+
       const metaParts = [];
-      if (pri === 'high') metaParts.push({ text: 'High', cls: 'pri-h' });
-      else if (pri === 'med') metaParts.push({ text: 'Medium', cls: 'pri-m' });
+      if (pri === 'high') metaParts.push('High');
+      else if (pri === 'med') metaParts.push('Medium');
       else if (pri === 'low') metaParts.push('Low');
       if (t.dueDate && !isOver && !isToday) metaParts.push(compactDate(t.dueDate));
-      const metaInner = metaParts.map((p, i) => {
-        const isObj = typeof p === 'object';
-        const text = isObj ? p.text : p;
-        const cls = isObj ? p.cls : '';
-        return (i > 0 ? '<span class="dot">·</span>' : '') + `<span class="${cls}">${text}</span>`;
-      }).join('');
-      return `<div class="task${t.done ? ' done dim' : ''}">
-        <span class="task-cb ${t.done ? 'done' : ''}" data-action="toggle-task" data-id="${t.id}"></span>
-        <div class="task-info">
-          <div class="task-n">${escHTML(t.text)} ${pillHTML}</div>
-          ${metaInner ? `<div class="task-meta">${metaInner}</div>` : ''}
-        </div>
-        <div class="task-acts">
-          <button data-action="edit" data-type="tasks" data-id="${t.id}">Edit</button>
-          <button class="danger" data-action="rm" data-type="tasks" data-id="${t.id}">Delete</button>
-        </div>
-      </div>`;
+      const metaText = metaParts.join(' · ');
+
+      const dimCls = t.done ? ' dim' : '';
+
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="tasks" data-id="${t.id}"><div><div class="n">${escHTML(t.text)}</div>${metaText ? `<div class="m">${metaText}</div>` : ''}</div>${rightHTML}</div>`;
     }).join('');
   }
 
-  return `
-    ${openBlock}
-    ${urgentBlock}
-    ${sh('All tasks', { meta: total + (total === 1 ? ' task' : ' tasks'), add: { action: 'open-modal', type: 'tasks', label: '+ Add' } })}
-    ${listHTML}
-  `;
+  return `${openBlock}${urgentBlock}${sh('All tasks', { meta: `${total} ${total === 1 ? 'task' : 'tasks'}`, add: { action: 'open-modal', type: 'tasks', label: '+ Add' } })}${listHTML}`;
 }
 
 // ──── Master render ──────────────────────────────────────────
@@ -2065,6 +2103,7 @@ document.addEventListener('click', e => {
       }
       state[t] = state[t].filter(x => x.id !== btn.dataset.id);
       saveState(); render();
+      document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
     }
   }
   else if (act === 'edit') openModal(btn.dataset.type, btn.dataset.id);
@@ -2182,6 +2221,33 @@ function openModal(type, id = null) {
         f.elements['tipsEnabled'].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
+  }
+  // Show/hide Delete button based on edit/add mode
+  const factionsDiv = f.querySelector('.factions');
+  if (factionsDiv) {
+    let delBtn = factionsDiv.querySelector('[data-action="rm"]');
+    if (id) {
+      if (!delBtn) {
+        delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'danger';
+        delBtn.dataset.action = 'rm';
+        delBtn.textContent = 'Delete';
+        factionsDiv.insertBefore(delBtn, factionsDiv.firstChild);
+      }
+      delBtn.dataset.type = type;
+      delBtn.dataset.id = id;
+      delBtn.style.display = '';
+    } else if (delBtn) {
+      delBtn.style.display = 'none';
+    }
+  }
+  // Update modal title (Add vs Edit)
+  const _titleEl = document.querySelector('#modal-' + type + ' .modal-t');
+  if (_titleEl) {
+    const verb = id ? 'Edit' : 'Add';
+    const typeLabel = ({expenses: 'expense', income: 'income source', tasks: 'task', goals: 'goal', petty: 'transaction'})[type] || type;
+    _titleEl.textContent = verb + ' ' + typeLabel;
   }
   document.getElementById('modal-' + type).classList.add('open');
   setTimeout(() => f.querySelector('input')?.focus(), 50);
