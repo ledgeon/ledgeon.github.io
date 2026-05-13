@@ -384,9 +384,9 @@ main { flex: 1; }
   gap: 3px;
   font-size: 9.5px;
   color: var(--ink-4);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: 600;
 }
 .chart-l > div { flex: 1 1 0; min-width: 0; text-align: center; }
 .chart-l .cur { color: var(--accent); font-weight: 700; }
@@ -795,6 +795,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .goal { padding: 12px 14px; }
   .meter { grid-template-columns: 78px 1fr 42px; gap: 8px; padding: 7px 14px; }
   .chart { padding: 12px 14px; }
+  .chart-l { font-size: 9px; letter-spacing: 0; }
   .note, .empty { padding: 14px; }
   .modal { padding: 10px; }
   .modal-c { max-height: 92vh; }
@@ -807,6 +808,8 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .meter { grid-template-columns: 66px 1fr 38px; gap: 6px; }
   nav.mnav button { font-size: 10px; }
   .blk-v { font-size: 28px; }
+  .chart-bars { gap: 2px; }
+  .chart-l { gap: 2px; font-size: 8.5px; }
 }
 
 
@@ -932,6 +935,63 @@ main > * { animation: fadeIn 0.12s ease-out; }
 @media (max-width: 380px) {
   .pie-wrap { flex-direction: column; align-items: stretch; gap: 14px; }
   .pie { width: 140px; height: 140px; align-self: center; }
+}
+
+
+/* ── WEEK ALLOWANCE SUMMARY (Budget tab) ────────────────── */
+.week-summary {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+.week-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.week-summary-label {
+  font-size: 13px;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.week-summary-v {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--positive);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.week-summary-v.warn { color: var(--warning); }
+.week-summary-v.neg { color: var(--negative); }
+.week-bar {
+  display: block;
+  height: 8px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 7px;
+}
+.week-bar-f {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.25s ease-out;
+}
+.week-bar-f.warn { background: var(--warning); }
+.week-bar-f.neg { background: var(--negative); }
+.week-summary-meta {
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  justify-content: space-between;
+}
+.week-summary-meta .a { color: var(--ink); font-weight: 600; }
+
+@media (max-width: 640px) {
+  .week-summary { padding: 13px 14px; }
+  .week-summary-v { font-size: 20px; }
 }
 </style>
 </head>
@@ -1669,7 +1729,7 @@ function renderOverview() {
       (openTasks.length > 4 ? `<div class="note">+${openTasks.length - 4} more · <span class="lnk" data-action="goto" data-tab="tasks">view all</span></div>` : '');
   }
 
-  return `${heroNet}${avgBlock}${periodSection}${queueHTML}${tasksHTML}`;
+  return `${heroNet}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
 // ──── Render: income ───────────────────────────────────────
@@ -1702,7 +1762,7 @@ function renderIncome() {
     }).join('');
     const labels = yearHist.map(h => {
       const cls = h.current ? ' class="cur"' : '';
-      return `<div${cls}>${h.label.charAt(0)}</div>`;
+      return `<div${cls}>${h.label}</div>`;
     }).join('');
     chartHTML = `<div class="chart"><div class="chart-bars">${bars}</div><div class="chart-l">${labels}</div></div>`;
   }
@@ -1903,9 +1963,25 @@ function renderBudget() {
     (savings > 0 ? row('Savings goals', '−' + fmtMoney(savings, {round:true}), 'negative') : '') +
     row('Available', fmtMoney(monthlyAllowance, {round:true}), 'positive', { strong: true });
 
+  const weekRemaining = weeklyAllowance - weekSpent;
   const weekUsedPctCapped = Math.min(100, weekPct);
   const weekFillCls = weekPct > 100 ? 'neg' : weekPct > 80 ? 'warn' : '';
-  const weekMeterHTML = `<div class="meter"><span class="meter-l">Used</span><span class="meter-b"><span class="meter-f ${weekFillCls}" style="width:${weekUsedPctCapped}%"></span></span><span class="meter-v">${fmtMoney(weekSpent, {round:true})}</span></div>`;
+  const weekValueCls = weekRemaining < 0 ? 'neg' : weekPct > 80 ? 'warn' : '';
+  const weekRemainingLabel = weekRemaining < 0 ? 'Over budget' : 'Remaining this week';
+  const weekRemainingValue = weekRemaining < 0
+    ? '−' + fmtMoney(Math.abs(weekRemaining), {round:true})
+    : fmtMoney(weekRemaining, {round:true});
+  const weekMeterHTML = `<div class="week-summary">
+    <div class="week-summary-row">
+      <span class="week-summary-label">${weekRemainingLabel}</span>
+      <span class="week-summary-v ${weekValueCls}">${weekRemainingValue}</span>
+    </div>
+    <div class="week-bar"><div class="week-bar-f ${weekFillCls}" style="width:${weekUsedPctCapped}%"></div></div>
+    <div class="week-summary-meta">
+      <span>Spent <span class="a">${fmtMoney(weekSpent, {round:true})}</span></span>
+      <span>of ${fmtMoney(weeklyAllowance, {round:true})} allowance</span>
+    </div>
+  </div>`;
 
   let txnHTML = '';
   if (txns.length === 0) {
@@ -1942,7 +2018,7 @@ function renderBudget() {
   }
 
   const pieHTML = buildPieChart(inc, catData, savings, netForPie);
-  return `${availBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('This week', { meta: `${weekPct.toFixed(0)}% used` })}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
+  return `${availBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('This week')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
