@@ -1787,18 +1787,28 @@ function renderOverview() {
     : `${fmtMoney(cur.income, {round:true})} in · ${fmtMoney(cur.bills + pettySpent, {round:true})} out`;
   const heroNet = blk('Net this month', (net >= 0 ? '+' : '−') + fmtMoney(Math.abs(net), {round:true}), heroSub, { color: net >= 0 ? 'positive' : 'negative' });
 
-  // --- NEW: Net Flow Chart (Income Tab Style) ---
+  // --- NEW: Net Flow Chart (Filtered for valid data) ---
   const yearHist = getCalendarYearHistory();
-  const monthsWithData = yearHist.filter(h => h.income > 0 || h.bills > 0);
+  const curMonthIndex = new Date().getMonth();
+  
+  // Exclude future months, and exclude past months with no income 
+  // to avoid projecting recurring bills into empty history.
+  const chartDataRaw = yearHist.map((h, i) => {
+    const isFuture = i > curMonthIndex;
+    const isEmpty = isFuture || h.income <= 0;
+    return { ...h, income: isEmpty ? 0 : h.income, bills: isEmpty ? 0 : h.bills, empty: isEmpty };
+  });
+
+  const validMonths = chartDataRaw.filter(m => !m.empty);
   
   let chartHTML = '';
-  if (monthsWithData.length === 0) {
-    chartHTML = `<div class="chart-empty">No complete months to display yet.</div>`;
+  if (validMonths.length === 0) {
+    chartHTML = `<div class="chart-empty">No complete months to display yet. Add income first.</div>`;
   } else {
-    const maxAbsNet = Math.max(1, ...monthsWithData.map(m => Math.abs(m.income - m.bills)));
+    const maxAbsNet = Math.max(1, ...validMonths.map(m => Math.abs(m.income - m.bills)));
     
-    const colsFlow = yearHist.map(h => {
-      const hasData = h.income > 0 || h.bills > 0;
+    const colsFlow = chartDataRaw.map(h => {
+      const hasData = !h.empty;
       const cNet = h.income - h.bills;
       const hPct = hasData ? (Math.abs(cNet) / maxAbsNet) * 100 : 0;
       const isPos = cNet >= 0;
@@ -1810,7 +1820,7 @@ function renderOverview() {
         topHalf = `<div style="height: 50%; width: 100%;"></div>`;
         botHalf = `<div style="height: 50%; width: 100%;"></div>`;
       } else if (isPos) {
-        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%;"><div class="bar" style="height: ${Math.max(5, hPct)}%; background: var(--accent); width: 100%;"></div></div>`;
+        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%;"><div class="bar" style="height: ${Math.max(5, hPct)}%; background: var(--accent); width: 100%; border-radius: 2px 2px 0 0;"></div></div>`;
         botHalf = `<div style="height: 50%; width: 100%;"></div>`;
       } else {
         topHalf = `<div style="height: 50%; width: 100%;"></div>`;
