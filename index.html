@@ -1343,28 +1343,24 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <div class="modal-c">
     <div class="modal-t">cloud sync</div>
     <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 4px; line-height: 1.5;">
-      This device has a unique sync code. Copy it to another device to sync them together. Or paste another device's code below to load that data here.
+      Use the same sync code on every device to share data. Generate one here, then enter it on your other devices.
     </div>
     <div class="frow"><div class="fcol">
-      <label class="flbl">this device's code</label>
+      <label class="flbl">sync code</label>
       <div style="display: flex; gap: 6px;">
-        <input type="text" class="input" id="sync-current-code" readonly placeholder="—" style="flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; text-align: center; font-weight: 700; font-size: 18px; background: var(--bg-subtle);">
-        <button type="button" id="sync-copy-btn" data-action="sync-copy" style="background: var(--accent-soft); color: var(--accent); padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 700;">Copy</button>
+        <input type="text" class="input" id="sync-code-input" placeholder="generate or paste a code" autocomplete="off" spellcheck="false" maxlength="20" style="flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 3px; text-transform: uppercase; text-align: center; font-weight: 700; font-size: 18px;">
+        <button type="button" data-action="sync-copy" id="sync-copy-btn" style="background: var(--accent-soft); color: var(--accent); padding: 0 14px; border-radius: 6px; font-size: 12px; font-weight: 700;">Copy</button>
       </div>
     </div></div>
-    <div style="font-size: 10.5px; color: var(--ink-4); margin: 14px 0 6px; line-height: 1; text-transform: uppercase; letter-spacing: 1.4px; font-weight: 700; text-align: center;">— or —</div>
     <div class="frow"><div class="fcol">
-      <label class="flbl">use a different code</label>
-      <div style="display: flex; gap: 6px;">
-        <input type="text" class="input" id="sync-paste-code" placeholder="paste code from another device" autocomplete="off" spellcheck="false" maxlength="20" style="flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 2px; text-transform: uppercase; text-align: center; font-weight: 600;">
-        <button type="button" data-action="sync-switch" class="primary" style="padding: 0 14px; font-size: 12px; font-weight: 700;">Switch</button>
-      </div>
+      <button type="button" data-action="sync-generate" style="background: var(--bg-hover); color: var(--ink-2); padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; width: 100%;">Generate new code</button>
     </div></div>
     <div id="sync-msg" style="font-size: 12px; color: var(--ink-3); margin: 4px 0 12px; min-height: 16px; line-height: 1.5;"></div>
     <div class="factions">
       <button type="button" class="danger" id="sync-disable-btn" data-action="sync-disable" style="display:none">Disable</button>
       <button type="button" data-action="close-modal">close</button>
       <button type="button" id="sync-now-btn" data-action="sync-now" style="display:none">Sync now</button>
+      <button type="button" class="primary" data-action="sync-save">Save &amp; sync</button>
     </div>
   </div>
 </div>
@@ -2990,114 +2986,78 @@ function setSyncMsg(text, isErr) {
   m.textContent = text;
 }
 
-async function generateCodeFromWorker() {
-  const res = await fetch(`${syncUrlBase()}/generate`, { method: 'POST' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if (!data.code) throw new Error('No code returned');
-  return data.code;
-}
-
-async function openSyncModal() {
-  const modal = document.getElementById('modal-sync');
-  modal.classList.add('open');
-  document.getElementById('sync-paste-code').value = '';
-  const currentField = document.getElementById('sync-current-code');
-  const disableBtn = document.getElementById('sync-disable-btn');
-  const nowBtn = document.getElementById('sync-now-btn');
-
-  if (syncEnabled()) {
-    const cfg = getSyncConfig();
-    currentField.value = cfg.key;
-    disableBtn.style.display = '';
-    nowBtn.style.display = '';
+function openSyncModal() {
+  const cfg = getSyncConfig() || {};
+  document.getElementById('sync-code-input').value = cfg.key || '';
+  const enabled = syncEnabled();
+  document.getElementById('sync-disable-btn').style.display = enabled ? '' : 'none';
+  document.getElementById('sync-now-btn').style.display = enabled ? '' : 'none';
+  if (enabled) {
     const ts = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : '—';
     setSyncMsg(`Sync active · last local change: ${ts}`, false);
-    return;
+  } else {
+    setSyncMsg('Generate a code on your first device, then enter the same code on your others.', false);
   }
-
-  // No config yet — auto-generate
-  currentField.value = '';
-  disableBtn.style.display = 'none';
-  nowBtn.style.display = 'none';
-  setSyncMsg('Generating sync code…', false);
-  try {
-    const code = await generateCodeFromWorker();
-    setSyncConfig({ key: code });
-    currentField.value = code;
-    disableBtn.style.display = '';
-    nowBtn.style.display = '';
-    setSyncBadge('syncing', 'syncing');
-    if (stateHasData(state)) {
-      const ok = await syncPush();
-      setSyncMsg(ok ? 'Code generated. Your local data has been backed up.' : 'Code generated but initial backup failed — tap "Sync now".', !ok);
-    } else {
-      setSyncBadge('ok', 'synced');
-      setSyncMsg('Code generated. Sync is active.', false);
-    }
-  } catch (e) {
-    setSyncMsg('Failed to generate code: ' + e.message + '. Close and reopen to retry.', true);
-  }
+  document.getElementById('modal-sync').classList.add('open');
 }
 
-async function handleSyncSwitch() {
-  const raw = document.getElementById('sync-paste-code').value;
-  const code = normalizeSyncCode(raw);
-  if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Code must be at least ${SYNC_CODE_MIN} characters.`, true); return; }
-
-  const currentCfg = getSyncConfig();
-  if (currentCfg && currentCfg.key === code) { setSyncMsg(`That's already this device's code.`, false); return; }
-
-  setSyncMsg('Looking up that code…', false);
-  const oldCfg = currentCfg;
-  setSyncConfig({ key: code });
-
-  const remote = await syncPull();
-  if (!remote) {
-    setSyncConfig(oldCfg);
-    setSyncMsg('Could not reach sync server. No changes made.', true);
-    return;
-  }
-
-  const remoteHasData = remote.state && stateHasData(remote.state);
-
-  if (remoteHasData) {
-    const ts = new Date(remote.updatedAt).toLocaleString();
-    if (!confirm(`Switch to data from ${ts}?\n\nYour local data on this device will be replaced.`)) {
-      setSyncConfig(oldCfg);
-      setSyncMsg('Cancelled.', false);
-      return;
-    }
-    applyRemoteState(remote.state, remote.updatedAt);
-    render(); updateBadges();
-    document.getElementById('sync-current-code').value = code;
-    document.getElementById('sync-paste-code').value = '';
-    setSyncMsg(`Switched. Loaded data from ${ts}.`, false);
-  } else {
-    if (!confirm(`No data found under that code. Continue?\n\nThis device's local data will be pushed under this code.`)) {
-      setSyncConfig(oldCfg);
-      setSyncMsg('Cancelled.', false);
-      return;
-    }
-    const ok = stateHasData(state) ? await syncPush() : true;
-    document.getElementById('sync-current-code').value = code;
-    document.getElementById('sync-paste-code').value = '';
-    setSyncMsg(ok ? 'Switched. Local data pushed under new code.' : 'Switch failed.', !ok);
-  }
+function handleSyncGenerate() {
+  const code = generateSyncCode();
+  document.getElementById('sync-code-input').value = code;
+  setSyncMsg('New code generated. Tap "Save & sync" to start, then copy this code to your other devices.', false);
 }
 
 async function handleSyncCopy() {
-  const code = document.getElementById('sync-current-code').value;
-  if (!code) { setSyncMsg('No code to copy yet.', true); return; }
+  const code = normalizeSyncCode(document.getElementById('sync-code-input').value);
+  if (!code) { setSyncMsg('Nothing to copy yet.', true); return; }
   try {
     await navigator.clipboard.writeText(code);
     setSyncMsg('Copied to clipboard.', false);
   } catch {
-    const inp = document.getElementById('sync-current-code');
+    const inp = document.getElementById('sync-code-input');
     inp.select(); inp.setSelectionRange(0, 9999);
     try { document.execCommand('copy'); setSyncMsg('Copied to clipboard.', false); }
     catch { setSyncMsg('Copy failed. Select the code manually.', true); }
   }
+}
+
+async function handleSyncSave() {
+  const raw = document.getElementById('sync-code-input').value;
+  const code = normalizeSyncCode(raw);
+  if (code.length < SYNC_CODE_MIN) { setSyncMsg(`Sync code must be at least ${SYNC_CODE_MIN} characters. Tap "Generate new code" if you don't have one yet.`, true); return; }
+
+  setSyncConfig({ key: code });
+  document.getElementById('sync-code-input').value = code;
+  setSyncMsg('Saved. Checking cloud…', false);
+
+  const remote = await syncPull();
+  if (!remote) { setSyncMsg('Could not reach the sync server. Check your connection.', true); return; }
+
+  const localHasData = stateHasData(state);
+  const remoteHasData = remote.state && stateHasData(remote.state);
+
+  if (remoteHasData && localHasData) {
+    const remoteTs = remote.updatedAt ? new Date(remote.updatedAt).toLocaleString() : 'unknown';
+    const localTs = state.updatedAt ? new Date(state.updatedAt).toLocaleString() : 'unknown';
+    const useRemote = confirm(`Both this device and the cloud have data under this code.\n\nRemote: ${remoteTs}\nLocal:  ${localTs}\n\nOK = use remote (replaces local)\nCancel = push local (replaces remote)`);
+    if (useRemote) {
+      applyRemoteState(remote.state, remote.updatedAt);
+      render(); updateBadges();
+      setSyncMsg('Pulled from cloud. Sync active.', false);
+    } else {
+      const ok = await syncPush();
+      setSyncMsg(ok ? 'Pushed local to cloud. Sync active.' : 'Push failed.', !ok);
+    }
+  } else if (remoteHasData) {
+    applyRemoteState(remote.state, remote.updatedAt);
+    render(); updateBadges();
+    setSyncMsg('Pulled from cloud. Sync active.', false);
+  } else {
+    const ok = localHasData ? await syncPush() : true;
+    setSyncMsg(ok ? 'Sync active. ' + (localHasData ? 'Local data backed up.' : 'Cloud is empty — make a change to start syncing.') : 'Push failed.', !ok);
+  }
+  document.getElementById('sync-disable-btn').style.display = '';
+  document.getElementById('sync-now-btn').style.display = '';
 }
 
 async function handleSyncNow() {
@@ -3121,11 +3081,11 @@ async function handleSyncNow() {
 
 function handleSyncDisable() {
   const cfg = getSyncConfig();
-  const codeMsg = cfg && cfg.key ? `\n\nThis device's code is: ${cfg.key}\nSave it somewhere if you want to rejoin this sync later.` : '';
+  const codeMsg = cfg && cfg.key ? `\n\nYour code is: ${cfg.key}\nSave it somewhere if you want to rejoin this sync later.` : '';
   if (!confirm('Disable sync on this device? Your local data stays. Other devices using this code keep syncing.' + codeMsg)) return;
   setSyncConfig(null);
   setSyncMsg('Sync disabled.', false);
-  const cur = document.getElementById('sync-current-code'); if (cur) cur.value = '';
+  const inp = document.getElementById('sync-code-input'); if (inp) inp.value = '';
   document.getElementById('sync-disable-btn').style.display = 'none';
   document.getElementById('sync-now-btn').style.display = 'none';
   const el = document.getElementById('sync-indicator');
@@ -3140,8 +3100,10 @@ document.addEventListener('click', e => {
     const menu = document.getElementById('header-menu');
     if (menu) menu.hidden = true;
     openSyncModal();
-  } else if (act === 'sync-switch') {
-    handleSyncSwitch();
+  } else if (act === 'sync-save') {
+    handleSyncSave();
+  } else if (act === 'sync-generate') {
+    handleSyncGenerate();
   } else if (act === 'sync-now') {
     handleSyncNow();
   } else if (act === 'sync-disable') {
