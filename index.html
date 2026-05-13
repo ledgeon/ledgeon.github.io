@@ -1283,7 +1283,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
         <div class="fcol"><label class="flbl">due date</label><input type="date" class="input" name="date"></div>
       </div>
       
-      <div class="tip-box" style="margin-top: 6px; margin-bottom: 0;">
+      <div class="tip-box" id="debt-section" style="margin-top: 6px; margin-bottom: 0; display: none;">
         <label class="tip-toggle">
           <input type="checkbox" name="isDebt" id="isDebtToggle"> Track as debt (Balance & APR)
         </label>
@@ -1544,6 +1544,25 @@ function syncPercentBills() {
     if (b.isPercent && typeof b.pctValue === 'number') {
       if (avg === null) avg = getIncomeStats().avgMonthly || 0;
       b.amount = avg * b.pctValue / 100;
+    }
+  }
+}
+
+function updateDebtSectionVisibility() {
+  const f = document.querySelector('#modal-expenses form');
+  if (!f) return;
+  const catSel = f.elements['category'];
+  const section = document.getElementById('debt-section');
+  const debtToggle = f.elements['isDebtToggle'];
+  if (!catSel || !section || !debtToggle) return;
+  if (catSel.value === 'debt') {
+    section.style.display = '';
+  } else {
+    section.style.display = 'none';
+    // If category is no longer 'debt', untick the toggle so save logic strips balance/apr
+    if (debtToggle.checked) {
+      debtToggle.checked = false;
+      debtToggle.dispatchEvent(new Event('change', { bubbles: true }));
     }
   }
 }
@@ -2722,6 +2741,9 @@ document.addEventListener('change', e => {
   else if (e.target.id === 'isPercentToggle') {
     updateExpensePercentUI();
   }
+  else if (e.target.name === 'category' && e.target.closest('#modal-expenses')) {
+    updateDebtSectionVisibility();
+  }
   else if (e.target.id === 'tax-pct-input') {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
@@ -2867,7 +2889,7 @@ function openModal(type, id = null) {
     }
   }
   document.getElementById('modal-' + type).classList.add('open');
-  if (type === 'expenses') updateExpensePercentUI();
+  if (type === 'expenses') { updateExpensePercentUI(); updateDebtSectionVisibility(); }
   setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
@@ -2916,8 +2938,8 @@ document.querySelectorAll('form[data-type]').forEach(f => {
         item.amount = inputVal;
       }
 
-      // Update debt fields
-      if (f.elements['isDebtToggle'].checked) {
+      // Update debt fields — only kept if category is 'debt' and toggle is on
+      if (item.category === 'debt' && f.elements['isDebtToggle'].checked) {
         item.balance = pAmt(fd.get('balance'));
         item.apr = parseFloat(fd.get('apr')) || 0;
       } else {
