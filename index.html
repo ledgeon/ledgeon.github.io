@@ -360,36 +360,47 @@ main { flex: 1; }
   padding: 12px 16px 14px;
   border-bottom: 1px solid var(--border);
 }
-.chart-bars {
+/* Each month is a SINGLE column containing both its bar AND its
+   label. They share one flex item so they cannot drift apart. */
+.chart-cols {
   display: flex;
-  align-items: flex-end;
   gap: 3px;
-  height: 64px;
-  margin-bottom: 6px;
+  align-items: stretch;
 }
-.chart-bar {
+.chart-col {
   flex: 1 1 0;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.chart-col .bar-track {
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.chart-col .bar {
+  width: 100%;
   background: var(--accent);
   border-radius: 2px 2px 0 0;
-  min-height: 2px;
+  min-height: 3px;
 }
-.chart-bar.cur {
-  background: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-.chart-bar.empty { background: transparent; min-height: 0; }
-.chart-l {
-  display: flex;
-  gap: 3px;
+.chart-col .bar.empty { background: transparent; min-height: 0; }
+.chart-col.cur .bar { box-shadow: 0 0 0 2px var(--accent-soft); }
+.chart-col .label {
+  text-align: center;
   font-size: 9.5px;
   color: var(--ink-4);
-  letter-spacing: 0.2px;
   text-transform: uppercase;
   font-weight: 600;
+  letter-spacing: 0.2px;
+  margin-top: 7px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
 }
-.chart-l > div { flex: 1 1 0; min-width: 0; text-align: center; }
-.chart-l .cur { color: var(--accent); font-weight: 700; }
+.chart-col.cur .label { color: var(--accent); font-weight: 700; }
 .chart-empty {
   padding: 28px 16px;
   text-align: center;
@@ -795,7 +806,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .goal { padding: 12px 14px; }
   .meter { grid-template-columns: 78px 1fr 42px; gap: 8px; padding: 7px 14px; }
   .chart { padding: 12px 14px; }
-  .chart-l { font-size: 9px; letter-spacing: 0; }
+  .chart-col .label { font-size: 9px; letter-spacing: 0; }
   .note, .empty { padding: 14px; }
   .modal { padding: 10px; }
   .modal-c { max-height: 92vh; }
@@ -808,8 +819,8 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .meter { grid-template-columns: 66px 1fr 38px; gap: 6px; }
   nav.mnav button { font-size: 10px; }
   .blk-v { font-size: 28px; }
-  .chart-bars { gap: 2px; }
-  .chart-l { gap: 2px; font-size: 8.5px; }
+  .chart-cols { gap: 2px; }
+  .chart-col .label { font-size: 8.5px; }
 }
 
 
@@ -1754,17 +1765,16 @@ function renderIncome() {
   if (monthsWithData.length === 0) {
     chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
   } else {
-    const bars = yearHist.map(h => {
-      if (h.income <= 0) return `<div class="chart-bar empty"></div>`;
-      const heightPct = maxVal > 0 ? Math.max(6, (h.income / maxVal) * 100) : 0;
-      const cls = h.current ? ' cur' : '';
-      return `<div class="chart-bar${cls}" style="height:${heightPct}%"></div>`;
+    const cols = yearHist.map(h => {
+      const hasIncome = h.income > 0;
+      const heightPct = hasIncome && maxVal > 0 ? Math.max(6, (h.income / maxVal) * 100) : 0;
+      const colCls = h.current ? ' cur' : '';
+      const barInner = hasIncome
+        ? `<div class="bar" style="height:${heightPct}%"></div>`
+        : `<div class="bar empty"></div>`;
+      return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
     }).join('');
-    const labels = yearHist.map(h => {
-      const cls = h.current ? ' class="cur"' : '';
-      return `<div${cls}>${h.label}</div>`;
-    }).join('');
-    chartHTML = `<div class="chart"><div class="chart-bars">${bars}</div><div class="chart-l">${labels}</div></div>`;
+    chartHTML = `<div class="chart"><div class="chart-cols">${cols}</div></div>`;
   }
 
   let sourcesHTML;
