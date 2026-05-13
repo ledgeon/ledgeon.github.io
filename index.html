@@ -1871,7 +1871,10 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${totalBlock}${weekBlock}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
+  const savings = getSavingsTarget().total;
+  const netForPie = Math.max(0, incTot - total - savings);
+  const pieHTML = buildPieChart(incTot, catData, savings, netForPie);
+  return `${totalBlock}${weekBlock}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Bills', { meta: `${state.bills.length} total`, add: { action: 'open-modal', type: 'expenses', label: '+ Add' } })}${billsHTML}`;
 }
 
 
@@ -1952,8 +1955,6 @@ function renderBudget() {
     } else g._reqMo = 0;
   });
 
-  const catData = aggregateBillsByCategory(state.bills, year, month);
-  const netForPie = Math.max(0, inc - fixed - savings);
   const monthlyAllowance = Math.max(0, inc - fixed - savings);
   const weeklyAllowance = monthlyAllowance / 4.333;
   const dailyAllowance = monthlyAllowance / 30;
@@ -2026,8 +2027,7 @@ function renderBudget() {
     }).join('');
   }
 
-  const pieHTML = buildPieChart(inc, catData, savings, netForPie);
-  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Breakdown', { meta: '% of income' })}${pieHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
+  return `${availBlock}${sh('Allowance')}${weekMeterHTML}${sh('Recent activity', { meta: `Last 7 days · ${txns.length}`, add: { action: 'open-modal', type: 'petty', label: '+ Log' } })}${txnHTML}${sh('Allocation', { meta: basisLabel, monthNav: monthNav(year, month) })}${allocationHTML}${sh('Savings goals', { meta: `${state.goals.length} ${state.goals.length === 1 ? 'goal' : 'goals'}`, add: { action: 'open-modal', type: 'goals', label: '+ Add' } })}${goalsHTML}`;
 }
 
 // ──── Render: tasks ────────────────────────────────────────
