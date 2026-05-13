@@ -2054,6 +2054,24 @@ function compactDate(iso) {
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 }
 
+// Smooth path through points using quadratic beziers (data points are control points,
+// curve passes through midpoints — clean look without overshoot).
+function smoothPath(pts) {
+  if (!pts || pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`;
+  if (pts.length === 2) return `M ${pts[0].x},${pts[0].y} L ${pts[1].x},${pts[1].y}`;
+  let d = `M ${pts[0].x},${pts[0].y}`;
+  const m0 = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+  d += ` L ${m0.x},${m0.y}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const nm = { x: (pts[i].x + pts[i+1].x) / 2, y: (pts[i].y + pts[i+1].y) / 2 };
+    d += ` Q ${pts[i].x},${pts[i].y} ${nm.x},${nm.y}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L ${last.x},${last.y}`;
+  return d;
+}
+
 // ──── Render: overview ─────────────────────────────────────
 function renderOverview() {
   const { year, month } = getViewMonth();
@@ -2152,11 +2170,12 @@ function renderOverview() {
       const padPct = 8;
       const xs = cumPoints.map(p => ((p.i + 0.5) / 12) * 100);
       const ys = cumPoints.map(p => padPct + (100 - 2 * padPct) * (1 - (p.val - cumMin) / cumRange));
-      const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
+      const ptsArr = xs.map((x, i) => ({ x, y: ys[i] }));
+      const pathD = smoothPath(ptsArr);
       const last = cumPoints[cumPoints.length - 1];
       const sign = last.val >= 0 ? '+' : '−';
       const totalStr = sign + fmtMoney(Math.abs(last.val), { round: true });
-      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--positive)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
+      cumLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><path d="${pathD}" fill="none" stroke="var(--positive)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--positive); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">YTD ${totalStr}</div>`;
     }
 
     chartHTML = `${sh('Net Flow', { meta: String(new Date().getFullYear()) })}
@@ -2279,7 +2298,10 @@ function renderIncome() {
       const xs = billsPts.map(p => ((p.i + 0.5) / 12) * 100);
       const ys = billsPts.map(p => 100 - (p.val / chartMax) * 100);
       const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">Expenses</div>`;
+      const curMonthIdx = new Date().getMonth();
+      const ytdBills = yearHist.slice(0, curMonthIdx + 1).reduce((s, h) => s + (h.bills || 0), 0);
+      const ytdBillsStr = fmtMoney(ytdBills, { round: true });
+      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">−${ytdBillsStr}</div>`;
     }
 
     chartHTML = `
