@@ -579,12 +579,25 @@ main { flex: 1; }
   flex: 1;
   justify-content: center;
 }
+.chart-cols.scroll {
+  overflow-x: auto;
+  justify-content: flex-start;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto;
+  padding-bottom: 2px;
+}
+.chart-cols.scroll::-webkit-scrollbar { height: 4px; }
+.chart-cols.scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 .chart-col {
   flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.chart-cols.scroll .chart-col {
+  flex: 0 0 auto;
+  width: 22px;
 }
 .chart-col .bar-track {
   flex: 1;
@@ -1024,6 +1037,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   .chart { padding: 16px 14px 20px; }
   .chart-layout { gap: 8px; }
   .chart-cols { gap: 3px; min-width: 0; }
+  .chart-cols.scroll .chart-col { width: 19px; }
   .chart-col .bar { width: 12px; }
   .chart-col .label { font-size: 9px; letter-spacing: 0; }
   .note, .empty { padding: 14px; }
@@ -2437,7 +2451,9 @@ function renderIncome() {
     const bd = b.receivedAt || b.createdAt || '';
     return bd.localeCompare(ad);
   });
-  const payHist = getPayPeriodHistory(12);
+  const payPeriodType = detectPayPeriodType();
+  const payPeriodCount = payPeriodType === 'biweekly' ? 26 : 52;
+  const payHist = getPayPeriodHistory(payPeriodCount);
   const periodsWithData = payHist.list.filter(h => h.income > 0);
   const maxVal = periodsWithData.length > 0 ? Math.max(...periodsWithData.map(h => h.income)) : 0;
   const monthHist = getMonthlyHistory(6);
@@ -2478,11 +2494,11 @@ function renderIncome() {
             <span>${midValStr}</span>
             <span>$0</span>
           </div>
-          <div class="chart-cols" style="position: relative;">${cols}</div>
+          <div class="chart-cols scroll" id="income-chart-cols" style="position: relative;">${cols}</div>
         </div>
       </div>`;
   }
-  const trendMeta = payHist.periodType === 'biweekly' ? 'Last 12 pay periods' : 'Last 12 weeks';
+  const trendMeta = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
 
   const monthlyRows = monthHist.slice().reverse().map(h => {
     const lbl = h.label.charAt(0).toUpperCase() + h.label.slice(1);
@@ -2917,7 +2933,11 @@ function render() {
   document.querySelectorAll('nav.mnav button').forEach(b => b.classList.toggle('active', b.dataset.tab === currentTab));
   const main = document.getElementById('content');
   if (currentTab === 'overview') main.innerHTML = renderOverview();
-  else if (currentTab === 'income') main.innerHTML = renderIncome();
+  else if (currentTab === 'income') {
+    main.innerHTML = renderIncome();
+    const cc = document.getElementById('income-chart-cols');
+    if (cc) cc.scrollLeft = cc.scrollWidth;
+  }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
   else if (currentTab === 'tasks') main.innerHTML = renderTasks();
