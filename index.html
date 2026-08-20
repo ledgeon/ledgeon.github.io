@@ -1898,6 +1898,93 @@ function getCalendarYearHistory() {
   return out;
 }
 
+function parseISODate(s) {
+  if (!s) return null;
+  const str = String(s);
+  const d = new Date(str.includes('T') ? str : str + 'T00:00:00');
+  return isNaN(d) ? null : d;
+}
+
+// All concrete "paycheck" occurrences of one income item that fall in [rangeStart, rangeEnd).
+// once -> a single point on its date. weekly/biweekly -> stepped from the anchor date.
+// monthly/yearly -> stepped by calendar month/year from the anchor's day-of-month / month+day.
+function incomeOccurrences(item, rangeStart, rangeEnd) {
+  const amt = parseFloat(String(item.amount).replace(/[^\d.-]/g, '')) || 0;
+  if (!amt) return [];
+  const freq = item.frequency || 'once';
+  const anchor = parseISODate(item.receivedAt || item.createdAt);
+  if (!anchor) return [];
+  const out = [];
+  if (freq === 'once') {
+    if (anchor >= rangeStart && anchor < rangeEnd) out.push({ date: anchor, amount: amt });
+    return out;
+  }
+  if (freq === 'weekly' || freq === 'biweekly') {
+    const stepMs = (freq === 'weekly' ? 7 : 14) * 86400000;
+    let d = new Date(anchor.getTime() + Math.max(0, Math.floor((rangeStart - anchor) / stepMs)) * stepMs);
+    while (d < rangeStart) d = new Date(d.getTime() + stepMs);
+    for (; d < rangeEnd; d = new Date(d.getTime() + stepMs)) {
+      if (d >= anchor) out.push({ date: d, amount: amt });
+    }
+    return out;
+  }
+  if (freq === 'monthly') {
+    const day = anchor.getDate();
+    const cursor = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+    while (cursor < rangeEnd) {
+      const dim = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+      const occ = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(day, dim));
+      if (occ >= anchor && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return out;
+  }
+  if (freq === 'yearly') {
+    const month = anchor.getMonth(); const day = anchor.getDate();
+    for (let y = rangeStart.getFullYear(); y <= rangeEnd.getFullYear(); y++) {
+      const dim = new Date(y, month + 1, 0).getDate();
+      const occ = new Date(y, month, Math.min(day, dim));
+      if (occ >= anchor && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
+    }
+    return out;
+  }
+  return out;
+}
+
+// Picks weekly vs. biweekly bars based on whichever pay frequency carries more monthly income.
+function detectPayPeriodType() {
+  let weeklyTotal = 0, biweeklyTotal = 0;
+  for (const i of state.income) {
+    if (i.frequency === 'weekly') weeklyTotal += monthlyEq(i.amount, 'weekly');
+    else if (i.frequency === 'biweekly') biweeklyTotal += monthlyEq(i.amount, 'biweekly');
+  }
+  if (weeklyTotal === 0 && biweeklyTotal === 0) return 'weekly';
+  return biweeklyTotal >= weeklyTotal ? 'biweekly' : 'weekly';
+}
+
+// Rolling pay-period buckets ending today (partial "current" period included), oldest first.
+function getPayPeriodHistory(periods = 12) {
+  const periodType = detectPayPeriodType();
+  const periodDays = periodType === 'biweekly' ? 14 : 7;
+  const dayMs = 86400000;
+  const end0 = new Date(todayStart().getTime() + dayMs); // exclusive end covering today
+  const out = [];
+  for (let i = periods - 1; i >= 0; i--) {
+    const end = new Date(end0.getTime() - i * periodDays * dayMs);
+    const start = new Date(end.getTime() - periodDays * dayMs);
+    let income = 0;
+    for (const item of state.income) {
+      for (const occ of incomeOccurrences(item, start, end)) income += occ.amount;
+    }
+    out.push({
+      label: `${start.getMonth() + 1}/${start.getDate()}`,
+      start, end, income,
+      current: i === 0,
+    });
+  }
+  return { periodType, periodDays, list: out };
+}
+
 function getIncomeStats() {
   const now = new Date(); const curY = now.getFullYear(); const curM = now.getMonth();
   let rawInc = []; let rawBills = [];
@@ -2350,9 +2437,10 @@ function renderIncome() {
     const bd = b.receivedAt || b.createdAt || '';
     return bd.localeCompare(ad);
   });
-  const yearHist = getCalendarYearHistory();
-  const monthsWithData = yearHist.filter(h => h.income > 0);
-  const maxVal = monthsWithData.length > 0 ? Math.max(...monthsWithData.map(h => h.income)) : 0;
+  const payHist = getPayPeriodHistory(12);
+  const periodsWithData = payHist.list.filter(h => h.income > 0);
+  const maxVal = periodsWithData.length > 0 ? Math.max(...periodsWithData.map(h => h.income)) : 0;
+  const monthHist = getMonthlyHistory(6);
 
   const ytdSub = stats.ytdHours > 0
     ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}${stats.projAnnual > 0 ? ' · proj. ' + fmtMoney(stats.projAnnual, {round:true}) : ''}`
@@ -2365,40 +2453,22 @@ function renderIncome() {
   }
 
   let chartHTML;
-  if (monthsWithData.length === 0) {
-    chartHTML = `<div class="chart-empty">No income recorded yet this year</div>`;
+  if (periodsWithData.length === 0) {
+    chartHTML = `<div class="chart-empty">No income recorded in recent pay periods</div>`;
   } else {
-    // Scale chart to whichever is larger between income and bills across the year,
-    // so the expenses line fits without clipping.
-    const maxBills = Math.max(0, ...yearHist.map(h => h.bills || 0));
-    const chartMax = Math.max(maxVal, maxBills, 1);
-    const maxValStr = chartMax > 0 ? fmtMoney(chartMax, {round:true}) : '';
-    const midValStr = chartMax > 0 ? fmtMoney(chartMax/2, {round:true}) : '';
+    const chartMax = Math.max(maxVal, 1);
+    const maxValStr = fmtMoney(chartMax, {round:true});
+    const midValStr = fmtMoney(chartMax/2, {round:true});
 
-    const cols = yearHist.map(h => {
+    const cols = payHist.list.map(h => {
       const hasIncome = h.income > 0;
-      const heightPct = hasIncome && chartMax > 0 ? Math.max(3, (h.income / chartMax) * 100) : 0;
+      const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
       const colCls = h.current ? ' cur' : '';
       const barInner = hasIncome
         ? `<div class="bar" style="height:${heightPct}%"></div>`
         : `<div class="bar empty"></div>`;
       return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
     }).join('');
-
-    // Expenses line overlay — only points where there were actually any bills paid that month
-    const billsPts = yearHist.map((h, i) => h.bills > 0 ? ({ i, val: h.bills }) : null).filter(Boolean);
-    let billsLineSVG = '';
-    if (billsPts.length > 1) {
-      const xs = billsPts.map(p => ((p.i + 0.5) / 12) * 100);
-      const ys = billsPts.map(p => 100 - (p.val / chartMax) * 100);
-      const pointsStr = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
-      // Sum monthly-equivalent of every recurring (fixed) bill — the baseline monthly burn
-      const monthlyFixed = state.bills
-        .filter(b => b.recurring && b.recurring !== 'once')
-        .reduce((s, b) => s + monthlyEq(parseFloat(String(b.amount).replace(/[^\d.-]/g, '')) || 0, b.recurring), 0);
-      const monthlyFixedStr = fmtMoney(monthlyFixed, { round: true });
-      billsLineSVG = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; inset: 0 0 22px 0; pointer-events: none; width: 100%; height: calc(100% - 22px); overflow: visible; z-index: 2;"><polyline points="${pointsStr}" fill="none" stroke="var(--negative)" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="4,3" vector-effect="non-scaling-stroke" /></svg><div style="position: absolute; right: 4px; top: 2px; font-size: 9.5px; font-weight: 700; color: var(--negative); background: var(--bg); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--border); font-variant-numeric: tabular-nums; z-index: 3;">${monthlyFixedStr}</div>`;
-    }
 
     chartHTML = `
       <div class="chart">
@@ -2408,10 +2478,16 @@ function renderIncome() {
             <span>${midValStr}</span>
             <span>$0</span>
           </div>
-          <div class="chart-cols" style="position: relative;">${billsLineSVG}${cols}</div>
+          <div class="chart-cols" style="position: relative;">${cols}</div>
         </div>
       </div>`;
   }
+  const trendMeta = payHist.periodType === 'biweekly' ? 'Last 12 pay periods' : 'Last 12 weeks';
+
+  const monthlyRows = monthHist.slice().reverse().map(h => {
+    const lbl = h.label.charAt(0).toUpperCase() + h.label.slice(1);
+    return row(lbl, fmtMoney(h.income, {round:true}), h.income > 0 ? 'positive' : '');
+  }).join('');
 
   let sourcesHTML;
   if (sources.length === 0) {
@@ -2434,7 +2510,7 @@ function renderIncome() {
     }).join('');
   }
 
-  return `${ytdBlock}${avgBlock}${sh('Trend', { meta: String(new Date().getFullYear()) })}${chartHTML}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
+  return `${ytdBlock}${avgBlock}${sh('Trend', { meta: trendMeta })}${chartHTML}${sh('Monthly', { meta: 'Last 6 months' })}${monthlyRows}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
