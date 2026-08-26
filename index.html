@@ -119,28 +119,6 @@
   --warning-soft:  #3a3a1f;
 }
 
-/* "here you go" — pastel coastal palette: light pink canvas, ocean-blue accent, mint-green positive */
-[data-theme="here-you-go"] {
-  --bg:            #fff5f8;
-  --bg-subtle:     #ffeaf1;
-  --bg-hover:      #ffdfec;
-  --border:        #f3c4d8;
-  --border-light:  #fce3ee;
-  --ink:           #3a2230;
-  --ink-2:         #6b4a5c;
-  --ink-3:         #93728a;
-  --ink-4:         #c39ab5;
-  --accent:        #0284c7;
-  --accent-soft:   #dceffc;
-  --accent-strong: #036592;
-  --positive:      #0d9f77;
-  --positive-soft: #d7f5ea;
-  --negative:      #e2445c;
-  --negative-soft: #ffe4e9;
-  --warning:       #c2790a;
-  --warning-soft:  #fdecc8;
-}
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   background: var(--bg); color: var(--ink);
@@ -662,6 +640,72 @@ main { flex: 1; }
   color: var(--ink-3);
   border-bottom: 1px solid var(--border);
 }
+
+/* ── INCOME TREND CARD (canvas chart, period/monthly toggle) ─ */
+.ic-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 12px 16px;
+  padding: 16px 14px 14px;
+}
+.ic-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ic-title {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.ic-subtitle {
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-weight: 500;
+  margin-top: 3px;
+}
+.ic-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ic-toggle button {
+  border: none;
+  background: var(--bg);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  color: var(--ink-3);
+  font-family: inherit;
+}
+.ic-toggle button + button { border-left: 1px solid var(--border); }
+.ic-toggle button.active { background: var(--bg-subtle); color: var(--ink); }
+.ic-wrap { position: relative; }
+.ic-wrap canvas { display: block; width: 100%; }
+.ic-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: opacity 0.1s;
+  white-space: nowrap;
+  z-index: 5;
+}
+.ic-tooltip .ic-tt-label { font-size: 10px; font-weight: 700; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.3px; }
 
 /* ── GOAL ───────────────────────────────────────────────── */
 .goal {
@@ -1379,7 +1423,6 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <button data-action="set-theme" data-theme-name="dark">Dark</button>
   <button data-action="set-theme" data-theme-name="nord">Nord</button>
   <button data-action="set-theme" data-theme-name="dracula">Dracula</button>
-  <button data-action="set-theme" data-theme-name="here-you-go">here you go</button>
   <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
@@ -1728,7 +1771,7 @@ function getTheme() {
   try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
 }
 function applyTheme(name) {
-  if (!['light', 'mono', 'dark', 'nord', 'dracula', 'here-you-go'].includes(name)) name = 'light';
+  if (!['light', 'mono', 'dark', 'nord', 'dracula'].includes(name)) name = 'light';
   if (name === 'light') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
@@ -1970,21 +2013,23 @@ function incomeOccurrences(item, rangeStart, rangeEnd) {
   }
   if (freq === 'monthly') {
     const day = anchor.getDate();
+    const anchorDay = startOfDay(anchor);
     const cursor = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
     while (cursor < rangeEnd) {
       const dim = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
       const occ = new Date(cursor.getFullYear(), cursor.getMonth(), Math.min(day, dim));
-      if (occ >= anchor && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
+      if (occ >= anchorDay && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
       cursor.setMonth(cursor.getMonth() + 1);
     }
     return out;
   }
   if (freq === 'yearly') {
     const month = anchor.getMonth(); const day = anchor.getDate();
+    const anchorDay = startOfDay(anchor);
     for (let y = rangeStart.getFullYear(); y <= rangeEnd.getFullYear(); y++) {
       const dim = new Date(y, month + 1, 0).getDate();
       const occ = new Date(y, month, Math.min(day, dim));
-      if (occ >= anchor && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
+      if (occ >= anchorDay && occ >= rangeStart && occ < rangeEnd) out.push({ date: occ, amount: amt });
     }
     return out;
   }
@@ -2023,6 +2068,127 @@ function getPayPeriodHistory(periods = 12) {
     });
   }
   return { periodType, periodDays, list: out };
+}
+
+// ──── Income trend chart (canvas) — single-series bar chart with period/monthly toggle ────
+let incomeChartMode = 'period'; // 'period' | 'monthly'
+let incomeChartData = null;     // { period: {list, meta}, monthly: {list, meta} }
+let incomeChartHitAreas = [];
+
+function icRoundRectTop(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h));
+  ctx.beginPath();
+  ctx.moveTo(x, y + h);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawIncomeChart(canvas, list) {
+  const ctx = canvas.getContext('2d');
+  const wrap = canvas.parentElement;
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = wrap.clientWidth;
+  const cssH = 200;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.height = cssH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const cs = getComputedStyle(document.documentElement);
+  const accent = cs.getPropertyValue('--accent').trim();
+  const accentStrong = cs.getPropertyValue('--accent-strong').trim() || accent;
+  const gridColor = cs.getPropertyValue('--border-light').trim();
+  const baseColor = cs.getPropertyValue('--border').trim();
+  const axisColor = cs.getPropertyValue('--ink-4').trim();
+
+  const PAD = { top: 8, right: 4, bottom: 20, left: 44 };
+  const plotW = cssW - PAD.left - PAD.right;
+  const plotH = cssH - PAD.top - PAD.bottom;
+  const withData = list.filter(h => h.income > 0);
+  const maxVal = withData.length > 0 ? Math.max(...withData.map(h => h.income)) : 0;
+  const niceMax = Math.max(maxVal, 1);
+
+  ctx.font = '10.5px Inter, sans-serif';
+  ctx.textBaseline = 'middle';
+  [1, 0.5, 0].forEach(frac => {
+    const val = niceMax * frac;
+    const y = PAD.top + plotH - frac * plotH;
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(PAD.left, y);
+    ctx.lineTo(cssW - PAD.right, y);
+    ctx.stroke();
+    ctx.fillStyle = axisColor;
+    ctx.textAlign = 'right';
+    ctx.fillText(fmtMoney(val, {round:true}), PAD.left - 8, y);
+  });
+
+  incomeChartHitAreas = [];
+  const n = list.length;
+  const groupW = plotW / n;
+  const barW = Math.max(1.5, groupW * 0.55);
+  const showEvery = n > 30 ? Math.ceil(n / 14) : (n > 8 ? 2 : 1);
+
+  list.forEach((h, i) => {
+    const colX = PAD.left + i * groupW;
+    const val = h.income;
+    const hasIncome = val > 0;
+    const barH = hasIncome ? Math.max(2, (val / niceMax) * plotH) : 0;
+    const x = colX + (groupW - barW) / 2;
+    const y = PAD.top + plotH - barH;
+    if (hasIncome) {
+      ctx.globalAlpha = h.current ? 1 : 0.82;
+      ctx.fillStyle = h.current ? accentStrong : accent;
+      icRoundRectTop(ctx, x, y, barW, barH, 2);
+      ctx.globalAlpha = 1;
+    }
+    incomeChartHitAreas.push({ x: colX, w: groupW, barY: y, label: h.label, value: val, current: !!h.current });
+
+    if (i % showEvery === 0) {
+      ctx.fillStyle = axisColor;
+      ctx.textAlign = 'center';
+      ctx.font = '10.5px Inter, sans-serif';
+      ctx.fillText(h.label, colX + groupW / 2, cssH - PAD.bottom + 12);
+    }
+  });
+
+  ctx.strokeStyle = baseColor;
+  ctx.beginPath();
+  ctx.moveTo(PAD.left, PAD.top + plotH);
+  ctx.lineTo(cssW - PAD.right, PAD.top + plotH);
+  ctx.stroke();
+}
+
+function mountIncomeChart() {
+  if (!incomeChartData) return;
+  const canvas = document.getElementById('income-chart-canvas');
+  if (!canvas) return;
+  const active = incomeChartMode === 'monthly' ? incomeChartData.monthly : incomeChartData.period;
+  drawIncomeChart(canvas, active.list);
+
+  const tooltip = document.getElementById('income-chart-tooltip');
+  function handleMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const hit = incomeChartHitAreas.find(a => mx >= a.x && mx < a.x + a.w);
+    if (hit && hit.value > 0) {
+      tooltip.innerHTML = `<div class="ic-tt-label">${hit.label}</div>${fmtMoney(hit.value, {round:true})}`;
+      tooltip.style.left = (hit.x + hit.w / 2) + 'px';
+      tooltip.style.top = (hit.barY - 8) + 'px';
+      tooltip.style.opacity = '1';
+    } else {
+      tooltip.style.opacity = '0';
+    }
+  }
+  canvas.addEventListener('mousemove', handleMove);
+  canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
 }
 
 function getIncomeStats() {
@@ -2469,39 +2635,6 @@ function renderOverview() {
   return `${heroNet}${chartHTML}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
-// Shared bar-chart builder — used for both the pay-period chart and the monthly chart so
-// they share identical bar width, gap, and label styling (same scrollable fixed-width columns).
-function buildScrollBarChart(list, emptyMsg) {
-  const withData = list.filter(h => h.income > 0);
-  if (withData.length === 0) {
-    return { html: `<div class="chart-empty">${emptyMsg}</div>`, hasData: false };
-  }
-  const chartMax = Math.max(...withData.map(h => h.income), 1);
-  const maxValStr = fmtMoney(chartMax, {round:true});
-  const midValStr = fmtMoney(chartMax/2, {round:true});
-  const cols = list.map(h => {
-    const hasIncome = h.income > 0;
-    const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
-    const colCls = h.current ? ' cur' : '';
-    const barInner = hasIncome
-      ? `<div class="bar" style="height:${heightPct}%"></div>`
-      : `<div class="bar empty"></div>`;
-    return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
-  }).join('');
-  const html = `
-      <div class="chart">
-        <div class="chart-layout">
-          <div class="chart-y">
-            <span>${maxValStr}</span>
-            <span>${midValStr}</span>
-            <span>$0</span>
-          </div>
-          <div class="chart-cols scroll income-chart-scroll" style="position: relative;">${cols}</div>
-        </div>
-      </div>`;
-  return { html, hasData: true };
-}
-
 // ──── Render: income ───────────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
@@ -2528,14 +2661,39 @@ function renderIncome() {
     : `Projected ${fmtMoney(stats.projAnnual, {round:true})}`;
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
-  const periodChart = buildScrollBarChart(payHist.list, 'No income recorded in recent pay periods');
   const periodsWithData = payHist.list.filter(h => h.income > 0);
   const payPeriodAvg = periodsWithData.length > 0 ? periodsWithData.reduce((s, h) => s + h.income, 0) / periodsWithData.length : 0;
-  const periodLabel = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
-  const trendMeta = periodLabel + (payPeriodAvg > 0 ? ` · avg ${fmtMoney(payPeriodAvg, {round:true})}` : '');
-
-  const monthlyChart = buildScrollBarChart(monthlyList, 'No income recorded in the last 24 months');
+  const periodTypeLabel = payHist.periodType === 'biweekly' ? 'Biweekly' : 'Weekly';
+  const periodRangeLabel = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
+  const periodMeta = periodRangeLabel + (payPeriodAvg > 0 ? ` · avg ${fmtMoney(payPeriodAvg, {round:true})}` : '');
   const monthlyMeta = 'Last 24 months' + (stats.avgMonthly > 0 ? ` · avg ${fmtMoney(stats.avgMonthly, {round:true})}` : '');
+
+  incomeChartData = {
+    period: { list: payHist.list, meta: periodMeta },
+    monthly: { list: monthlyList, meta: monthlyMeta },
+  };
+  if (incomeChartMode !== 'period' && incomeChartMode !== 'monthly') incomeChartMode = 'period';
+  const activeList = incomeChartMode === 'monthly' ? monthlyList : payHist.list;
+  const activeMeta = incomeChartMode === 'monthly' ? monthlyMeta : periodMeta;
+  const hasChartData = activeList.some(h => h.income > 0);
+
+  const chartCardHTML = `<div class="ic-card">
+      <div class="ic-head">
+        <div>
+          <div class="ic-title">Trend</div>
+          <div class="ic-subtitle">${activeMeta}</div>
+        </div>
+        <div class="ic-toggle">
+          <button class="${incomeChartMode === 'period' ? 'active' : ''}" data-action="set-income-chart-mode" data-mode="period">${periodTypeLabel}</button>
+          <button class="${incomeChartMode === 'monthly' ? 'active' : ''}" data-action="set-income-chart-mode" data-mode="monthly">Monthly</button>
+        </div>
+      </div>
+      <div class="ic-wrap">
+        ${hasChartData
+          ? `<canvas id="income-chart-canvas"></canvas><div class="ic-tooltip" id="income-chart-tooltip"></div>`
+          : `<div class="chart-empty">No income recorded ${incomeChartMode === 'monthly' ? 'in the last 24 months' : 'in recent pay periods'}</div>`}
+      </div>
+    </div>`;
 
   let sourcesHTML;
   if (sources.length === 0) {
@@ -2561,7 +2719,7 @@ function renderIncome() {
     }).join('');
   }
 
-  return `${ytdBlock}${sh('Trend', { meta: trendMeta })}${periodChart.html}${sh('Monthly', { meta: monthlyMeta })}${monthlyChart.html}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
+  return `${ytdBlock}${chartCardHTML}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -2970,13 +3128,19 @@ function render() {
   if (currentTab === 'overview') main.innerHTML = renderOverview();
   else if (currentTab === 'income') {
     main.innerHTML = renderIncome();
-    document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
+    mountIncomeChart();
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
   else if (currentTab === 'tasks') main.innerHTML = renderTasks();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
+
+let incomeChartResizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(incomeChartResizeTimer);
+  incomeChartResizeTimer = setTimeout(() => { if (currentTab === 'income') mountIncomeChart(); }, 100);
+});
 
 // ──── Event handlers ─────────────────────────────────────────
 document.addEventListener('click', e => {
@@ -2999,6 +3163,9 @@ document.addEventListener('click', e => {
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
+  else if (act === 'set-income-chart-mode') {
+    if (btn.dataset.mode !== incomeChartMode) { incomeChartMode = btn.dataset.mode; render(); }
+  }
   else if (act === 'open-modal') { openModal(btn.dataset.type); if (btn.dataset.type === 'petty') document.getElementById('petty-date-input').value = isoDate(todayStart()); }
   else if (act === 'close-modal') document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
   else if (act === 'rm') {
