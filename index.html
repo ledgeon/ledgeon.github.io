@@ -2511,7 +2511,7 @@ function renderIncome() {
     return bd.localeCompare(ad);
   });
   const payPeriodType = detectPayPeriodType();
-  const payPeriodCount = payPeriodType === 'biweekly' ? 26 : 52;
+  const payPeriodCount = payPeriodType === 'biweekly' ? 52 : 104; // ~2yr, matching the monthly chart's 24-month reach
   const payHist = getPayPeriodHistory(payPeriodCount);
 
   // Monthly bars: last 24 months, labeled by month/year (e.g. "8/26") since the range can span multiple years
@@ -2531,7 +2531,7 @@ function renderIncome() {
   const periodChart = buildScrollBarChart(payHist.list, 'No income recorded in recent pay periods');
   const periodsWithData = payHist.list.filter(h => h.income > 0);
   const payPeriodAvg = periodsWithData.length > 0 ? periodsWithData.reduce((s, h) => s + h.income, 0) / periodsWithData.length : 0;
-  const periodLabel = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
+  const periodLabel = payHist.periodType === 'biweekly' ? 'Last 52 pay periods (~2yr)' : 'Last 104 weeks (~2yr)';
   const trendMeta = periodLabel + (payPeriodAvg > 0 ? ` · avg ${fmtMoney(payPeriodAvg, {round:true})}` : '');
 
   const monthlyChart = buildScrollBarChart(monthlyList, 'No income recorded in the last 24 months');
