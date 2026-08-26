@@ -2016,23 +2016,71 @@ function incomeOccurrences(item, rangeStart, rangeEnd) {
   return out;
 }
 
-// Picks weekly vs. biweekly bars based on whichever pay frequency carries more monthly income.
+// Picks weekly vs. biweekly. Most people log each paycheck individually (frequency: 'once') rather than
+// setting up a recurring weekly/biweekly source, so we infer the real cadence from the actual gaps between
+// paycheck dates on whichever income source earns the most — falling back to explicit recurring
+// weekly/biweekly entries if those exist instead.
 function detectPayPeriodType() {
   let weeklyTotal = 0, biweeklyTotal = 0;
   for (const i of state.income) {
     if (i.frequency === 'weekly') weeklyTotal += monthlyEq(i.amount, 'weekly');
     else if (i.frequency === 'biweekly') biweeklyTotal += monthlyEq(i.amount, 'biweekly');
   }
-  if (weeklyTotal === 0 && biweeklyTotal === 0) return 'weekly';
-  return biweeklyTotal >= weeklyTotal ? 'biweekly' : 'weekly';
+  if (weeklyTotal > 0 || biweeklyTotal > 0) return biweeklyTotal >= weeklyTotal ? 'biweekly' : 'weekly';
+
+  const bySource = {};
+  for (const i of state.income) {
+    if (i.frequency && i.frequency !== 'once') continue;
+    const d = parseISODate(i.receivedAt || i.createdAt);
+    if (!d) continue;
+    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+    const key = i.source || '';
+    (bySource[key] = bySource[key] || { dates: [], total: 0 });
+    bySource[key].dates.push(d);
+    bySource[key].total += amt;
+  }
+  let bestKey = null, bestTotal = -1;
+  for (const key in bySource) {
+    if (bySource[key].total > bestTotal) { bestTotal = bySource[key].total; bestKey = key; }
+  }
+  if (!bestKey) return 'weekly';
+  const dates = bySource[bestKey].dates.sort((a, b) => a - b);
+  if (dates.length < 2) return 'weekly';
+  const gaps = [];
+  for (let k = 1; k < dates.length; k++) {
+    const g = Math.round((dates[k] - dates[k - 1]) / 86400000);
+    if (g > 0) gaps.push(g);
+  }
+  if (gaps.length === 0) return 'weekly';
+  gaps.sort((a, b) => a - b);
+  const median = gaps[Math.floor(gaps.length / 2)];
+  return median >= 11 ? 'biweekly' : 'weekly';
 }
 
-// Rolling pay-period buckets ending today (partial "current" period included), oldest first.
+// Rolling pay-period buckets, anchored to the most recent actual paycheck date (not "today") so
+// bucket boundaries — and their date labels — line up with real income entries.
 function getPayPeriodHistory(periods = 12) {
   const periodType = detectPayPeriodType();
   const periodDays = periodType === 'biweekly' ? 14 : 7;
   const dayMs = 86400000;
-  const end0 = new Date(todayStart().getTime() + dayMs); // exclusive end covering today
+  const todayD = todayStart();
+
+  let anchor = null;
+  for (const i of state.income) {
+    const d = parseISODate(i.receivedAt || i.createdAt);
+    if (!d) continue;
+    const ds = startOfDay(d);
+    if (ds <= todayD && (!anchor || ds > anchor)) anchor = ds;
+  }
+  if (!anchor) anchor = todayD;
+
+  // Step forward from the anchor in exact periodDays increments to find the bucket that contains "today"
+  let curStart = new Date(anchor);
+  while (curStart.getTime() + periodDays * dayMs <= todayD.getTime()) {
+    curStart = new Date(curStart.getTime() + periodDays * dayMs);
+  }
+  const end0 = new Date(curStart.getTime() + periodDays * dayMs);
+
   const out = [];
   for (let i = periods - 1; i >= 0; i--) {
     const end = new Date(end0.getTime() - i * periodDays * dayMs);
@@ -2103,7 +2151,12 @@ function getIncomeStats() {
       ytdIncome += monthlyInc * activeMonthsThisYear; ytdTips += monthlyTip * activeMonthsThisYear; ytdHours += (h * f) * activeMonthsThisYear;
     }
   }
-  const ytdAvgMonthly = monthsElapsedThisYear > 0 ? ytdIncome / monthsElapsedThisYear : 0;
+  let ytdMonthsWithIncome = 0, ytdIncomeForMonthlyAvg = 0;
+  for (let m = 0; m <= curM; m++) {
+    const mi = getMonthlyStats(curY, m).income;
+    if (mi > 0) { ytdMonthsWithIncome++; ytdIncomeForMonthlyAvg += mi; }
+  }
+  const ytdAvgMonthly = ytdMonthsWithIncome > 0 ? ytdIncomeForMonthlyAvg / ytdMonthsWithIncome : 0;
   return { ytdIncome, ytdHours, ytdHourly: ytdHours > 0 ? ytdIncome / ytdHours : 0, ytdTips, avgMonthly, ytdAvgMonthly, projAnnual, avgMonthlyBills, projAnnualBills };
 }
 
@@ -2288,6 +2341,13 @@ function monthNav(year, month) {
   `</span>`;
 }
 function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+// Always shows an exact, unambiguous date (never relative wording like "Yesterday"/"3 days ago") —
+// includes the year since income entries can span multiple calendar years.
+function exactDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso + (String(iso).includes('T') ? '' : 'T00:00:00'));
+  return `${d.getMonth() + 1}/${d.getDate()}/${String(d.getFullYear()).slice(-2)}`;
+}
 function compactDate(iso) {
   if (!iso) return '';
   const t = todayStart();
@@ -2555,10 +2615,13 @@ function renderIncome() {
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
   const periodChart = buildScrollBarChart(payHist.list, 'No income recorded in recent pay periods');
-  const periodsWithData = payHist.list.filter(h => h.income > 0);
-  const payPeriodAvg = periodsWithData.length > 0 ? periodsWithData.reduce((s, h) => s + h.income, 0) / periodsWithData.length : 0;
+  const curYear = nowD.getFullYear();
+  const periodsThisYearWithIncome = payHist.list.filter(h => h.start.getFullYear() === curYear && h.income > 0);
+  const payPeriodYtdAvg = periodsThisYearWithIncome.length > 0
+    ? periodsThisYearWithIncome.reduce((s, h) => s + h.income, 0) / periodsThisYearWithIncome.length
+    : 0;
   const periodLabel = payHist.periodType === 'biweekly' ? 'Last 52 pay periods (~2yr)' : 'Last 104 weeks (~2yr)';
-  const trendMeta = periodLabel + (payPeriodAvg > 0 ? ` · avg ${fmtMoney(payPeriodAvg, {round:true})}` : '');
+  const trendMeta = periodLabel + (payPeriodYtdAvg > 0 ? ` · YTD avg ${fmtMoney(payPeriodYtdAvg, {round:true})}` : '');
 
   const monthlyChart = buildScrollBarChart(monthlyList, 'No income recorded in the last 24 months');
   const monthlyMeta = 'Last 24 months' + (stats.ytdAvgMonthly > 0 ? ` · YTD avg ${fmtMoney(stats.ytdAvgMonthly, {round:true})}` : '');
@@ -2580,7 +2643,7 @@ function renderIncome() {
       }
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
       const dateStr = i.receivedAt || i.createdAt;
-      if (dateStr) metaParts.push(freq === 'once' ? compactDate(dateStr) : `since ${compactDate(dateStr)}`);
+      if (dateStr) metaParts.push(freq === 'once' ? exactDate(dateStr) : `since ${exactDate(dateStr)}`);
       const hasTips = i.tipsEnabled && amt > base;
       const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
       return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div class="src-line"><span class="n">${escHTML(i.source)}${tipsPill}</span><span class="m">${metaParts.join(' · ')}</span></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
