@@ -119,6 +119,28 @@
   --warning-soft:  #3a3a1f;
 }
 
+/* "here you go" — pastel coastal palette: light pink canvas, ocean-blue accent, mint-green positive */
+[data-theme="here-you-go"] {
+  --bg:            #fff5f8;
+  --bg-subtle:     #ffeaf1;
+  --bg-hover:      #ffdfec;
+  --border:        #f3c4d8;
+  --border-light:  #fce3ee;
+  --ink:           #3a2230;
+  --ink-2:         #6b4a5c;
+  --ink-3:         #93728a;
+  --ink-4:         #c39ab5;
+  --accent:        #0284c7;
+  --accent-soft:   #dceffc;
+  --accent-strong: #036592;
+  --positive:      #0d9f77;
+  --positive-soft: #d7f5ea;
+  --negative:      #e2445c;
+  --negative-soft: #ffe4e9;
+  --warning:       #c2790a;
+  --warning-soft:  #fdecc8;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body {
   background: var(--bg); color: var(--ink);
@@ -383,6 +405,9 @@ main { flex: 1; }
 }
 .row .l { font-size: 13.5px; font-weight: 500; color: var(--ink); }
 .row .n { font-size: 13.5px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.src-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; overflow: hidden; }
+.src-line .n { flex-shrink: 0; flex-wrap: nowrap; }
+.src-line .m { margin-top: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .row .m { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
 .row .v {
   font-size: 14px; font-weight: 600;
@@ -1354,6 +1379,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
   <button data-action="set-theme" data-theme-name="dark">Dark</button>
   <button data-action="set-theme" data-theme-name="nord">Nord</button>
   <button data-action="set-theme" data-theme-name="dracula">Dracula</button>
+  <button data-action="set-theme" data-theme-name="here-you-go">here you go</button>
   <div class="menu-divider"></div>
   <button data-action="open-sync">Cloud sync</button>
   <button data-action="import">Import data</button>
@@ -1702,7 +1728,7 @@ function getTheme() {
   try { return localStorage.getItem(THEME_KEY) || 'light'; } catch { return 'light'; }
 }
 function applyTheme(name) {
-  if (!['light', 'mono', 'dark', 'nord', 'dracula'].includes(name)) name = 'light';
+  if (!['light', 'mono', 'dark', 'nord', 'dracula', 'here-you-go'].includes(name)) name = 'light';
   if (name === 'light') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
@@ -2443,6 +2469,39 @@ function renderOverview() {
   return `${heroNet}${chartHTML}${periodSection}${queueHTML}${tasksHTML}`;
 }
 
+// Shared bar-chart builder — used for both the pay-period chart and the monthly chart so
+// they share identical bar width, gap, and label styling (same scrollable fixed-width columns).
+function buildScrollBarChart(list, emptyMsg) {
+  const withData = list.filter(h => h.income > 0);
+  if (withData.length === 0) {
+    return { html: `<div class="chart-empty">${emptyMsg}</div>`, hasData: false };
+  }
+  const chartMax = Math.max(...withData.map(h => h.income), 1);
+  const maxValStr = fmtMoney(chartMax, {round:true});
+  const midValStr = fmtMoney(chartMax/2, {round:true});
+  const cols = list.map(h => {
+    const hasIncome = h.income > 0;
+    const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
+    const colCls = h.current ? ' cur' : '';
+    const barInner = hasIncome
+      ? `<div class="bar" style="height:${heightPct}%"></div>`
+      : `<div class="bar empty"></div>`;
+    return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
+  }).join('');
+  const html = `
+      <div class="chart">
+        <div class="chart-layout">
+          <div class="chart-y">
+            <span>${maxValStr}</span>
+            <span>${midValStr}</span>
+            <span>$0</span>
+          </div>
+          <div class="chart-cols scroll income-chart-scroll" style="position: relative;">${cols}</div>
+        </div>
+      </div>`;
+  return { html, hasData: true };
+}
+
 // ──── Render: income ───────────────────────────────────────
 function renderIncome() {
   const stats = getIncomeStats();
@@ -2454,56 +2513,29 @@ function renderIncome() {
   const payPeriodType = detectPayPeriodType();
   const payPeriodCount = payPeriodType === 'biweekly' ? 26 : 52;
   const payHist = getPayPeriodHistory(payPeriodCount);
-  const periodsWithData = payHist.list.filter(h => h.income > 0);
-  const maxVal = periodsWithData.length > 0 ? Math.max(...periodsWithData.map(h => h.income)) : 0;
-  const monthHist = getMonthlyHistory(6);
+
+  // Monthly bars: last 24 months, labeled by month/year (e.g. "8/26") since the range can span multiple years
+  const nowD = new Date();
+  const monthlyList = [];
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
+    const mStats = getMonthlyStats(d.getFullYear(), d.getMonth());
+    monthlyList.push({ label: `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}`, income: mStats.income, current: i === 0 });
+  }
 
   const ytdSub = stats.ytdHours > 0
     ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}${stats.projAnnual > 0 ? ' · proj. ' + fmtMoney(stats.projAnnual, {round:true}) : ''}`
     : `Projected ${fmtMoney(stats.projAnnual, {round:true})}`;
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
-  let avgBlock = '';
-  if (stats.avgMonthly > 0) {
-    avgBlock = blk('Monthly average', fmtMoney(stats.avgMonthly, {round:true}), null, { size: 'med' });
-  }
+  const periodChart = buildScrollBarChart(payHist.list, 'No income recorded in recent pay periods');
+  const periodsWithData = payHist.list.filter(h => h.income > 0);
+  const payPeriodAvg = periodsWithData.length > 0 ? periodsWithData.reduce((s, h) => s + h.income, 0) / periodsWithData.length : 0;
+  const periodLabel = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
+  const trendMeta = periodLabel + (payPeriodAvg > 0 ? ` · avg ${fmtMoney(payPeriodAvg, {round:true})}` : '');
 
-  let chartHTML;
-  if (periodsWithData.length === 0) {
-    chartHTML = `<div class="chart-empty">No income recorded in recent pay periods</div>`;
-  } else {
-    const chartMax = Math.max(maxVal, 1);
-    const maxValStr = fmtMoney(chartMax, {round:true});
-    const midValStr = fmtMoney(chartMax/2, {round:true});
-
-    const cols = payHist.list.map(h => {
-      const hasIncome = h.income > 0;
-      const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
-      const colCls = h.current ? ' cur' : '';
-      const barInner = hasIncome
-        ? `<div class="bar" style="height:${heightPct}%"></div>`
-        : `<div class="bar empty"></div>`;
-      return `<div class="chart-col${colCls}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
-    }).join('');
-
-    chartHTML = `
-      <div class="chart">
-        <div class="chart-layout">
-          <div class="chart-y">
-            <span>${maxValStr}</span>
-            <span>${midValStr}</span>
-            <span>$0</span>
-          </div>
-          <div class="chart-cols scroll" id="income-chart-cols" style="position: relative;">${cols}</div>
-        </div>
-      </div>`;
-  }
-  const trendMeta = payHist.periodType === 'biweekly' ? 'Last 26 pay periods (~1yr)' : 'Last 52 weeks (~1yr)';
-
-  const monthlyRows = monthHist.slice().reverse().map(h => {
-    const lbl = h.label.charAt(0).toUpperCase() + h.label.slice(1);
-    return row(lbl, fmtMoney(h.income, {round:true}), h.income > 0 ? 'positive' : '');
-  }).join('');
+  const monthlyChart = buildScrollBarChart(monthlyList, 'No income recorded in the last 24 months');
+  const monthlyMeta = 'Last 24 months' + (stats.avgMonthly > 0 ? ` · avg ${fmtMoney(stats.avgMonthly, {round:true})}` : '');
 
   let sourcesHTML;
   if (sources.length === 0) {
@@ -2516,17 +2548,20 @@ function renderIncome() {
       const freq = i.frequency || 'once';
       const monthly = freq === 'once' ? amt : monthlyEq(amt, freq);
       const metaParts = [freq.charAt(0).toUpperCase() + freq.slice(1)];
-      if (hrs > 0) metaParts.push(fmtHM(hrs));
+      if (hrs > 0) {
+        metaParts.push(fmtHM(hrs));
+        metaParts.push(`$${(amt / hrs).toFixed(2)}/hr`);
+      }
       if (freq !== 'once') metaParts.push(`${fmtMoney(monthly, {round:true})}/mo`);
       const dateStr = i.receivedAt || i.createdAt;
       if (dateStr) metaParts.push(freq === 'once' ? compactDate(dateStr) : `since ${compactDate(dateStr)}`);
       const hasTips = i.tipsEnabled && amt > base;
       const tipsPill = hasTips ? ' ' + pill('+tips', 'g') : '';
-      return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="n">${escHTML(i.source)}${tipsPill}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
+      return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}"><div class="src-line"><span class="n">${escHTML(i.source)}${tipsPill}</span><span class="m">${metaParts.join(' · ')}</span></div><span class="v positive">${fmtMoney(amt, {round:true})}</span></div>`;
     }).join('');
   }
 
-  return `${ytdBlock}${avgBlock}${sh('Trend', { meta: trendMeta })}${chartHTML}${sh('Monthly', { meta: 'Last 6 months' })}${monthlyRows}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
+  return `${ytdBlock}${sh('Trend', { meta: trendMeta })}${periodChart.html}${sh('Monthly', { meta: monthlyMeta })}${monthlyChart.html}${sh('Sources', { meta: `${sources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -2935,8 +2970,7 @@ function render() {
   if (currentTab === 'overview') main.innerHTML = renderOverview();
   else if (currentTab === 'income') {
     main.innerHTML = renderIncome();
-    const cc = document.getElementById('income-chart-cols');
-    if (cc) cc.scrollLeft = cc.scrollWidth;
+    document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
