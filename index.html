@@ -161,40 +161,10 @@ button { cursor: pointer; font: inherit; color: inherit; background: none; borde
 input, select, textarea { font: inherit; color: inherit; }
 
 main { flex: 1; }
-/* Single-page mode: this build is Income-only, no other tabs, no menu — matches preview-refined.html exactly */
-nav.mnav { display: none !important; }
-body { padding-bottom: 0 !important; }
-
-/* ═══ EXACT MATCH — every value below copied directly from preview-refined.html ═══ */
-html, body { font-family: 'Inter', -apple-system, sans-serif !important; font-size: 14px !important; line-height: normal !important; }
-body { max-width: 480px !important; padding-bottom: 60px !important; display: block !important; min-height: 0 !important; }
-.mhdr { position: static !important; border-bottom: none !important; padding: 26px 20px 4px !important; background: transparent !important; }
-.mtitle::before { display: none !important; content: none !important; }
-.mtitle { font-size: 13px !important; font-weight: 700 !important; letter-spacing: 0.2px !important; color: var(--ink-3) !important; }
-.blk { padding: 20px 20px 8px !important; border-bottom: none !important; }
-.blk-l { font-size: 12px !important; font-weight: 500 !important; letter-spacing: normal !important; text-transform: none !important; color: var(--ink-3) !important; }
-.blk-s { margin-top: 9px !important; line-height: 1.5 !important; }
-.blk-s .a { color: var(--ink-2) !important; font-weight: 600 !important; }
-.sh h3 { font-weight: 700 !important; }
-.sh { padding: 28px 20px 10px !important; }
-.sh .x { font-weight: 500 !important; }
-.row { display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 12px 20px !important; }
-.stat-trio { padding: 4px 20px 6px !important; margin-top: 6px !important; }
-.stat-trio .st { padding: 16px 4px 4px !important; }
-.stat-trio .st:not(:first-child) { padding-left: 16px !important; }
-.stat-trio .st-label { text-transform: none !important; letter-spacing: normal !important; }
-.stat-trio .st-value.positive, .stat-trio .st-value.negative { color: var(--ink) !important; }
-.chart { padding: 14px 20px 22px !important; border-bottom: none !important; }
-.chart-layout { height: 96px !important; }
-.chart-y { padding-bottom: 16px !important; font-size: 10px !important; }
-.chart-cols { gap: 3px !important; justify-content: flex-start !important; }
-.chart-col .bar { width: 100% !important; border-radius: 2px 2px 0 0 !important; opacity: 0.9 !important; box-shadow: none !important; min-height: 0 !important; }
-.chart-col.cur .bar { opacity: 1 !important; box-shadow: none !important; }
-.chart-col .label { font-size: 8.5px !important; margin-top: 6px !important; }
 
 /* ── HEADER ─────────────────────────────────────────────── */
 .mhdr {
-  padding: 14px 16px 12px;
+  padding: 14px 20px 12px;
   padding-top: calc(14px + env(safe-area-inset-top));
   border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
@@ -202,18 +172,9 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
   position: sticky; top: 0; z-index: 50;
 }
 .mtitle {
-  font-size: 15px; font-weight: 700;
-  letter-spacing: -0.3px;
-  color: var(--ink);
-  display: inline-flex; align-items: center;
-}
-.mtitle::before {
-  content: '';
-  display: inline-block;
-  width: 3px; height: 13px;
-  background: var(--accent);
-  border-radius: 1px;
-  margin-right: 8px;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--ink-3);
 }
 .mhdr-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .sync-ind {
@@ -324,63 +285,61 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 .mhdr-menu button.current::before { content: '✓  '; font-weight: 700; }
 .mhdr-menu button[data-action="set-theme"]:not(.current)::before { content: '\2003\2003'; }
 
-/* ── HERO BLOCK ─────────────────────────────────────────── */
-.blk {
-  padding: 18px 16px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.blk-l {
-  font-size: 10.5px; font-weight: 600;
-  color: var(--ink-3);
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-}
-.blk-v {
+/* ── HERO BLOCK (preview-refined.html verbatim) ───────────── */
+.hero { padding: 20px 20px 8px; }
+.h-label { font-size: 12px; font-weight: 500; color: var(--ink-3); }
+.h-value {
   font-size: 38px; font-weight: 800;
   letter-spacing: -1.1px;
   color: var(--ink);
-  margin: 4px 0;
+  margin-top: 5px;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
   word-break: break-word;
 }
-.blk-v.positive { color: var(--positive); }
-.blk-v.negative { color: var(--negative); }
-.blk-v.warning { color: var(--warning); }
-.blk-v.med { font-size: 28px; }
-.blk-v .dim { color: var(--ink-3); font-size: 0.65em; font-weight: 500; }
-.blk-s {
+.h-value.positive { color: var(--positive); }
+.h-value.negative { color: var(--negative); }
+.h-value.warning { color: var(--warning); }
+.h-value.med { font-size: 28px; }
+.h-value .dim { color: var(--ink-3); font-size: 0.65em; font-weight: 500; }
+.h-sub {
   font-size: 12.5px;
   color: var(--ink-3);
+  margin-top: 9px;
+  line-height: 1.5;
 }
-.blk-s .a { color: var(--accent); font-weight: 600; }
-.stat-trio { display: flex; padding: 4px 16px 2px; border-top: 1px solid var(--border-light); }
-.stat-trio .st { flex: 1; padding: 14px 4px 4px; }
-.stat-trio .st:not(:first-child) { border-left: 1px solid var(--border-light); padding-left: 14px; }
+.h-sub b { color: var(--ink-2); font-weight: 600; }
+.h-sub .a { color: var(--accent); font-weight: 600; }
+.h-sub .lnk { color: var(--accent); cursor: pointer; font-weight: 500; }
+.h-sub .lnk:hover { text-decoration: underline; }
+
+/* ── STAT TRIO (preview-refined.html verbatim) ────────────── */
+.stat-trio { display: flex; padding: 4px 20px 6px; border-top: 1px solid var(--border-light); margin-top: 6px; }
+.stat-trio .st { flex: 1; padding: 16px 4px 4px; }
+.stat-trio .st:not(:first-child) { border-left: 1px solid var(--border-light); padding-left: 16px; }
 .stat-trio .st-label { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-4); }
 .stat-trio .st-value { font-size: 17px; font-weight: 700; margin-top: 4px; letter-spacing: -0.2px; font-variant-numeric: tabular-nums; }
-.stat-trio .st-value.positive { color: var(--positive); }
-.stat-trio .st-value.negative { color: var(--negative); }
-.blk-s .lnk { color: var(--accent); cursor: pointer; font-weight: 500; }
-.blk-s .lnk:hover { text-decoration: underline; }
 
 /* ── SECTION HEADER ─────────────────────────────────────── */
 .sh {
-  padding: 28px 16px 10px;
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 28px 20px 10px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
 }
 .sh h3 {
   font-size: 11px; font-weight: 700;
-  letter-spacing: 1.4px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--accent);
 }
 .sh .x {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--ink-3);
   font-weight: 500;
-  letter-spacing: 0.3px;
 }
+/* Groups meta/add/month-nav into a single flex child so .sh's space-between
+   puts the title on the left and everything else flush right as one unit,
+   instead of spreading 3-4 children evenly across the row. */
+.sh-right { display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .sh .add {
   background: var(--accent-soft);
   color: var(--accent);
@@ -388,12 +347,11 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 4px;
-  margin-left: auto;
   letter-spacing: 0.2px;
+  align-self: center;
 }
 .sh .add:hover { background: var(--accent-soft); }
 .sh .month-nav {
-  margin-left: auto;
   display: inline-flex; align-items: center;
   gap: 1px;
   background: var(--bg-hover);
@@ -433,18 +391,31 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 
 /* ── ROW (label : value, with optional pill and sub-meta) ─ */
 .row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-light);
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-light);
 }
+.row:last-child { border-bottom: none; }
+.row > *:first-child { min-width: 0; flex: 1; }
 .row .l { font-size: 13.5px; font-weight: 500; color: var(--ink); }
 .row .n { font-size: 13.5px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .src-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; overflow: hidden; }
 .src-line .n { flex-shrink: 0; flex-wrap: nowrap; }
 .src-line .m { margin-top: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* ── SOURCE GROUP (tap a source in Income → Sources to see individual payments) ── */
+.src-group { border-bottom: 1px solid var(--border-light); }
+.src-group:last-child { border-bottom: none; }
+.src-group summary.row { border-bottom: none; list-style: none; cursor: pointer; }
+.src-group summary.row::-webkit-details-marker { display: none; }
+.src-group summary.row::marker { content: ''; }
+.src-group[open] summary.row { border-bottom: 1px solid var(--border-light); background: var(--bg-subtle); }
+.src-group .sub-row { padding-left: 32px; border-bottom: 1px solid var(--border-light); }
+.src-group .sub-row:last-child { border-bottom: none; }
+.src-group .sub-row .m { margin-top: 0; }
 .row .m { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
 .row .v {
   font-size: 14px; font-weight: 600;
@@ -455,34 +426,17 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 .row .v.positive { color: var(--positive); }
 .row .v.negative { color: var(--negative); }
 .row .v.warning { color: var(--warning); }
-.row .v.muted { color: var(--ink-4); text-decoration: line-through; }
-.row .r-name { font-size: 13.5px; font-weight: 500; }
-.row .r-meta { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
-.row .r-amt { font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.row .r-amt.pos { color: var(--positive); }
-.row .r-amt.neg { color: var(--negative); }
-.row .r-amt.done { color: var(--ink-3); font-weight: 400; text-decoration: line-through; }
-.rm-x {
-  margin-left: 10px;
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  color: var(--ink-4);
-  font-size: 16px;
-  line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.rm-x:hover { background: var(--negative-soft); color: var(--negative); }
-.back-btn { font-size: 13px; font-weight: 600; color: var(--accent); }
+.row .v.muted { color: var(--ink-3); font-weight: 400; text-decoration: line-through; }
 .row.strong .v { font-weight: 700; }
 .row.strong .l { font-weight: 600; }
 
 /* ── AMOUNT BUTTON (pay/unpay via tapping the dollar amount) ── */
 .amount-btn {
   display: inline-block;
-  padding: 5px 11px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  padding: 3px 5px;
+  margin: -3px -5px;
+  border-radius: 5px;
+  border: none;
   background: transparent;
   font: inherit;
   font-size: 14px;
@@ -491,31 +445,28 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  transition: background 0.12s, color 0.12s;
   -webkit-tap-highlight-color: transparent;
 }
 .amount-btn:hover, .amount-btn:focus-visible, .amount-btn:active {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--accent);
+  background: var(--bg-hover);
   outline: none;
 }
-.amount-btn.urgent { color: var(--negative); border-color: var(--negative-soft); }
+.amount-btn.urgent { color: var(--negative); }
 .amount-btn.urgent:hover, .amount-btn.urgent:focus-visible, .amount-btn.urgent:active {
-  background: var(--negative-soft); border-color: var(--negative); color: var(--negative);
+  background: var(--negative-soft);
 }
-.amount-btn.soon { color: var(--warning); border-color: var(--warning-soft); }
+.amount-btn.soon { color: var(--warning); }
 .amount-btn.soon:hover, .amount-btn.soon:focus-visible, .amount-btn.soon:active {
-  background: var(--warning-soft); border-color: var(--warning); color: var(--warning);
+  background: var(--warning-soft);
 }
 .amount-btn.paid {
   text-decoration: line-through;
-  color: var(--ink-4);
-  border-color: var(--border-light);
-  opacity: 0.65;
+  color: var(--ink-3);
+  font-weight: 400;
 }
 .amount-btn.paid:hover, .amount-btn.paid:focus-visible, .amount-btn.paid:active {
-  background: var(--bg-hover); color: var(--ink-3); border-color: var(--border); opacity: 1;
+  background: var(--bg-hover); color: var(--ink-3);
   text-decoration: none;
 }
 
@@ -631,33 +582,31 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 
 /* ── CHART (axis + flex layout) ─────────────────────────── */
 .chart {
-  padding: 16px 16px 20px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 20px 22px;
 }
 .chart-layout {
   display: flex;
   gap: 12px;
-  height: 120px;
+  height: 96px;
 }
 .chart-y {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding-bottom: 22px; /* offsets text height to align perfectly with baseline */
-  font-size: 9.5px;
+  padding-bottom: 16px; /* offsets text height to align perfectly with baseline */
+  font-size: 10px;
   color: var(--ink-4);
   text-align: right;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
   white-space: nowrap;
   min-width: 34px;
 }
 .chart-cols {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   align-items: stretch;
   flex: 1;
-  justify-content: center;
+  min-width: 0;
 }
 .chart-cols.scroll {
   overflow-x: auto;
@@ -679,49 +628,38 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
   flex: 0 0 auto;
   width: 22px;
 }
-.chart-cols-inner {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 4px;
-  position: relative;
-}
 .chart-col .bar-track {
   flex: 1;
   min-height: 0;
   width: 100%;
   display: flex;
   align-items: flex-end;
-  justify-content: center;
   position: relative;
 }
 .chart-col .bar {
-  width: 14px;
+  width: 100%;
   background: var(--accent);
-  border-radius: 3px 3px 0 0;
+  border-radius: 2px 2px 0 0;
+  opacity: 0.9;
   min-height: 2px;
 }
-.chart-col .bar.empty { background: transparent; min-height: 0; }
-.chart-col.cur .bar { box-shadow: 0 0 0 2px var(--accent-soft); }
+.chart-col .bar.empty { background: transparent; opacity: 1; min-height: 0; }
+.chart-col.cur .bar { opacity: 1; }
 .chart-col .label {
   text-align: center;
-  font-size: 9.5px;
+  font-size: 8.5px;
   color: var(--ink-4);
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  margin-top: 7px;
+  margin-top: 6px;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   width: 100%;
 }
-.chart-col.cur .label { color: var(--accent); font-weight: 700; }
 .chart-empty {
-  padding: 28px 16px;
+  padding: 28px 20px;
   text-align: center;
   font-size: 12.5px;
   color: var(--ink-3);
-  border-bottom: 1px solid var(--border);
 }
 
 .bar-tooltip {
@@ -750,7 +688,7 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 
 /* ── GOAL ───────────────────────────────────────────────── */
 .goal {
-  padding: 12px 16px;
+  padding: 12px 20px;
   border-bottom: 1px solid var(--border-light);
 }
 .goal-h {
@@ -804,7 +742,7 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
   display: grid;
   grid-template-columns: 16px 1fr auto;
   gap: 12px;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border-bottom: 1px solid var(--border-light);
   align-items: center;
 }
@@ -869,7 +807,7 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 /* ── NOTE / EMPTY ───────────────────────────────────────── */
 .note {
   font-size: 12.5px;
-  padding: 9px 16px;
+  padding: 9px 20px;
   color: var(--ink-3);
   background: var(--bg-subtle);
   border-bottom: 1px solid var(--border-light);
@@ -877,7 +815,7 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 .note .lnk { color: var(--accent); cursor: pointer; font-weight: 600; }
 .note .lnk:hover { text-decoration: underline; }
 .empty {
-  padding: 24px 16px;
+  padding: 24px 20px;
   text-align: center;
   font-size: 12.5px;
   color: var(--ink-3);
@@ -1134,24 +1072,11 @@ main > * { animation: fadeIn 0.12s ease-out; }
    ════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
   html, body { font-size: 14px; }
-  .mhdr { padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top)); }
-  .blk { padding: 16px 14px 14px; }
-  .blk-v { font-size: 32px; }
-  .blk-v.med { font-size: 26px; }
-  .sh { padding: 13px 14px 7px; }
-  .row { padding: 9px 14px; }
+  .mhdr { padding: 12px 20px; padding-top: calc(12px + env(safe-area-inset-top)); }
+  .h-value.med { font-size: 26px; }
   .li { padding: 10px 14px; }
-  .task { padding: 10px 14px; }
-  .goal { padding: 12px 14px; }
   .meter { grid-template-columns: 78px 1fr 42px; gap: 8px; padding: 7px 14px; }
-  .chart { padding: 16px 14px 20px; }
-  .chart-layout { gap: 8px; }
-  .chart-cols { gap: 3px; min-width: 0; }
-  .chart-cols-inner { gap: 3px; }
   .chart-cols.scroll .chart-col { width: 19px; }
-  .chart-col .bar { width: 12px; }
-  .chart-col .label { font-size: 9px; letter-spacing: 0; }
-  .note, .empty { padding: 14px; }
   .modal { padding: 10px; }
   .modal-c { max-height: 92vh; }
   .input, .select, textarea { font-size: 14.5px; padding: 9px 11px; }
@@ -1162,11 +1087,7 @@ main > * { animation: fadeIn 0.12s ease-out; }
 @media (max-width: 380px) {
   .meter { grid-template-columns: 66px 1fr 38px; gap: 6px; }
   nav.mnav button { font-size: 10px; }
-  .blk-v { font-size: 28px; }
   .chart-cols { gap: 2px; }
-  .chart-cols-inner { gap: 2px; }
-  .chart-col .bar { width: 12px; }
-  .chart-col .label { font-size: 8.5px; }
 }
 
 
@@ -1804,8 +1725,7 @@ state.income.forEach(i => {
   }
 });
 
-let currentTab = 'income'; // this build is a single-page Income-only view — always this, ignore any saved tab
-let sourceDetailView = null; // set to a source name to show that source's payment list instead of the main view
+let currentTab = localStorage.getItem(TAB_KEY) || 'overview';
 if (!TABS.includes(currentTab)) currentTab = 'overview';
 let editingItem = null;
 let viewMonth = null;
@@ -2380,7 +2300,11 @@ function sh(title, opts = {}) {
   const meta = opts.meta ? `<span class="x">${opts.meta}</span>` : '';
   const add = opts.add ? `<button class="add" data-action="${opts.add.action}"${opts.add.type ? ` data-type="${opts.add.type}"` : ''}>${opts.add.label}</button>` : '';
   const monthN = opts.monthNav || '';
-  return `<div class="sh"><h3>${title}</h3>${meta}${add}${monthN}</div>`;
+  const right = meta || add || monthN ? `<div class="sh-right">${meta}${add}${monthN}</div>` : '';
+  return `<div class="sh"><h3>${title}</h3>${right}</div>`;
+}
+function statTrio(items) {
+  return `<div class="stat-trio">${items.map(it => `<div class="st"><div class="st-label">${it.label}</div><div class="st-value">${it.value}</div></div>`).join('')}</div>`;
 }
 function row(label, value, valCls = '', opts = {}) {
   const cls = opts.strong ? 'row strong' : 'row';
@@ -2388,7 +2312,7 @@ function row(label, value, valCls = '', opts = {}) {
 }
 function blk(label, value, sub, opts = {}) {
   const valCls = (opts.color || '') + (opts.size === 'med' ? ' med' : '');
-  return `<div class="blk"><div class="blk-l">${label}</div><div class="blk-v ${valCls}">${value}</div>${sub ? `<div class="blk-s">${sub}</div>` : ''}</div>`;
+  return `<div class="hero"><div class="h-label">${label}</div><div class="h-value ${valCls}">${value}</div>${sub ? `<div class="h-sub">${sub}</div>` : ''}</div>`;
 }
 function pill(text, type, clickable) {
   const cls = `pill ${type || ''}${clickable ? ' clickable' : ''}`;
@@ -2505,11 +2429,11 @@ function renderOverview() {
         topHalf = `<div style="height: 50%; width: 100%;"></div>`;
         botHalf = `<div style="height: 50%; width: 100%;"></div>`;
       } else if (isPos) {
-        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%; justify-content: center;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--accent); width: 14px; border-radius: 3px 3px 0 0;"></div></div>`;
+        topHalf = `<div style="height: 50%; display: flex; align-items: flex-end; width: 100%;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--accent); width: 100%; border-radius: 2px 2px 0 0;"></div></div>`;
         botHalf = `<div style="height: 50%; width: 100%;"></div>`;
       } else {
         topHalf = `<div style="height: 50%; width: 100%;"></div>`;
-        botHalf = `<div style="height: 50%; display: flex; align-items: flex-start; width: 100%; justify-content: center;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--negative); width: 14px; border-radius: 0 0 3px 3px;"></div></div>`;
+        botHalf = `<div style="height: 50%; display: flex; align-items: flex-start; width: 100%;"><div class="bar" style="height: ${Math.max(2, hPct)}%; background: var(--negative); width: 100%; border-radius: 0 0 2px 2px;"></div></div>`;
       }
 
       const colCls = h.current ? ' cur' : '';
@@ -2584,8 +2508,8 @@ function renderOverview() {
           const days = Math.round((new Date(b.dueDate + 'T00:00:00') - todayStart()) / 86400000);
           if (days === 1) pillHTML = pill('Tomorrow', 'y');
         }
-        const valCls = overdue ? 'negative' : today ? 'negative' : '';
-        return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${pillHTML ? ' ' + pillHTML : ''}</div><div class="m">${cap(cat.label)} · ${compactDate(b.dueDate)}</div></div><span class="v ${valCls}">${fmtMoney(b.amount, {round:true})}</span></div>`;
+        const dueLabel = 'due ' + new Date(b.dueDate + 'T00:00:00').toLocaleString('en-US', { month: 'short', day: 'numeric' });
+        return `<div class="row clickable" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}${pillHTML ? ' ' + pillHTML : ''}</div><div class="m">${cap(cat.label)} · ${dueLabel}</div></div><span class="v negative">${fmtMoney(b.amount)}</span></div>`;
       }).join('') +
       (upcoming.length > 5 ? `<div class="note">+${upcoming.length - 5} more · <span class="lnk" data-action="goto" data-tab="expenses">view all</span></div>` : '');
   }
@@ -2621,8 +2545,8 @@ function renderOverview() {
 
 // Shared bar-chart builder — used for both the pay-period chart and the monthly chart so
 // they share identical bar width, gap, and label styling (same scrollable fixed-width columns).
-function buildScrollBarChart(list, emptyMsg, options) {
-  options = options || {};
+function buildScrollBarChart(list, emptyMsg, opts = {}) {
+  const scroll = opts.scroll !== false; // default true — existing callers are unaffected
   const withData = list.filter(h => h.income > 0);
   if (withData.length === 0) {
     return { html: `<div class="chart-empty">${emptyMsg}</div>`, hasData: false };
@@ -2639,27 +2563,7 @@ function buildScrollBarChart(list, emptyMsg, options) {
       : `<div class="bar empty"></div>`;
     return `<div class="chart-col${colCls}" data-amount="${h.income}" data-label="${escHTML(h.label)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
   }).join('');
-
-  let colsHTML = cols;
-  if (options.movingAvg) {
-    // Percentage-based SVG line, plotted against the same chartMax scale as the bars. Wrapped in a
-    // shrink-to-fit inner container so it scrolls together with the bars instead of staying pinned
-    // to the visible viewport of the scrollable chart.
-    const n = list.length;
-    const pts = [];
-    options.movingAvg.forEach((v, i) => {
-      if (v === null || v === undefined) return;
-      pts.push({ x: ((i + 0.5) / n) * 100, y: 100 - Math.min(100, (v / chartMax) * 100) });
-    });
-    let lineOverlay = '';
-    if (pts.length > 1) {
-      const pathD = pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`).join(' ');
-      const last = pts[pts.length - 1];
-      lineOverlay = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0 0 22px 0; pointer-events:none; width:100%; height:calc(100% - 22px); overflow:visible; z-index:2;"><path d="${pathD}" fill="none" stroke="var(--accent-strong)" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="3,2.5" vector-effect="non-scaling-stroke" /></svg><div style="position:absolute; left:${last.x}%; top:calc(${last.y}% - 22px); transform:translate(-50%, -100%); font-size:9px; font-weight:700; color:var(--accent-strong); background:var(--bg); padding:2px 5px; border-radius:4px; border:1px solid var(--border); font-variant-numeric:tabular-nums; white-space:nowrap; z-index:3;">${options.movingAvgLabel || ''}</div>`;
-    }
-    colsHTML = `<div class="chart-cols-inner">${cols}${lineOverlay}</div>`;
-  }
-
+  const colsCls = scroll ? 'chart-cols scroll income-chart-scroll' : 'chart-cols';
   const html = `
       <div class="chart">
         <div class="chart-layout">
@@ -2668,135 +2572,106 @@ function buildScrollBarChart(list, emptyMsg, options) {
             <span>${midValStr}</span>
             <span>$0</span>
           </div>
-          <div class="chart-cols scroll income-chart-scroll" style="position: relative;">${colsHTML}</div>
+          <div class="${colsCls}" style="position: relative;">${cols}</div>
         </div>
       </div>`;
   return { html, hasData: true };
 }
 
 // ──── Render: income ───────────────────────────────────────
-function renderSourceDetail(sourceName) {
-  const entries = state.income.filter(i => (i.source || 'Unknown') === sourceName)
-    .sort((a, b) => (b.receivedAt || b.createdAt || '').localeCompare(a.receivedAt || a.createdAt || ''));
-  if (entries.length === 0) { sourceDetailView = null; return renderIncome(); }
-  const total = entries.reduce((s, i) => s + (parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-  const rows = entries.map(i => {
-    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-    const hrs = Number(i.hours) || 0;
-    const dateStr = i.receivedAt || i.createdAt;
-    const metaParts = [];
-    if (dateStr) metaParts.push(exactDate(dateStr));
-    if (hrs > 0) { metaParts.push(fmtHM(hrs)); metaParts.push(`$${(amt / hrs).toFixed(2)}/hr`); }
-    return `<div class="row clickable" data-action="edit" data-type="income" data-id="${i.id}">
-        <div><div class="r-name">${metaParts.join(' · ') || 'Payment'}</div></div>
-        <div style="display:flex; align-items:center;">
-          <span class="r-amt pos">${fmtMoney(amt)}</span>
-          <button class="rm-x" data-action="rm" data-type="income" data-id="${i.id}" aria-label="Remove">×</button>
-        </div>
-      </div>`;
-  }).join('');
-
-  return `<div class="sh"><button class="back-btn" data-action="close-source-detail">← Back</button></div>
-    <div class="blk" style="border-bottom:none; padding-bottom: 4px;">
-      <div class="blk-l">${escHTML(sourceName)}</div>
-      <div class="blk-v" style="font-size:28px;">${fmtMoney(total, {round:true})}</div>
-      <div class="blk-s">${entries.length} payment${entries.length === 1 ? '' : 's'}</div>
-    </div>
-    <div class="sh"><h3>Payments</h3></div>
-    ${rows}`;
-}
-
 function renderIncome() {
-  if (sourceDetailView) return renderSourceDetail(sourceDetailView);
   const stats = getIncomeStats();
   const nowD = new Date();
+  const cur = getMonthlyStats(nowD.getFullYear(), nowD.getMonth());
+  const monthKey = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2,'0')}`;
+  const pettySpent = state.petty.filter(p => p.date && p.date.startsWith(monthKey))
+    .reduce((s, p) => s + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
+  const netThisMonth = cur.income - cur.bills - pettySpent;
 
-  const ytdSub = stats.ytdHours > 0
-    ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}`
-    : '';
-  const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
-
-  const curMonthStats = getMonthlyStats(nowD.getFullYear(), nowD.getMonth());
-
+  const sources = state.income.slice().sort((a, b) => {
+    const ad = a.receivedAt || a.createdAt || '';
+    const bd = b.receivedAt || b.createdAt || '';
+    return bd.localeCompare(ad);
+  });
   const payPeriodType = detectPayPeriodType();
-  const payPeriodCount = payPeriodType === 'biweekly' ? 52 : 104;
+  const payPeriodCount = payPeriodType === 'biweekly' ? 52 : 104; // ~2yr
   const payHist = getPayPeriodHistory(payPeriodCount);
-  const periodsThisYearWithIncome = payHist.list.filter(h => h.start.getFullYear() === nowD.getFullYear() && h.income > 0);
-  const payPeriodYtdAvg = periodsThisYearWithIncome.length > 0
-    ? periodsThisYearWithIncome.reduce((s, h) => s + h.income, 0) / periodsThisYearWithIncome.length
-    : 0;
 
-  const statTrioHTML = `<div class="stat-trio">
-      <div class="st"><div class="st-label">This month</div><div class="st-value positive">${fmtMoney(curMonthStats.income, {round:true})}</div></div>
-      <div class="st"><div class="st-label">YTD avg / mo</div><div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div></div>
-      <div class="st"><div class="st-label">YTD avg / pmt</div><div class="st-value">${fmtMoney(payPeriodYtdAvg, {round:true})}</div></div>
-    </div>`;
-
-  // Trend: one simple chart, last 14 months, evenly spread across the full width (no scrolling)
-  const trendList = [];
+  // Trend: last 14 months, labeled by month/year (e.g. "8/26") since the range can span multiple years
+  const monthlyList = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
     const mStats = getMonthlyStats(d.getFullYear(), d.getMonth());
-    const label = i === 0 || i === 13 || d.getMonth() === 0 ? `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}` : String(d.getMonth() + 1);
-    trendList.push({ label, income: mStats.income, current: i === 0 });
+    monthlyList.push({ label: `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}`, income: mStats.income, current: i === 0 });
   }
-  const trendWithData = trendList.filter(h => h.income > 0);
-  let trendChartHTML;
-  if (trendWithData.length === 0) {
-    trendChartHTML = `<div class="chart-empty">No income recorded in the last 14 months</div>`;
-  } else {
-    const chartMax = Math.max(...trendWithData.map(h => h.income), 1);
-    const cols = trendList.map(h => {
-      const hasIncome = h.income > 0;
-      const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
-      const barInner = hasIncome ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%"></div>` : '';
-      return `<div class="chart-col" data-amount="${h.income}" data-label="${escHTML(h.label)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
-    }).join('');
-    trendChartHTML = `
-      <div class="chart">
-        <div class="chart-layout">
-          <div class="chart-y"><span>${fmtMoney(chartMax, {round:true})}</span><span>${fmtMoney(chartMax/2, {round:true})}</span><span>$0</span></div>
-          <div class="chart-cols">${cols}</div>
-        </div>
-      </div>`;
-  }
-  const trendMeta = 'Last 14 months';
 
-  // Sources: grouped by name (one row per source, not one row per paycheck)
-  const sourceGroups = {};
-  for (const i of state.income) {
+  const ytdSub = stats.ytdHours > 0
+    ? `${fmtHM(stats.ytdHours)} worked · <b>$${stats.ytdHourly.toFixed(2)}/hr</b> average${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}${stats.projAnnual > 0 ? ' · projected <b>' + fmtMoney(stats.projAnnual, {round:true}) + '</b>' : ''}`
+    : `Projected ${fmtMoney(stats.projAnnual, {round:true})}`;
+  const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome), ytdSub);
+
+  const trioHTML = statTrio([
+    { label: 'This month', value: fmtMoney(cur.income, {round:true}) },
+    { label: 'YTD avg / mo', value: fmtMoney(stats.ytdAvgMonthly, {round:true}) },
+    { label: 'Net this mo.', value: (netThisMonth < 0 ? '−' : '') + fmtMoney(Math.abs(netThisMonth), {round:true}) },
+  ]);
+
+  const periodChart = buildScrollBarChart(payHist.list, 'No income recorded in recent pay periods');
+  const curYear = nowD.getFullYear();
+  const periodsThisYearWithIncome = payHist.list.filter(h => h.start.getFullYear() === curYear && h.income > 0);
+  const payPeriodYtdAvg = periodsThisYearWithIncome.length > 0
+    ? periodsThisYearWithIncome.reduce((s, h) => s + h.income, 0) / periodsThisYearWithIncome.length
+    : 0;
+  const periodLabel = payHist.periodType === 'biweekly' ? 'Last 52 pay periods (~2yr)' : 'Last 104 weeks (~2yr)';
+  const periodMeta = periodLabel + (payPeriodYtdAvg > 0 ? ` · YTD avg ${fmtMoney(payPeriodYtdAvg, {round:true})}` : '');
+
+  const monthlyChart = buildScrollBarChart(monthlyList, 'No income recorded in the last 14 months', { scroll: false });
+
+  // Sources: group entries (mostly one-off shift payments) by source name — count, total,
+  // and an hours-weighted $/hr average, falling back to the most recent year when no hours are logged.
+  const bySource = {};
+  for (const i of sources) {
+    const key = i.source || 'Other';
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
     const hrs = Number(i.hours) || 0;
-    const key = i.source || 'Unknown';
-    if (!sourceGroups[key]) sourceGroups[key] = { total: 0, hours: 0, count: 0, freqSet: new Set(), lastDate: '', years: new Set() };
-    const g = sourceGroups[key];
-    g.total += amt; g.hours += hrs; g.count++;
-    g.freqSet.add(i.frequency || 'once');
+    const freq = i.frequency || 'once';
+    if (!bySource[key]) bySource[key] = { entries: [], count: 0, total: 0, hrsSum: 0, dollarsForHrs: 0, freqs: new Set(), latestDate: '' };
+    const g = bySource[key];
+    g.entries.push(i);
+    g.count++;
+    g.total += amt;
+    if (hrs > 0) { g.hrsSum += hrs; g.dollarsForHrs += amt; }
+    g.freqs.add(freq);
     const d = i.receivedAt || i.createdAt || '';
-    if (d > g.lastDate) g.lastDate = d;
-    if (d) g.years.add(String(d).slice(0, 4));
+    if (d > g.latestDate) g.latestDate = d;
   }
-  const groupedSources = Object.keys(sourceGroups)
-    .map(name => ({ name, ...sourceGroups[name] }))
-    .sort((a, b) => b.lastDate.localeCompare(a.lastDate));
+  const sourceGroups = Object.entries(bySource).sort((a, b) => b[1].latestDate.localeCompare(a[1].latestDate));
 
   let sourcesHTML;
-  if (groupedSources.length === 0) {
+  if (sources.length === 0) {
     sourcesHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="income">Add your first income source</span></div>`;
   } else {
-    sourcesHTML = groupedSources.map(g => {
-      const freqLabel = g.freqSet.size === 1 ? [...g.freqSet][0] : 'mixed';
-      const metaParts = [freqLabel.charAt(0).toUpperCase() + freqLabel.slice(1), `${g.count} pmts`];
-      if (g.hours > 0) {
-        metaParts.push(`$${(g.total / g.hours).toFixed(2)}/hr avg`);
-      } else if (g.years.size === 1 && [...g.years][0] !== String(nowD.getFullYear())) {
-        metaParts.push([...g.years][0]);
-      }
-      return `<div class="row clickable" data-action="view-source" data-source="${escHTML(g.name)}"><div><div class="r-name">${escHTML(g.name)}</div><div class="r-meta">${metaParts.join(' · ')}</div></div><span class="r-amt pos">${fmtMoney(g.total)}</span></div>`;
+    sourcesHTML = sourceGroups.map(([name, g]) => {
+      const freqLabel = g.freqs.size === 1 ? cap([...g.freqs][0]) : 'Mixed';
+      const thirdPart = g.hrsSum > 0 ? `$${(g.dollarsForHrs / g.hrsSum).toFixed(2)}/hr avg` : (g.latestDate ? g.latestDate.slice(0, 4) : '');
+      const metaParts = [freqLabel, `${g.count} pmt${g.count === 1 ? '' : 's'}`];
+      if (thirdPart) metaParts.push(thirdPart);
+      const entriesHTML = g.entries.slice()
+        .sort((a, b) => (b.receivedAt || b.createdAt || '').localeCompare(a.receivedAt || a.createdAt || ''))
+        .map(i => {
+          const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
+          const hrs = Number(i.hours) || 0;
+          const dateStr = i.receivedAt || i.createdAt;
+          const bits = [];
+          if (dateStr) bits.push(exactDate(dateStr));
+          if (hrs > 0) { bits.push(fmtHM(hrs)); bits.push(`$${(amt / hrs).toFixed(2)}/hr`); }
+          return `<div class="row clickable sub-row" data-action="edit" data-type="income" data-id="${i.id}"><div><div class="m">${bits.join(' · ')}</div></div><span class="v positive">${fmtMoney(amt)}</span></div>`;
+        }).join('');
+      return `<details class="src-group"><summary class="row"><div><div class="n">${escHTML(name)}</div><div class="m">${metaParts.join(' · ')}</div></div><span class="v positive">${fmtMoney(g.total)}</span></summary>${entriesHTML}</details>`;
     }).join('');
   }
 
-  return `${ytdBlock}${statTrioHTML}${sh('Trend', { meta: trendMeta })}${trendChartHTML}${sh('Sources', { meta: `${groupedSources.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
+  return `${ytdBlock}${trioHTML}${sh('Trend', { meta: 'Last 14 months' })}${monthlyChart.html}${sh('Pay periods', { meta: periodMeta })}${periodChart.html}${sh('Sources', { meta: `${sourceGroups.length} active`, add: { action: 'open-modal', type: 'income', label: '+ Add' } })}${sourcesHTML}`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -2872,7 +2747,7 @@ function renderExpenses() {
       const amountAction = isPaid ? 'unpay-bill' : 'pay-bill';
       const dimCls = isPaid ? ' dim' : '';
 
-      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}</div><div class="m">${metaParts.join(' · ')}</div></div><button type="button" class="${amountCls}" data-action="${amountAction}" data-id="${b.id}">${fmtMoney(b.amount, {round:true})}</button></div>`;
+      return `<div class="row clickable${dimCls}" data-action="edit" data-type="expenses" data-id="${b.id}"><div><div class="n">${escHTML(b.name)}</div><div class="m">${metaParts.join(' · ')}</div></div><button type="button" class="${amountCls}" data-action="${amountAction}" data-id="${b.id}">${fmtMoney(b.amount)}</button></div>`;
     }).join('');
   }
 
@@ -3188,7 +3063,12 @@ function updateBadges() {
 function updateHeader() {
   const titleEl = document.getElementById('mtitle');
   if (!titleEl) return;
-  titleEl.textContent = 'Ledgeon'; // single-page mode: always the app name, not the tab name
+  let title = 'Ledgeon';
+  if (currentTab === 'income') title = 'Income';
+  else if (currentTab === 'expenses') title = 'Expenses';
+  else if (currentTab === 'budget') title = 'Budget';
+  else if (currentTab === 'tasks') title = 'Tasks';
+  titleEl.textContent = title;
 }
 
 function render() {
@@ -3274,8 +3154,6 @@ document.addEventListener('click', e => {
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
-  else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
-  else if (act === 'close-source-detail') { sourceDetailView = null; render(); }
   else if (act === 'open-modal') { openModal(btn.dataset.type); if (btn.dataset.type === 'petty') document.getElementById('petty-date-input').value = isoDate(todayStart()); }
   else if (act === 'close-modal') document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
   else if (act === 'rm') {
