@@ -182,6 +182,7 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 .stat-trio { padding: 4px 20px 6px !important; margin-top: 6px !important; }
 .stat-trio .st { padding: 16px 4px 4px !important; }
 .stat-trio .st:not(:first-child) { padding-left: 16px !important; }
+.stat-trio .st-label { text-transform: none !important; letter-spacing: normal !important; }
 .stat-trio .st-value.positive, .stat-trio .st-value.negative { color: var(--ink) !important; }
 .chart { padding: 14px 20px 22px !important; border-bottom: none !important; }
 .chart-layout { height: 96px !important; }
@@ -2737,8 +2738,7 @@ function renderIncome() {
     const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
     const mStats = getMonthlyStats(d.getFullYear(), d.getMonth());
     const label = i === 0 || i === 13 || d.getMonth() === 0 ? `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}` : String(d.getMonth() + 1);
-    const tipLabel = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    trendList.push({ label, tipLabel, income: mStats.income, current: i === 0 });
+    trendList.push({ label, income: mStats.income, current: i === 0 });
   }
   const trendWithData = trendList.filter(h => h.income > 0);
   let trendChartHTML;
@@ -2750,7 +2750,7 @@ function renderIncome() {
       const hasIncome = h.income > 0;
       const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
       const barInner = hasIncome ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%"></div>` : '';
-      return `<div class="chart-col" data-amount="${h.income}" data-label="${escHTML(h.tipLabel)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
+      return `<div class="chart-col" data-amount="${h.income}" data-label="${escHTML(h.label)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
     }).join('');
     trendChartHTML = `
       <div class="chart">
