@@ -2326,6 +2326,34 @@ body {
 }
 
 
+/* Monthly chart: real horizontal scroll strip, like scrolling any normal
+   web page - drag/swipe/scrollbar to pan through history. Defaults scrolled
+   to the most recent month (see income-chart-scroll in render()). */
+.monthly-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.monthly-scroll-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 100%;
+  min-width: max-content;
+}
+.monthly-scroll-inner .chart-col {
+  flex: 0 0 22px;
+  width: 22px;
+  min-width: 22px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 /* Pay-period chart: scroll container. Shows as many recent periods as fit; the
    JS still calls scrollPayPeriodChartToLatest() but overflow is intentionally
    hidden rather than scrollable, so that's a harmless no-op. */
@@ -3504,6 +3532,19 @@ body {
   justify-content: flex-start !important;
 }
 
+
+/* Final chart edge fix */
+.chart-cols {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  box-sizing: border-box !important;
+}
+.payperiod-inner {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  box-sizing: border-box !important;
+}
+
 </style>
 </head>
 
@@ -4464,7 +4505,7 @@ function getRecentTransactions() {
 // ──── UI helpers ─────────────────────────────────────────
 function sh(title, opts = {}) {
   const meta = opts.meta ? `<span class="x">${opts.meta}</span>` : '';
-  const add = opts.add ? `<button class="add" data-action="${opts.add.action}"${opts.add.type ? ` data-type="${opts.add.type}"` : ''}>${opts.add.label}</button>` : '';
+  const add = opts.add ? `<button class="add" data-action="${opts.add.action}"${opts.add.type ? ` data-type="${opts.add.type}"` : ''}${opts.add.source ? ` data-source="${escHTML(opts.add.source)}"` : ''}>${opts.add.label}</button>` : '';
   const monthN = opts.monthNav || '';
   return `<div class="sh"><h3>${title}</h3>${meta}${add}${monthN}</div>`;
 }
@@ -4843,7 +4884,7 @@ function renderSourceDetail(sourceName) {
   return `${hero}
     ${summary}
     ${sh('Payments', {
-      add: { action: 'open-modal', type: 'income', label: '+ Add' }
+      add: { action: 'open-modal', type: 'income', label: '+ Add', source: sourceName }
     })}
     ${rows}`;
 }
@@ -4855,7 +4896,7 @@ function renderIncome() {
   const nowD = new Date();
 
   const ytdSub = stats.ytdHours > 0
-    ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · tips ' + fmtMoney(stats.ytdTips, {round:true}) : ''}`
+    ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · cash ' + fmtMoney(stats.ytdTips, {round:true}) : ''}`
     : '';
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
@@ -4974,7 +5015,7 @@ function renderIncome() {
       ${statDelta(monthDelta)}
     </div>
     <div class="st">
-      <div class="st-label">YTD monthly avg</div>
+      <div class="st-label">Monthly avg</div>
       <div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div>
       ${statDelta(monthlyAvgDelta)}
     </div>
@@ -5034,12 +5075,13 @@ function renderIncome() {
       };
     });
   } else {
-    const firstMonthD = new Date(nowD.getFullYear(), nowD.getMonth() - 13, 1);
+    const monthsBack = 35;
+    const firstMonthD = new Date(nowD.getFullYear(), nowD.getMonth() - monthsBack, 1);
     trendMeta = `${firstMonthD.toLocaleString('en-US', {month:'short'})} '${String(firstMonthD.getFullYear()).slice(-2)} – ${nowD.toLocaleString('en-US', {month:'short'})} '${String(nowD.getFullYear()).slice(-2)}`;
-    for (let i = 13; i >= 0; i--) {
+    for (let i = monthsBack; i >= 0; i--) {
       const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
       const mStats = getMonthlyStats(d.getFullYear(), d.getMonth());
-      const label = i === 0 || i === 13 || d.getMonth() === 0
+      const label = i === 0 || i === monthsBack || d.getMonth() === 0
         ? `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}`
         : String(d.getMonth() + 1);
       const tipLabel = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
@@ -5077,7 +5119,9 @@ function renderIncome() {
           ? `<div class="payperiod-scroll">
                <div class="payperiod-inner">${cols}</div>
              </div>`
-          : `<div class="chart-cols">${cols}</div>`}
+          : `<div class="monthly-scroll income-chart-scroll">
+               <div class="monthly-scroll-inner">${cols}</div>
+             </div>`}
       </div>
     </div>`;
   }
@@ -5813,7 +5857,11 @@ document.addEventListener('click', e => {
     incomeChartMode = btn.dataset.mode === 'payperiod' ? 'payperiod' : 'monthly';
     render();
   }
-  else if (act === 'open-modal') { openModal(btn.dataset.type); if (btn.dataset.type === 'petty') document.getElementById('petty-date-input').value = isoDate(todayStart()); }
+  else if (act === 'open-modal') {
+    const prefill = btn.dataset.source ? { source: btn.dataset.source } : null;
+    openModal(btn.dataset.type, null, prefill);
+    if (btn.dataset.type === 'petty') document.getElementById('petty-date-input').value = isoDate(todayStart());
+  }
   else if (act === 'close-modal') document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
   else if (act === 'rm') {
     if (confirm('Delete?')) {
@@ -5909,12 +5957,15 @@ document.addEventListener('input', e => {
   }
 });
 
-function openModal(type, id = null) {
+function openModal(type, id = null, prefill = null) {
   document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
   const f = document.querySelector(`#modal-${type} form`);
   if (!f) return;
   f.reset();
   editingItem = id ? { type, id } : null;
+  if (prefill) {
+    Object.keys(prefill).forEach(k => { if (f.elements[k]) f.elements[k].value = prefill[k]; });
+  }
   const tArr = type === 'expenses' ? state.bills : state[type];
   if (id) {
     const item = tArr.find(x => x.id === id);
