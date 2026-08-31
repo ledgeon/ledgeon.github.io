@@ -2326,9 +2326,10 @@ body {
 }
 
 
-/* Monthly chart: real horizontal scroll strip, like scrolling any normal
-   web page - drag/swipe/scrollbar to pan through history. Defaults scrolled
-   to the most recent month (see income-chart-scroll in render()). */
+/* Monthly chart: extends back to 36 months for scroll-back, but sized to look
+   identical to the original 14-column fit-to-width layout by default (same
+   21px column width, 3px gap). Real native scrollbar - no hiding tricks - so
+   it's visibly obvious and behaves like scrolling any other page. */
 .monthly-scroll {
   flex: 1 1 auto;
   min-width: 0;
@@ -2340,14 +2341,14 @@ body {
 .monthly-scroll-inner {
   display: flex;
   align-items: stretch;
-  gap: 4px;
+  gap: 3px;
   height: 100%;
   min-width: max-content;
 }
 .monthly-scroll-inner .chart-col {
-  flex: 0 0 22px;
-  width: 22px;
-  min-width: 22px;
+  flex: 0 0 21px !important;
+  width: 21px !important;
+  min-width: 21px !important;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -2361,7 +2362,9 @@ body {
   flex: 1 1 auto !important;
   min-width: 0 !important;
   height: 100% !important;
-  overflow: hidden !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 0 !important;
 }
 
@@ -2371,11 +2374,9 @@ body {
 .payperiod-inner {
   display: flex !important;
   align-items: stretch !important;
-  justify-content: flex-end !important;
   gap: 2px !important;
   height: 100% !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  min-width: max-content !important;
 }
 
 .payperiod-inner .payperiod-col {
@@ -5028,19 +5029,23 @@ function renderIncome() {
 
   let trendList = [];
   let trendMeta = '';
+  let visibleWindowSize = 14;
 
   if (incomeChartMode === 'payperiod') {
-    // Show a true rolling year of pay periods.
-    // Weekly cadence = 52 buckets; biweekly cadence = 26 buckets.
-    const periodsToShow = payHist.periodType === 'biweekly' ? 18 : 28;
-    const periodSlice = payHist.list.slice(-periodsToShow);
-    if (periodSlice.length) {
-      const first = periodSlice[0].start;
+    // Render the full fetched history (already buffered via payPeriodCount) so
+    // there's real history to scroll back through, but keep the visible
+    // default window the same size as before for trendMeta / scale reference.
+    const visiblePeriods = payHist.periodType === 'biweekly' ? 18 : 28;
+    visibleWindowSize = visiblePeriods;
+    const periodSlice = payHist.list;
+    const visibleSlice = periodSlice.slice(-visiblePeriods);
+    if (visibleSlice.length) {
+      const first = visibleSlice[0].start;
       const lastEntryDates = state.income
         .map(i => parseISODate(i.receivedAt || i.createdAt))
         .filter(Boolean)
         .sort((a,b) => b-a);
-      const last = lastEntryDates[0] || periodSlice[periodSlice.length - 1].start;
+      const last = lastEntryDates[0] || visibleSlice[visibleSlice.length - 1].start;
       trendMeta = `${first.toLocaleDateString('en-US', {month:'short', day:'numeric'})} – ${last.toLocaleDateString('en-US', {month:'short', day:'numeric'})}`;
     } else {
       trendMeta = 'Pay periods';
@@ -5076,8 +5081,10 @@ function renderIncome() {
     });
   } else {
     const monthsBack = 35;
-    const firstMonthD = new Date(nowD.getFullYear(), nowD.getMonth() - monthsBack, 1);
-    trendMeta = `${firstMonthD.toLocaleString('en-US', {month:'short'})} '${String(firstMonthD.getFullYear()).slice(-2)} – ${nowD.toLocaleString('en-US', {month:'short'})} '${String(nowD.getFullYear()).slice(-2)}`;
+    const visibleMonthsBack = 13;
+    visibleWindowSize = 14;
+    const firstVisibleD = new Date(nowD.getFullYear(), nowD.getMonth() - visibleMonthsBack, 1);
+    trendMeta = `${firstVisibleD.toLocaleString('en-US', {month:'short'})} '${String(firstVisibleD.getFullYear()).slice(-2)} – ${nowD.toLocaleString('en-US', {month:'short'})} '${String(nowD.getFullYear()).slice(-2)}`;
     for (let i = monthsBack; i >= 0; i--) {
       const d = new Date(nowD.getFullYear(), nowD.getMonth() - i, 1);
       const mStats = getMonthlyStats(d.getFullYear(), d.getMonth());
@@ -5095,10 +5102,12 @@ function renderIncome() {
   if (trendWithData.length === 0) {
     trendChartHTML = `<div class="chart-empty">No income recorded for this view</div>`;
   } else {
-    const chartMax = Math.max(...trendWithData.map(h => h.income), 1);
+    const scaleWindow = trendList.slice(-visibleWindowSize);
+    const scaleWithData = scaleWindow.filter(h => h.income > 0);
+    const chartMax = Math.max(...(scaleWithData.length ? scaleWithData : trendWithData).map(h => h.income), 1);
     const cols = trendList.map(h => {
       const hasIncome = h.income > 0;
-      const heightPct = hasIncome ? Math.max(3, (h.income / chartMax) * 100) : 0;
+      const heightPct = hasIncome ? Math.min(100, Math.max(3, (h.income / chartMax) * 100)) : 0;
       const barInner = hasIncome
         ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%"></div>`
         : '';
@@ -5116,7 +5125,7 @@ function renderIncome() {
           <span>$0</span>
         </div>
         ${incomeChartMode === 'payperiod'
-          ? `<div class="payperiod-scroll">
+          ? `<div class="payperiod-scroll income-chart-scroll">
                <div class="payperiod-inner">${cols}</div>
              </div>`
           : `<div class="monthly-scroll income-chart-scroll">
