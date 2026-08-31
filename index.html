@@ -2337,6 +2337,22 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-hover);
+}
+.monthly-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+.monthly-scroll::-webkit-scrollbar-track {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+.monthly-scroll::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+.monthly-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-strong);
 }
 .monthly-scroll-inner {
   display: flex;
@@ -2366,6 +2382,22 @@ body {
   overflow-y: hidden !important;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 0 !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg-hover);
+}
+.payperiod-scroll::-webkit-scrollbar {
+  height: 5px;
+}
+.payperiod-scroll::-webkit-scrollbar-track {
+  background: var(--bg-hover);
+  border-radius: 3px;
+}
+.payperiod-scroll::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 3px;
+}
+.payperiod-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-strong);
 }
 
 /* Pay-period chart: bar/column geometry.
@@ -5721,6 +5753,57 @@ function render() {
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
   window.scrollTo({ top: 0, behavior: 'instant' });
+  syncOverlayHistory();
+}
+
+// ──── Back-button handling for overlays (modals, source detail, budget log) ────
+// Without this, Android/iOS hardware/gesture back exits the site entirely the
+// moment any overlay is open, since there's no history entry for it to consume.
+let overlayHistoryPushed = false;
+let handlingPopState = false;
+
+function isOverlayActive() {
+  return !!document.querySelector('.modal.open') || !!budgetLogView || !!sourceDetailView;
+}
+
+function syncOverlayHistory() {
+  const active = isOverlayActive();
+  if (active && !overlayHistoryPushed) {
+    history.pushState({ ledgeonOverlay: true }, '', location.href);
+    overlayHistoryPushed = true;
+  } else if (!active && overlayHistoryPushed && !handlingPopState) {
+    overlayHistoryPushed = false;
+    history.back();
+  }
+}
+
+window.addEventListener('popstate', () => {
+  if (!overlayHistoryPushed) return;
+  handlingPopState = true;
+  overlayHistoryPushed = false;
+  if (document.querySelector('.modal.open')) {
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+  } else if (budgetLogView) {
+    budgetLogView = false;
+    render();
+  } else if (sourceDetailView) {
+    sourceDetailView = null;
+    render();
+  }
+  handlingPopState = false;
+});
+
+// Modals are opened/closed all over the codebase via direct classList calls
+// rather than one central function, so a MutationObserver catches every case
+// instead of needing to instrument each call site.
+function attachOverlayModalObserver() {
+  const modalObserver = new MutationObserver(() => syncOverlayHistory());
+  document.querySelectorAll('.modal').forEach(m => modalObserver.observe(m, { attributes: true, attributeFilter: ['class'] }));
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachOverlayModalObserver);
+} else {
+  attachOverlayModalObserver();
 }
 
 // ──── Bar chart hover/tap tooltips (delegated so they survive re-renders) ────
