@@ -2169,6 +2169,17 @@ body {
   color: var(--ink-4);
 }
 
+.source-mini-chart {
+  height: 46px;
+  margin: 14px 20px 2px;
+}
+.source-mini-chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
 @media (max-width: 380px) {
   .source-summary-grid {
     margin-left: 14px;
@@ -2339,6 +2350,7 @@ body {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--accent) var(--bg-hover);
+  padding-bottom: 7px;
 }
 .monthly-scroll::-webkit-scrollbar {
   height: 5px;
@@ -2381,7 +2393,7 @@ body {
   overflow-x: auto !important;
   overflow-y: hidden !important;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 0 !important;
+  padding-bottom: 7px !important;
   scrollbar-width: thin;
   scrollbar-color: var(--accent) var(--bg-hover);
 }
@@ -3538,6 +3550,19 @@ body {
   .source-summary-grid.source-summary-grid-4 .source-summary-item:nth-child(n+3) {
     border-top: 1px solid var(--border-light);
   }
+}
+
+/* Income source detail — three equally important metrics (paycheck/hourly/hours) */
+.source-summary-grid.source-summary-grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.source-summary-grid.source-summary-grid-3 .source-summary-item {
+  padding-right: 10px;
+  border-left: 0;
+}
+.source-summary-grid.source-summary-grid-3 .source-summary-item + .source-summary-item {
+  padding-left: 10px;
+  border-left: 1px solid var(--border-light);
 }
 
 
@@ -4845,12 +4870,17 @@ function renderSourceDetail(sourceName) {
   const firstDate = dates[0] || '';
   const lastDate = dates[dates.length - 1] || '';
 
+  const heroSub = [
+    totalHours > 0 ? `${fmtHM(totalHours)} total hours` : '',
+    lastDate ? `latest ${exactDate(lastDate)}` : ''
+  ].filter(Boolean).join(' · ');
+
   const hero = `<div class="detail-top">
       <button class="back-btn" data-action="close-source-detail">← Income</button>
     </div>
-    ${blk(sourceName, fmtMoney(total, {round:true}), '')}`;
+    ${blk(sourceName, fmtMoney(total, {round:true}), heroSub)}`;
 
-  const summary = `<div class="source-summary-grid source-summary-grid-4">
+  const summary = `<div class="source-summary-grid">
     <div class="source-summary-item">
       <div class="source-summary-label">Avg paycheck</div>
       <div class="source-summary-value">${fmtMoney(avgPaycheck, {round:true})}</div>
@@ -4859,15 +4889,30 @@ function renderSourceDetail(sourceName) {
       <div class="source-summary-label">Avg hourly</div>
       <div class="source-summary-value">${totalHours > 0 ? '$' + avgHourly.toFixed(2) + '/hr' : '—'}</div>
     </div>
-    <div class="source-summary-item">
-      <div class="source-summary-label">Avg hours</div>
-      <div class="source-summary-value">${avgHoursPerCheck > 0 ? fmtHM(avgHoursPerCheck) : '—'}</div>
-    </div>
-    <div class="source-summary-item">
-      <div class="source-summary-label">Total hours</div>
-      <div class="source-summary-value">${totalHours > 0 ? fmtHM(totalHours) : '—'}</div>
-    </div>
   </div>`;
+
+  // Small trend line across this source's payments, oldest to newest.
+  const chronoEntries = entries.slice().reverse();
+  const chartAmounts = chronoEntries.map(i => parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0);
+  let sourceLineChartHTML = '';
+  if (chartAmounts.length >= 2) {
+    const n = chartAmounts.length;
+    const cMax = Math.max(...chartAmounts);
+    const cMin = Math.min(...chartAmounts, 0);
+    const range = (cMax - cMin) || 1;
+    const pts = chartAmounts.map((amt, idx) => ({
+      x: (idx / (n - 1)) * 100,
+      y: 100 - ((amt - cMin) / range) * 100
+    }));
+    const linePath = pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ');
+    const areaPath = `${linePath} L 100,100 L 0,100 Z`;
+    sourceLineChartHTML = `<div class="source-mini-chart">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path d="${areaPath}" fill="var(--accent-soft)" stroke="none" />
+        <path d="${linePath}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round" />
+      </svg>
+    </div>`;
+  }
 
   const rows = entries.map(i => {
     const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
@@ -4897,7 +4942,8 @@ function renderSourceDetail(sourceName) {
 
   return `${hero}
     ${summary}
-    ${sh('Payments', {
+    ${sourceLineChartHTML}
+    ${sh('Paystubs', {
       add: { action: 'open-modal', type: 'income', label: '+ Add', source: sourceName }
     })}
     ${rows}`;
@@ -5042,14 +5088,12 @@ function renderIncome() {
 
   let trendList = [];
   let trendMeta = '';
-  let visibleWindowSize = 14;
 
   if (incomeChartMode === 'payperiod') {
     // Render the full fetched history (already buffered via payPeriodCount) so
     // there's real history to scroll back through, but keep the visible
-    // default window the same size as before for trendMeta / scale reference.
+    // default window the same size as before for trendMeta reference.
     const visiblePeriods = payHist.periodType === 'biweekly' ? 18 : 28;
-    visibleWindowSize = visiblePeriods;
     const periodSlice = payHist.list;
     const visibleSlice = periodSlice.slice(-visiblePeriods);
     if (visibleSlice.length) {
@@ -5095,7 +5139,6 @@ function renderIncome() {
   } else {
     const monthsBack = 35;
     const visibleMonthsBack = 13;
-    visibleWindowSize = 14;
     const firstVisibleD = new Date(nowD.getFullYear(), nowD.getMonth() - visibleMonthsBack, 1);
     trendMeta = `${firstVisibleD.toLocaleString('en-US', {month:'short'})} '${String(firstVisibleD.getFullYear()).slice(-2)} – ${nowD.toLocaleString('en-US', {month:'short'})} '${String(nowD.getFullYear()).slice(-2)}`;
     for (let i = monthsBack; i >= 0; i--) {
@@ -5115,9 +5158,7 @@ function renderIncome() {
   if (trendWithData.length === 0) {
     trendChartHTML = `<div class="chart-empty">No income recorded for this view</div>`;
   } else {
-    const scaleWindow = trendList.slice(-visibleWindowSize);
-    const scaleWithData = scaleWindow.filter(h => h.income > 0);
-    const chartMax = Math.max(...(scaleWithData.length ? scaleWithData : trendWithData).map(h => h.income), 1);
+    const chartMax = Math.max(...trendWithData.map(h => h.income), 1);
     const cols = trendList.map(h => {
       const hasIncome = h.income > 0;
       const heightPct = hasIncome ? Math.min(100, Math.max(3, (h.income / chartMax) * 100)) : 0;
