@@ -3682,14 +3682,6 @@ body {
         <div class="fcol"><label class="flbl">name</label><input type="text" class="input" name="name" required></div>
         <div class="fcol" style="min-width: 100px;"><label class="flbl" id="expense-amount-label">amount</label><input type="text" class="input" name="amount" id="expense-amount-input" placeholder="0.00" required></div>
       </div>
-      <div class="frow" style="margin-top: -4px;">
-        <div class="fcol">
-          <label class="tip-toggle" style="font-size: 12px; color: var(--ink-3);">
-            <input type="checkbox" name="isPercent" id="isPercentToggle"> Set as % of monthly average income
-          </label>
-          <div id="pct-preview" style="font-size: 11px; color: var(--ink-3); margin-top: 4px; display: none; font-style: italic;"></div>
-        </div>
-      </div>
       <div class="frow">
         <div class="fcol"><label class="flbl">category</label>
           <select class="select" name="category">
@@ -3868,6 +3860,23 @@ body {
   </div>
 </div>
 
+<div class="modal" id="modal-import-choice">
+  <div class="modal-bd" data-action="import-cancel"></div>
+  <div class="modal-c">
+    <div class="modal-t">import data</div>
+    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5;" id="import-summary">—</div>
+    <div style="font-size: 12px; color: var(--ink-3); margin-bottom: 12px; line-height: 1.5;">
+      <strong>Merge</strong> adds these entries alongside what you already have.
+      <strong>Replace all</strong> clears your current data — including anything not in this file — and uses only what's imported.
+    </div>
+    <div class="factions" style="flex-wrap: wrap; gap: 6px;">
+      <button type="button" data-action="import-cancel">Cancel</button>
+      <button type="button" data-action="import-merge">Merge with current data</button>
+      <button type="button" class="primary" data-action="import-replace">Replace all data</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 
@@ -4028,39 +4037,6 @@ function updateDebtSectionVisibility() {
   }
 }
 
-function updateExpensePercentUI() {
-  const toggle = document.getElementById('isPercentToggle');
-  const label  = document.getElementById('expense-amount-label');
-  const input  = document.getElementById('expense-amount-input');
-  const prev   = document.getElementById('pct-preview');
-  if (!toggle || !label || !input || !prev) return;
-  if (toggle.checked) {
-    label.textContent = '% of monthly income';
-    input.placeholder = 'e.g. 30';
-    prev.style.display = '';
-    updatePctPreview();
-  } else {
-    label.textContent = 'amount';
-    input.placeholder = '0.00';
-    prev.style.display = 'none';
-    prev.textContent = '';
-  }
-}
-
-function updatePctPreview() {
-  const input = document.getElementById('expense-amount-input');
-  const prev  = document.getElementById('pct-preview');
-  if (!input || !prev) return;
-  const pct = parseFloat(String(input.value).replace(/[^\d.-]/g, '')) || 0;
-  const avg = getIncomeStats().avgMonthly || 0;
-  if (pct > 0 && avg > 0) {
-    prev.textContent = `≈ ${fmtMoney(avg * pct / 100, {round:true})}/mo at current income`;
-  } else if (pct > 0) {
-    prev.textContent = `Will calculate once income is recorded`;
-  } else {
-    prev.textContent = '';
-  }
-}
 function nextId(col) {
   const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm', budgetCats: 'bc' }[col];
   let max = 0;
@@ -4899,10 +4875,15 @@ function renderSourceDetail(sourceName) {
     const hourly = hrs > 0 ? amt / hrs : 0;
     const date = i.receivedAt || i.createdAt || '';
 
+    const baseAmt = parseFloat(String(i.baseAmount != null ? i.baseAmount : i.amount).replace(/[^\d.-]/g, '')) || 0;
+    const cashTipAmt = i.tipsEnabled
+      ? (i.tipsType === 'percent' ? baseAmt * (Number(i.tipsValue) || 0) / 100 : Number(i.tipsValue) || 0)
+      : 0;
+
     const inlineMeta = [
       hrs > 0 ? fmtHM(hrs) : '',
       hourly > 0 ? `$${hourly.toFixed(2)}/hr` : '',
-      i.tipsEnabled && Number(i.tipsValue) > 0 ? 'tips incl.' : ''
+      cashTipAmt > 0 ? `${fmtMoney(cashTipAmt, {round:true})} cash` : ''
     ].filter(Boolean).join(' · ');
 
     return `<div class="row clickable source-payment-row" data-action="edit" data-type="income" data-id="${i.id}">
@@ -5980,7 +5961,66 @@ document.addEventListener('click', e => {
   }
   else if (act === 'import') document.getElementById('file-import').click();
   else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[], payments:[], budgetCats:[] }; saveState(); render(); } }
+  else if (act === 'import-cancel') {
+    pendingImportData = null;
+    document.getElementById('modal-import-choice').classList.remove('open');
+  }
+  else if (act === 'import-merge') {
+    if (pendingImportData) { mergeImportedData(pendingImportData); saveState(); render(); }
+    pendingImportData = null;
+    document.getElementById('modal-import-choice').classList.remove('open');
+  }
+  else if (act === 'import-replace') {
+    if (pendingImportData) { replaceImportedData(pendingImportData); saveState(); render(); }
+    pendingImportData = null;
+    document.getElementById('modal-import-choice').classList.remove('open');
+  }
 });
+
+let pendingImportData = null;
+const IMPORT_COLLECTIONS = ['tasks', 'bills', 'events', 'income', 'goals', 'petty', 'payments', 'budgetCats'];
+
+function importAssignUniqueIds(col, items) {
+  const pfx = { tasks: 't', bills: 'b', events: 'e', income: 'i', goals: 'g', petty: 'p', payments: 'pm', budgetCats: 'bc' }[col];
+  let maxNum = 0;
+  state[col].forEach(x => {
+    const n = parseInt(String(x.id || '').slice(pfx.length), 10);
+    if (!isNaN(n) && n > maxNum) maxNum = n;
+  });
+  const existingIds = new Set(state[col].map(x => x.id));
+  return items.map(item => {
+    const it = Object.assign({}, item);
+    if (!it.id || existingIds.has(it.id)) {
+      maxNum++;
+      it.id = pfx + maxNum;
+    }
+    existingIds.add(it.id);
+    return it;
+  });
+}
+
+function mergeImportedData(imp) {
+  IMPORT_COLLECTIONS.forEach(col => {
+    if (Array.isArray(imp[col]) && imp[col].length) {
+      state[col] = state[col].concat(importAssignUniqueIds(col, imp[col]));
+    }
+  });
+}
+
+function replaceImportedData(imp) {
+  state = {
+    tasks: imp.tasks || [], bills: imp.bills || [], events: imp.events || [],
+    income: imp.income || [], goals: imp.goals || [], petty: imp.petty || [],
+    payments: imp.payments || [], budgetCats: imp.budgetCats || []
+  };
+}
+
+function summarizeImport(imp) {
+  const parts = IMPORT_COLLECTIONS
+    .filter(col => Array.isArray(imp[col]) && imp[col].length)
+    .map(col => `${imp[col].length} ${col}`);
+  return parts.length ? `This file has ${parts.join(', ')}.` : 'This file has no recognizable data.';
+}
 
 document.getElementById('file-import').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
@@ -5988,14 +6028,12 @@ document.getElementById('file-import').addEventListener('change', e => {
   r.onload = ev => {
     try {
       const imp = JSON.parse(ev.target.result);
-      if (confirm('Import data? Replaces current.')) {
-        state = {
-          tasks: imp.tasks||[], bills: imp.bills||[], events: imp.events||[],
-          income: imp.income||[], goals: imp.goals||[], petty: imp.petty||[],
-          payments: imp.payments||[], budgetCats: imp.budgetCats||[]
-        };
-        saveState(); render();
-      }
+      const hasData = IMPORT_COLLECTIONS.some(col => Array.isArray(imp[col]) && imp[col].length);
+      if (!hasData) { alert('No recognizable data in that file.'); return; }
+      pendingImportData = imp;
+      document.getElementById('import-summary').textContent = summarizeImport(imp);
+      document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
+      document.getElementById('modal-import-choice').classList.add('open');
     } catch { alert('Error importing.'); }
   };
   r.readAsText(f); e.target.value = '';
@@ -6031,21 +6069,12 @@ document.addEventListener('change', e => {
     if (e.target.checked) { g.style.display = 'flex'; setTimeout(() => g.style.opacity = '1', 10); }
     else { g.style.opacity = '0'; setTimeout(() => g.style.display = 'none', 200); }
   }
-  else if (e.target.id === 'isPercentToggle') {
-    updateExpensePercentUI();
-  }
   else if (e.target.name === 'category' && e.target.closest('#modal-expenses')) {
     updateDebtSectionVisibility();
   }
   else if (e.target.id === 'tax-pct-input') {
     const v = parseFloat(e.target.value);
     if (!isNaN(v) && v >= 0 && v <= 100) { setTaxPct(v); render(); }
-  }
-});
-
-document.addEventListener('input', e => {
-  if (e.target.id === 'expense-amount-input' && document.getElementById('isPercentToggle')?.checked) {
-    updatePctPreview();
   }
 });
 
@@ -6086,15 +6115,6 @@ function openModal(type, id = null, prefill = null) {
         f.elements['apr'].value = item.apr || '';
         f.elements['isDebt'].checked = !!item.balance;
         f.elements['isDebt'].dispatchEvent(new Event('change', { bubbles: true }));
-
-        // Percent-of-income mode
-        if (item.isPercent && typeof item.pctValue === 'number') {
-          f.elements['amount'].value = item.pctValue;
-          f.elements['isPercent'].checked = true;
-        } else {
-          f.elements['isPercent'].checked = false;
-        }
-        f.elements['isPercent'].dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
   }
@@ -6126,7 +6146,7 @@ function openModal(type, id = null, prefill = null) {
     _titleEl.textContent = verb + ' ' + typeLabel;
   }
   document.getElementById('modal-' + type).classList.add('open');
-  if (type === 'expenses') { updateExpensePercentUI(); updateDebtSectionVisibility(); }
+  if (type === 'expenses') { updateDebtSectionVisibility(); }
   setTimeout(() => f.querySelector('input')?.focus(), 50);
 }
 
@@ -6163,17 +6183,9 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
       item.dueDate = fd.get('date') || null;
 
-      const inputVal = pAmt(fd.get('amount'));
-      if (f.elements['isPercentToggle'].checked) {
-        item.isPercent = true;
-        item.pctValue = inputVal;
-        const avg = getIncomeStats().avgMonthly || 0;
-        item.amount = avg * inputVal / 100;
-      } else {
-        delete item.isPercent;
-        delete item.pctValue;
-        item.amount = inputVal;
-      }
+      delete item.isPercent;
+      delete item.pctValue;
+      item.amount = pAmt(fd.get('amount'));
 
       // Update debt fields — only kept if category is 'debt' and toggle is on
       if (item.category === 'debt' && f.elements['isDebtToggle'].checked) {
