@@ -4377,11 +4377,11 @@ function getIncomeStats() {
     }
   }
   let ytdMonthsWithIncome = 0, ytdIncomeForMonthlyAvg = 0;
-  for (let m = 0; m <= curM; m++) {
+  for (let m = 0; m < curM; m++) {
     const mi = getMonthlyStats(curY, m).income;
     if (mi > 0) { ytdMonthsWithIncome++; ytdIncomeForMonthlyAvg += mi; }
   }
-  const ytdAvgMonthly = ytdMonthsWithIncome > 0 ? ytdIncomeForMonthlyAvg / ytdMonthsWithIncome : 0;
+  const ytdAvgMonthly = ytdMonthsWithIncome > 0 ? ytdIncomeForMonthlyAvg / ytdMonthsWithIncome : avgMonthly;
   return { ytdIncome, ytdHours, ytdHourly: ytdHours > 0 ? ytdIncome / ytdHours : 0, ytdTips, avgMonthly, ytdAvgMonthly, projAnnual, avgMonthlyBills, projAnnualBills };
 }
 
