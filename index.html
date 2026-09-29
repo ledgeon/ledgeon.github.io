@@ -190,6 +190,33 @@ body { max-width: 480px !important; padding-bottom: 60px !important; display: bl
 .sync-ind.ok      { background: var(--positive-soft); color: var(--positive); }
 .sync-ind.err     { background: var(--negative-soft); color: var(--negative); }
 
+.cash-plan {
+  margin: 14px 16px 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-subtle);
+}
+.cash-plan-title { font-size: 14px; font-weight: 700; }
+.cash-plan-copy { margin-top: 3px; color: var(--ink-3); font-size: 11.5px; line-height: 1.45; }
+.cash-plan-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
+.cash-plan-field { min-width: 0; }
+.cash-plan-field label { display: block; margin-bottom: 4px; color: var(--ink-3); font-size: 10.5px; font-weight: 600; }
+.cash-plan-field input { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--ink); font-size: 13px; }
+.cash-plan-breakdown { margin-top: 12px; border-top: 1px solid var(--border); }
+.cash-plan-breakdown .row { padding: 8px 0 !important; }
+.cash-plan-result { margin-top: 10px; padding: 11px 12px; border-radius: 7px; background: var(--positive-soft); color: var(--positive); }
+.cash-plan-result.short { background: var(--negative-soft); color: var(--negative); }
+.cash-plan-result.waiting { background: var(--bg-hover); color: var(--ink-2); }
+.cash-plan-result-label { font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; }
+.cash-plan-result-amount { margin-top: 2px; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cash-plan-result-copy { margin-top: 2px; font-size: 11px; line-height: 1.4; }
+.cash-plan-note { margin-top: 8px; color: var(--warning); font-size: 11px; line-height: 1.4; }
+.cash-plan-bills { margin-top: 8px; color: var(--ink-2); font-size: 11px; line-height: 1.5; }
+.cash-plan-bills div { display: flex; justify-content: space-between; gap: 8px; }
+.cash-plan-bills span:last-child { white-space: nowrap; }
+.cash-plan-legacy { margin: 8px 16px 0; color: var(--ink-3); font-size: 10.5px; line-height: 1.4; }
+
 .conflict-card {
   padding: 12px 14px;
   border: 1px solid var(--border);
@@ -3950,7 +3977,8 @@ const PRESET_BILLS = [
 ];
 
 // ──── State ──────────────────────────────────────────────────
-let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [], budgetCats: [], updatedAt: 0 };
+const DEFAULT_CASH_PLAN = { cashOnHand: '', nextPayDate: '', essentials: '', cushion: '500' };
+let state = { tasks: [], bills: [], events: [], income: [], goals: [], petty: [], payments: [], budgetCats: [], cashPlan: { ...DEFAULT_CASH_PLAN }, updatedAt: 0 };
 const possibleKeys = ['ledgeon-state-v5', 'ledgeon-state-v4', 'ledgeon-prompt-v1', 'ledgeon-state-v3'];
 for (const k of possibleKeys) {
   try {
@@ -3967,6 +3995,7 @@ for (const k of possibleKeys) {
           petty:    Array.isArray(v.petty)    ? v.petty    : [],
           payments: Array.isArray(v.payments) ? v.payments : [],
           budgetCats: Array.isArray(v.budgetCats) ? v.budgetCats : [],
+          cashPlan: { ...DEFAULT_CASH_PLAN, ...(v.cashPlan && typeof v.cashPlan === 'object' ? v.cashPlan : {}) },
           updatedAt: typeof v.updatedAt === 'number' ? v.updatedAt : 0,
         };
         break;
@@ -5518,6 +5547,127 @@ function buildPieChart(incTot, catData, savings, net) {
 }
 
 // ──── Render: budget ───────────────────────────────────────
+function defaultNextPayDate() {
+  const d = todayStart();
+  d.setDate(d.getDate() + 7);
+  return isoDate(d);
+}
+
+function moneyValue(value) {
+  const n = parseFloat(String(value == null ? '' : value).replace(/[$,\s]/g, ''));
+  return Number.isFinite(n) ? Math.max(0, n) : 0;
+}
+
+function nextBillDate(date, recurrence, anchorDay) {
+  if (recurrence === 'weekly') return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+  if (recurrence === 'monthly') {
+    const monthIndex = date.getFullYear() * 12 + date.getMonth() + 1;
+    const year = Math.floor(monthIndex / 12), month = monthIndex % 12;
+    return new Date(year, month, Math.min(anchorDay, new Date(year, month + 1, 0).getDate()));
+  }
+  if (recurrence === 'yearly') {
+    const year = date.getFullYear() + 1, month = date.getMonth();
+    return new Date(year, month, Math.min(anchorDay, new Date(year, month + 1, 0).getDate()));
+  }
+  return null;
+}
+
+function getPaydayPlanProjection() {
+  const todayIso = isoDate(todayStart());
+  const rawDate = state.cashPlan?.nextPayDate || '';
+  const nextPayDate = rawDate && rawDate >= todayIso ? rawDate : defaultNextPayDate();
+  const dueBills = [];
+  let missingDates = 0;
+
+  for (const bill of state.bills) {
+    const amount = moneyValue(bill.amount);
+    if (amount <= 0) continue;
+    if (!bill.dueDate) { missingDates++; continue; }
+    let due = new Date(bill.dueDate + 'T00:00:00');
+    if (isNaN(due.getTime())) { missingDates++; continue; }
+    const recurrence = bill.recurring || 'once';
+
+    if (recurrence === 'once') {
+      if (!bill.paid && isoDate(due) <= nextPayDate) {
+        dueBills.push({ name: bill.name || 'Expense', amount, date: isoDate(due) });
+      }
+      continue;
+    }
+
+    const anchorDay = due.getDate();
+    if (isBillCurrentlyPaid(bill)) {
+      due = nextBillDate(due, recurrence, anchorDay) || due;
+    }
+    let guard = 0;
+    while (isoDate(due) < todayIso && guard++ < 600) {
+      const advanced = nextBillDate(due, recurrence, anchorDay);
+      if (!advanced) break;
+      due = advanced;
+    }
+    guard = 0;
+    while (isoDate(due) <= nextPayDate && guard++ < 600) {
+      dueBills.push({ name: bill.name || 'Expense', amount, date: isoDate(due) });
+      const advanced = nextBillDate(due, recurrence, anchorDay);
+      if (!advanced) break;
+      due = advanced;
+    }
+  }
+
+  dueBills.sort((a, b) => a.date.localeCompare(b.date) || a.name.localeCompare(b.name));
+  return {
+    nextPayDate,
+    dueBills,
+    billReserve: dueBills.reduce((sum, bill) => sum + bill.amount, 0),
+    missingDates
+  };
+}
+
+function renderPaydayPlan() {
+  const projection = getPaydayPlanProjection();
+  const plan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}) };
+  const hasCash = String(plan.cashOnHand).trim() !== '' && Number.isFinite(parseFloat(plan.cashOnHand));
+  const hasEssentials = String(plan.essentials).trim() !== '' && Number.isFinite(parseFloat(plan.essentials));
+  const cash = moneyValue(plan.cashOnHand);
+  const essentials = moneyValue(plan.essentials);
+  const cushion = moneyValue(plan.cushion);
+  const available = hasCash && hasEssentials ? cash - projection.billReserve - essentials - cushion : null;
+  const billRows = projection.dueBills.slice(0, 5).map(bill =>
+    `<div><span>${escHTML(bill.name)} · ${compactDate(bill.date)}</span><span>${fmtMoney(bill.amount, {round:true})}</span></div>`
+  ).join('');
+  const waiting = available === null;
+  const short = available !== null && available < 0;
+  const resultLabel = waiting ? 'Complete the cash plan' : short ? 'Shortfall before payday' : 'Left after set-asides';
+  const resultValue = waiting ? 'Enter cash + essentials' : fmtMoney(Math.abs(available), {round:true});
+  const resultCopy = waiting
+    ? 'Enter the money available now and what you need for food, gas, and essentials. The planner never counts estimated or future income.'
+    : short
+      ? 'Bills, essentials, and your cushion exceed the cash entered. Hold off on extra debt payments until more money arrives.'
+      : 'This is the amount left for extra debt payments or flexible spending, after the set-asides above.';
+
+  return `<section class="cash-plan" aria-label="Payday safety plan">
+    <div class="cash-plan-title">Payday safety plan</div>
+    <div class="cash-plan-copy">Plan from money you actually have. Enter your current available cash and next payday; known bills due before then are reserved below.</div>
+    <div class="cash-plan-fields">
+      <div class="cash-plan-field"><label for="plan-cash">Available cash now</label><input id="plan-cash" data-cash-plan="cashOnHand" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${escHTML(plan.cashOnHand)}"></div>
+      <div class="cash-plan-field"><label for="plan-payday">Next payday</label><input id="plan-payday" data-cash-plan="nextPayDate" type="date" value="${escHTML(projection.nextPayDate)}"></div>
+      <div class="cash-plan-field"><label for="plan-essentials">Food, gas & essentials until then</label><input id="plan-essentials" data-cash-plan="essentials" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" value="${escHTML(plan.essentials)}"></div>
+      <div class="cash-plan-field"><label for="plan-cushion">Keep untouched as cushion</label><input id="plan-cushion" data-cash-plan="cushion" type="number" inputmode="decimal" min="0" step="0.01" value="${escHTML(plan.cushion)}"></div>
+    </div>
+    <div class="cash-plan-breakdown">
+      <div class="row"><span>Bills due through ${compactDate(projection.nextPayDate)}</span><strong>${fmtMoney(projection.billReserve, {round:true})}</strong></div>
+      <div class="row"><span>Essentials until payday</span><strong>${fmtMoney(essentials, {round:true})}</strong></div>
+      <div class="row"><span>Cash cushion</span><strong>${fmtMoney(cushion, {round:true})}</strong></div>
+    </div>
+    <div class="cash-plan-result${waiting ? ' waiting' : short ? ' short' : ''}">
+      <div class="cash-plan-result-label">${resultLabel}</div>
+      <div class="cash-plan-result-amount">${resultValue}</div>
+      <div class="cash-plan-result-copy">${resultCopy}</div>
+    </div>
+    ${projection.dueBills.length ? `<div class="cash-plan-bills">${billRows}${projection.dueBills.length > 5 ? `<div><span>And ${projection.dueBills.length - 5} more bills</span><span></span></div>` : ''}</div>` : `<div class="cash-plan-copy">No scheduled bills due before payday.</div>`}
+    ${projection.missingDates ? `<div class="cash-plan-note">${projection.missingDates} expense${projection.missingDates === 1 ? ' has' : 's have'} no due date and ${projection.missingDates === 1 ? 'is' : 'are'} not included. Add due dates under Expenses for a safer estimate.</div>` : ''}
+  </section>`;
+}
+
 function renderBudget() {
   if (budgetLogView) return renderBudgetSpendingDetail();
 
@@ -5526,8 +5676,9 @@ function renderBudget() {
   const currentMonth = getMonthlyStats(now.getFullYear(), now.getMonth());
   const avgIncome = stats.ytdAvgMonthly || stats.avgMonthly || currentMonth.income || 0;
 
+  const paydayPlan = renderPaydayPlan();
   if (avgIncome <= 0) {
-    return `${blk('Budget', 'No income yet', `<span class="lnk" data-action="open-modal" data-type="income">Add income</span> to build a budget`)}`;
+    return `${paydayPlan}${blk('Monthly estimate', 'No income yet', `<span class="lnk" data-action="open-modal" data-type="income">Add income</span> to see the historical average`)}`;
   }
 
   const fixed = state.bills
@@ -5549,9 +5700,9 @@ function renderBudget() {
   // One combined line instead of a separate income/fixed/savings stat-trio —
   // this tab is meant to read as a single flowing summary, not a stack of cards.
   const hero = blk(
-    'Remaining to spend',
+    'Average-based monthly estimate',
     (remaining < 0 ? '−' : '') + fmtMoney(Math.abs(remaining), {round:true}),
-    `${fmtMoney(avgIncome, {round:true})} income · ${fmtMoney(fixed, {round:true})} fixed${savingsTarget > 0 ? ` · ${fmtMoney(savingsTarget, {round:true})} savings` : ''}`,
+    `${fmtMoney(avgIncome, {round:true})} avg income · ${fmtMoney(fixed, {round:true})} fixed${savingsTarget > 0 ? ` · ${fmtMoney(savingsTarget, {round:true})} savings` : ''} · historical estimate`,
     { color: remaining < 0 ? 'negative' : '' }
   );
 
@@ -5640,7 +5791,9 @@ function renderBudget() {
     <span class="v">${fmtMoney(spent, {round:true})} ›</span>
   </div>`;
 
-  return `${hero}
+  return `${paydayPlan}
+    <div class="cash-plan-legacy">The monthly budget below is an estimate from recorded income averages. Use the Payday safety plan above before deciding what cash is safe for extra debt payments.</div>
+    ${hero}
     ${meterHTML}
     ${sh('Spending targets', {
       meta: targets.length ? `${fmtMoney(unassigned, {round:true})} unassigned` : '',
@@ -6001,7 +6154,7 @@ document.addEventListener('click', e => {
     a.href = u; a.download = 'ledgeon.json'; a.click(); URL.revokeObjectURL(u);
   }
   else if (act === 'import') document.getElementById('file-import').click();
-  else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[], payments:[], budgetCats:[] }; saveState(); render(); } }
+  else if (act === 'reset') { if (confirm('Wipe all data?')) { state = { tasks:[], bills:[], events:[], income:[], goals:[], petty:[], payments:[], budgetCats:[], cashPlan: { ...DEFAULT_CASH_PLAN } }; saveState(); render(); } }
   else if (act === 'import-cancel') {
     pendingImportData = null;
     document.getElementById('modal-import-choice').classList.remove('open');
@@ -6046,13 +6199,17 @@ function mergeImportedData(imp) {
       state[col] = state[col].concat(importAssignUniqueIds(col, imp[col]));
     }
   });
+  if (imp.cashPlan && typeof imp.cashPlan === 'object') {
+    state.cashPlan = { ...DEFAULT_CASH_PLAN, ...imp.cashPlan };
+  }
 }
 
 function replaceImportedData(imp) {
   state = {
     tasks: imp.tasks || [], bills: imp.bills || [], events: imp.events || [],
     income: imp.income || [], goals: imp.goals || [], petty: imp.petty || [],
-    payments: imp.payments || [], budgetCats: imp.budgetCats || []
+    payments: imp.payments || [], budgetCats: imp.budgetCats || [],
+    cashPlan: { ...DEFAULT_CASH_PLAN, ...(imp.cashPlan && typeof imp.cashPlan === 'object' ? imp.cashPlan : {}) }
   };
 }
 
@@ -6069,7 +6226,8 @@ document.getElementById('file-import').addEventListener('change', e => {
   r.onload = ev => {
     try {
       const imp = JSON.parse(ev.target.result);
-      const hasData = IMPORT_COLLECTIONS.some(col => Array.isArray(imp[col]) && imp[col].length);
+      const hasData = IMPORT_COLLECTIONS.some(col => Array.isArray(imp[col]) && imp[col].length)
+        || (imp.cashPlan && typeof imp.cashPlan === 'object');
       if (!hasData) { alert('No recognizable data in that file.'); return; }
       pendingImportData = imp;
       document.getElementById('import-summary').textContent = summarizeImport(imp);
@@ -6081,7 +6239,14 @@ document.getElementById('file-import').addEventListener('change', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.id === 'tipsEnabled') {
+  if (e.target.dataset.cashPlan) {
+    const field = e.target.dataset.cashPlan;
+    if (['cashOnHand', 'nextPayDate', 'essentials', 'cushion'].includes(field)) {
+      state.cashPlan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}), [field]: e.target.value };
+      saveState(); render();
+    }
+  }
+  else if (e.target.id === 'tipsEnabled') {
     const g = document.getElementById('tipsInputGroup');
     const help = document.getElementById('cashTipHelp');
     if (e.target.checked) {
@@ -6413,7 +6578,10 @@ function schedulePush() {
 
 function stateHasData(s) {
   if (!s) return false;
-  return !!(s.bills?.length || s.income?.length || s.tasks?.length || s.goals?.length || s.petty?.length || s.payments?.length || s.budgetCats?.length);
+  const cp = s.cashPlan || {};
+  const hasCashPlan = String(cp.cashOnHand || '').trim() !== '' || String(cp.nextPayDate || '').trim() !== ''
+    || String(cp.essentials || '').trim() !== '' || String(cp.cushion ?? DEFAULT_CASH_PLAN.cushion) !== DEFAULT_CASH_PLAN.cushion;
+  return !!(s.bills?.length || s.income?.length || s.tasks?.length || s.goals?.length || s.petty?.length || s.payments?.length || s.budgetCats?.length || hasCashPlan);
 }
 
 function applyRemoteState(remoteState, remoteUpdatedAt) {
@@ -6426,6 +6594,7 @@ function applyRemoteState(remoteState, remoteUpdatedAt) {
     petty:    Array.isArray(remoteState.petty)    ? remoteState.petty    : [],
     payments: Array.isArray(remoteState.payments) ? remoteState.payments : [],
     budgetCats: Array.isArray(remoteState.budgetCats) ? remoteState.budgetCats : [],
+    cashPlan: { ...DEFAULT_CASH_PLAN, ...(remoteState.cashPlan && typeof remoteState.cashPlan === 'object' ? remoteState.cashPlan : {}) },
     updatedAt: remoteUpdatedAt || Date.now(),
   };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
