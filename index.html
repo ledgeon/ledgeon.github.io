@@ -3669,6 +3669,7 @@ body {
 .page-section + .page-section{border-top:1px solid var(--border);margin-top:28px;padding-top:16px}
 .page-section-title{margin:0;padding:18px 20px 0;font-size:11px;line-height:1.4;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-3)}
 #content{padding-bottom:28px!important}
+.overview-link{display:flex;align-items:center;justify-content:space-between;gap:12px;width:calc(100% - 40px);margin:16px 20px 0;padding:14px 0;border-top:1px solid var(--border-light);text-align:left;color:var(--ink);font-size:13px;font-weight:500}.overview-link-meta{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:11px;font-weight:400}.overview-link-meta>span{font-size:18px;color:var(--ink-4)}.budget-breakdown>summary{display:flex;justify-content:space-between;gap:12px;padding:12px 0;list-style:none;cursor:pointer;font-size:12px;color:var(--ink)}.budget-breakdown>summary::-webkit-details-marker{display:none}.budget-breakdown>summary>span:last-child{color:var(--ink-3);font-size:11px}.budget-saved-line{display:flex;justify-content:space-between;gap:12px;font-size:11px;color:var(--ink-3);padding:4px 0}.budget-saved-line strong{font-weight:500;color:var(--ink-2)}.budget-check-totals{margin-top:0}.budget-check-totals .budget-check-left{margin-bottom:10px}.budget-options{margin-top:12px}.page-section+.page-section{margin-top:22px;padding-top:10px}
 </style>
 </head>
 
@@ -4952,7 +4953,7 @@ function renderSourceDetail(sourceName) {
   ].filter(Boolean).join(' · ');
 
   const hero = `<div class="detail-top">
-      <button class="back-btn" data-action="close-source-detail">← Income</button>
+      <button class="back-btn" data-action="close-source-detail">← Income sources</button>
     </div>
     ${blk(sourceName, fmtMoney(total, {round:true}), heroSub)}`;
 
@@ -5005,7 +5006,7 @@ function renderSourceDetail(sourceName) {
     ${rows}<div class="source-delete"><button class="danger" data-action="delete-source" data-source="${escHTML(sourceName)}">Delete income source</button><p>Removes this source and all ${entries.length} recorded paychecks.</p></div>`;
 }
 
-function renderIncome() {
+function renderIncome(listOnly = false) {
   if (sourceDetailView) return renderSourceDetail(sourceDetailView);
 
   const stats = getIncomeStats();
@@ -5319,14 +5320,11 @@ function renderIncome() {
     }).join('');
   }
 
+  if (listOnly) return `<div class="detail-top"><button class="back-btn" data-action="close-list">← Overview</button></div>${sh('Income sources', {add:{action:'open-modal',type:'income',label:'+ Add'}})}${sourcesHTML}`;
   return `<section class="income-overview">${ytdBlock}
-    ${statTrioHTML}
-    ${trendHeader}
-    ${trendChartHTML}
-    ${sh('Sources', {
-      add: { action: 'open-modal', type: 'income', label: '+ Add' }
-    })}
-    ${sourcesHTML}</section>`;
+    ${statTrioHTML}${trendHeader}${trendChartHTML}
+    <button class="overview-link" data-action="open-list" data-list="income"><span>Income sources</span><span class="overview-link-meta">${groupedSources.length} sources <span aria-hidden="true">›</span></span></button>
+    </section>`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -5450,7 +5448,7 @@ function buildExpensePieChart(total, catData, incomeBasis) {
   </div>`;
 }
 
-function renderExpenses() {
+function renderExpenses(listOnly = false) {
   const recurringBills = state.bills.filter(b => b.recurring && b.recurring !== 'once');
   const recurringMonthly = recurringBills
     .reduce((sum, b) => sum + monthlyEq(b.amount, b.recurring), 0);
@@ -5521,13 +5519,9 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${hero}
-    ${sh('Breakdown', { meta: ytdMonthlyIncome > 0 ? '% of income' : '' })}
-    ${pieHTML}
-    ${sh('Expenses', {
-      add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
-    })}
-    ${rowsHTML}`;
+  if (listOnly) return `<div class="detail-top"><button class="back-btn" data-action="close-list">← Overview</button></div>${sh('Expenses', {add:{action:'open-modal',type:'expenses',label:'+ Add'}})}${rowsHTML}`;
+  return `${hero}${sh('Breakdown', {meta:ytdMonthlyIncome > 0 ? '% of income' : ''})}${pieHTML}
+    <button class="overview-link" data-action="open-list" data-list="expenses"><span>Manage expenses</span><span class="overview-link-meta">${state.bills.length} expenses <span aria-hidden="true">›</span></span></button>`;
 }
 
 function buildPieChart(incTot, catData, savings, net) {
@@ -5776,20 +5770,23 @@ function renderBudget() {
  return `<section class="budget-compact">
  ${blk('Latest paycheck',fmtMoney(p.check.amount),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
  <div class="budget-compact-body">
- <div class="sh budget-compact-title"><h3>Bills</h3><span class="x">${p.recorded?'Recorded':'This check'}</span></div>
+ <details class="budget-breakdown"><summary><span>Bill breakdown</span><span>${p.rows.length} bills <span aria-hidden="true">⌄</span></span></summary>
+
  ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses. Each bill is counted once.</div>':''}
- ${p.unfunded>0?`<div class="budget-review">${fmtMoney(p.unfunded)} of the planned bill funding still needs covering. This check funds the earliest due bills first.</div>`:''}
  ${groups.map(rs=>`<details class="budget-fund" data-fund="${escHTML(rs[0].bill.id)}"><summary><span>${escHTML(rs[0].bill.name)}</span><strong>${fmtMoney(rs.reduce((v,r)=>v+r.allocation,0))}</strong></summary><div class="budget-fund-edit">${rs.map(r=>`<div class="budget-fund-cycle"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}</p><label>Total already saved<input data-reserve="${escHTML(r.key)}" aria-label="Total saved for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')}" type="number" min="0" step="0.01" value="${r.saved}"></label>${!p.recorded?`<label>Set aside from this check<input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')} from this check" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation}"></label>`:''}<p>${r.paychecks===1?'Remaining balance is needed before next payday.':`Remaining balance spread over ${r.paychecks} paychecks.`}</p></div>`).join('')}<button data-action="edit" data-type="expenses" data-id="${escHTML(rs[0].bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
+ </details>
+ ${p.unfunded>0?`<div class="budget-review">${fmtMoney(p.unfunded)} still needed for planned bill funding.</div>`:''}
  <div class="budget-check-totals">
  ${p.essentials?`<div><span>Food, gas & essentials</span><strong>${fmtMoney(p.essentials)}</strong></div>`:''}
  ${p.extra?`<div><span>Cushion</span><strong>${fmtMoney(p.extra)}</strong></div>`:''}
  <div><span>${p.recorded?'Set aside from this check':'Set aside for bills'}</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve}">`}</div>
- <div><span>Total allocated</span><strong>${fmtMoney(p.reserve+p.essentials+p.extra)}</strong></div>
+ ${p.essentials || p.extra?`<div><span>Total allocated</span><strong>${fmtMoney(p.reserve+p.essentials+p.extra)}</strong></div>`:''}
  <div class="budget-check-left"><span>${p.left<0?'Short by':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
  </div>
- <p class="budget-caption">${p.recorded?'':'Change the total or tap a bill to adjust its amount. '}Saved for bills across paychecks: <strong>${fmtMoney(p.savedTotal)}</strong>${!p.recorded?` · After saving: <strong>${fmtMoney(p.savedTotal+p.reserve)}</strong>`:''}</p>
+ <div class="budget-saved-line"><span>Already saved for bills</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
+ ${!p.recorded?`<div class="budget-saved-line"><span>After this set-aside</span><strong>${fmtMoney(p.savedTotal+p.reserve)}</strong></div>`:''}
  <div class="budget-save-row">${p.recorded?`<span class="budget-recorded">✓ ${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside ${fmtMoney(p.reserve)}</button>`}</div>
- <div class="budget-caption">${p.recorded?'Saved totals carry forward to your next paycheck.':p.left<0?'Tap bills to adjust amounts to what this check can cover.':'Record money you’ve put aside. No bank transfer is made.'}</div>
+ <div class="budget-caption">${p.recorded?'Saved totals carry forward to your next paycheck.':p.left<0?'Tap bills to adjust amounts to what this check can cover.':'Edit the amount above, then save your set-aside.'}</div>
  <details class="budget-options plan-settings"><summary>Adjust plan · Next payday ${shortDate(isoDate(p.next))}</summary><div class="simple-fields"><label>Check amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Extra cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div><p class="budget-caption">Check amount includes any money already set aside from this check.</p></details>
  ${history.length?`<details class="budget-options"><summary>Set-aside history</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
  </div></section>`;
@@ -5942,6 +5939,7 @@ function refreshPayPeriodAverage() {
   }
 }
 
+let listView = null;
 let overviewScrollY = 0;
 function render() {
   syncPercentBills();
@@ -5949,12 +5947,13 @@ function render() {
   updateHeader();
   const main = document.getElementById('content');
   const wasDetail = main.dataset.detail === 'true';
-  const isDetail = !!sourceDetailView;
+  const isDetail = !!sourceDetailView || !!listView;
   let scroll = window.scrollY;
   if (isDetail && !wasDetail) { overviewScrollY = scroll; scroll = 0; }
   if (!isDetail && wasDetail) scroll = overviewScrollY;
   main.dataset.detail = String(isDetail);
-  if (isDetail) main.innerHTML = renderSourceDetail(sourceDetailView);
+  if (sourceDetailView) main.innerHTML = renderSourceDetail(sourceDetailView);
+  else if (listView) main.innerHTML = listView === 'income' ? renderIncome(true) : renderExpenses(true);
   else main.innerHTML = `<section class="page-section" id="section-income" aria-labelledby="heading-income"><h2 class="page-section-title" id="heading-income">Income</h2>${renderIncome()}</section>
     <section class="page-section" id="section-expenses" aria-labelledby="heading-expenses"><h2 class="page-section-title" id="heading-expenses">Expenses</h2>${renderExpenses()}</section>
     <section class="page-section" id="section-budget" aria-labelledby="heading-budget"><h2 class="page-section-title" id="heading-budget">Budget</h2>${renderBudget()}</section>`;
@@ -5971,7 +5970,7 @@ let overlayHistoryPushed = false;
 let handlingPopState = false;
 
 function isOverlayActive() {
-  return !!document.querySelector('.modal.open') || !!budgetLogView || !!sourceDetailView;
+  return !!document.querySelector('.modal.open') || !!budgetLogView || !!sourceDetailView || !!listView;
 }
 
 function syncOverlayHistory() {
@@ -5996,6 +5995,9 @@ window.addEventListener('popstate', () => {
     render();
   } else if (sourceDetailView) {
     sourceDetailView = null;
+    render();
+  } else if (listView) {
+    listView = null;
     render();
   }
   handlingPopState = false;
@@ -6146,6 +6148,8 @@ document.addEventListener('click', e => {
     return;
   }
 
+  if (act === 'open-list') { listView = btn.dataset.list; render(); return; }
+  if (act === 'close-list') { listView = null; sourceDetailView = null; render(); return; }
   if (act === 'delete-source') {
     const source = btn.dataset.source;
     const count = state.income.filter(i=>(i.source || 'Unknown')===source).length;
@@ -6337,9 +6341,11 @@ document.addEventListener('change', e => {
       if (e.target.dataset.plan === 'paycheckAmount') state.cashPlan.paycheckId=plan.check?.id;
     }
     const openFunds=[...document.querySelectorAll('.budget-fund[open]')].map(el=>el.dataset.fund);
+    const breakdownOpen = document.querySelector('.budget-breakdown')?.open;
     const settingsOpen = document.querySelector('.plan-settings')?.open;
     const scroll = window.scrollY;
     saveState(); render();
+    if (breakdownOpen && document.querySelector('.budget-breakdown')) document.querySelector('.budget-breakdown').open=true;
     if (settingsOpen && document.querySelector('.plan-settings')) document.querySelector('.plan-settings').open=true;
     document.querySelectorAll('.budget-fund').forEach(el=>{el.open=openFunds.includes(el.dataset.fund)});
     window.scrollTo(0,scroll);
