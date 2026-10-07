@@ -3672,6 +3672,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-worksheet .budget-options summary{font-size:11.25px;color:var(--ink-3)}
 .budget-worksheet .simple-fields input,.budget-worksheet .simple-fields select{font-family:var(--ui-font)}
 @media(pointer:coarse){.budget-worksheet input,.budget-worksheet select{font-size:16px!important}}
+.saved-bills-total{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;font-size:12px;color:var(--ink)}.budget-worksheet .saved-bills-total .worksheet-entry{margin:0;width:110px}.budget-worksheet .saved-bills-hint{font-size:11px;margin-top:6px;margin-bottom:6px}.budget-worksheet .worksheet-bill{align-items:start;min-height:49px}.budget-worksheet .worksheet-bill>.worksheet-entry{margin-top:7px}.budget-worksheet .worksheet-bill .budget-fund summary{padding:14px 0!important}
 </style>
 </head>
 
@@ -4394,6 +4395,20 @@ function getPayPeriodHistory(periods = 12) {
   return { periodType, periodDays, list: out };
 }
 
+// Share the chart's latest four-week window across all monthly income estimates.
+function getRollingMonthlyIncome(sourceName = null) {
+  const history = getPayPeriodHistory(8);
+  const averages = fourWeekMovingAverages(history.list, history.periodDays);
+  const average = averages[averages.length - 1];
+  if (!Number.isFinite(average)) return null;
+  if (sourceName === null) return average * (7 / history.periodDays) * 52 / 12;
+  const window = history.list.slice(-(28 / history.periodDays));
+  const entries = state.income.filter(i => (i.source || 'Unknown') === sourceName);
+  const total = window.reduce((sum, period) => sum + entries.reduce((subtotal, entry) =>
+    subtotal + incomeOccurrences(entry, period.start, period.end).reduce((value, occurrence) => value + occurrence.amount, 0), 0), 0);
+  return total / 4 * 52 / 12;
+}
+
 function getIncomeStats() {
   const now = new Date(); const curY = now.getFullYear(); const curM = now.getMonth();
   let rawInc = []; let rawBills = [];
@@ -4410,7 +4425,7 @@ function getIncomeStats() {
   
   let validInc = rawInc.length > 1 ? rawInc.filter(inc => inc >= Math.max(...rawInc) * 0.5) : rawInc;
   if (validInc.length === 0) { const cur = getMonthlyStats(curY, curM); if (cur.income > 0) validInc.push(cur.income); }
-  const avgMonthly = validInc.length ? validInc.reduce((a,b)=>a+b,0) / validInc.length : 0;
+  const avgMonthly = getRollingMonthlyIncome() ?? 0;
   const projAnnual = avgMonthly * 12;
 
   let validBills = rawBills;
@@ -4452,7 +4467,7 @@ function getIncomeStats() {
     const mi = getMonthlyStats(curY, m).income;
     if (mi > 0) { ytdMonthsWithIncome++; ytdIncomeForMonthlyAvg += mi; }
   }
-  const ytdAvgMonthly = ytdMonthsWithIncome > 0 ? ytdIncomeForMonthlyAvg / ytdMonthsWithIncome : avgMonthly;
+  const ytdAvgMonthly = avgMonthly;
   return { ytdIncome, ytdHours, ytdHourly: ytdHours > 0 ? ytdIncome / ytdHours : 0, ytdTips, avgMonthly, ytdAvgMonthly, projAnnual, avgMonthlyBills, projAnnualBills };
 }
 
@@ -4929,18 +4944,7 @@ function renderSourceDetail(sourceName) {
   const totalHours = entries.reduce((sum, i) => sum + (Number(i.hours) || 0), 0);
   const entriesWithHours = entries.filter(i => (Number(i.hours) || 0) > 0);
 
-  // Average recorded payments over the distinct calendar months represented.
-  // Do not count months after a source ended or project recurring payments.
-  const recordedMonths = new Set();
-  let recordedTotal = 0;
-  const today = todayStart();
-  for (const entry of entries) {
-    const date = parseISODate(entry.receivedAt || entry.createdAt);
-    if (!date || date >= new Date(today.getFullYear(), today.getMonth(), 1)) continue;
-    recordedMonths.add(`${date.getFullYear()}-${date.getMonth()}`);
-    recordedTotal += parseFloat(String(entry.amount).replace(/[^\d.-]/g, '')) || 0;
-  }
-  const avgMonthlyTakeHome = recordedMonths.size ? recordedTotal / recordedMonths.size : null;
+  const avgMonthlyTakeHome = getRollingMonthlyIncome(sourceName);
   const avgPaycheck = entries.length ? total / entries.length : 0;
   const avgHourly = totalHours > 0 ? total / totalHours : 0;
   const avgHoursPerCheck = entriesWithHours.length ? totalHours / entriesWithHours.length : 0;
@@ -4969,7 +4973,7 @@ function renderSourceDetail(sourceName) {
       <div class="source-summary-value">${fmtMoney(avgPaycheck, {round:true})}</div>
     </div>
     <div class="source-summary-item">
-      <div class="source-summary-label" title="Recorded income divided by completed months with entries; excludes the current month">Avg monthly</div>
+      <div class="source-summary-label" title="Monthly estimate from this source’s income in the chart’s latest four-week window (weekly average × 52 ÷ 12)">Monthly est.</div>
       <div class="source-summary-value">${avgMonthlyTakeHome === null ? '—' : fmtMoney(avgMonthlyTakeHome, {round:true})}</div>
     </div>
     <div class="source-summary-item">
@@ -5138,7 +5142,7 @@ function renderIncome() {
       
     </div>
     <div class="st">
-      <div class="st-label">Monthly avg</div>
+      <div class="st-label" title="Latest four-week average converted to a monthly estimate (weekly average × 52 ÷ 12)">Monthly est.</div>
       <div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div>
       
     </div>
@@ -5751,12 +5755,34 @@ function getPaycheckPlan() {
   }
   const unfunded=recorded?0:roundCash(Math.max(0,requested-Math.max(0,available-essentials-extra)));
   const reserve=roundCash(recorded?Object.values(recorded.allocations).reduce((a,v)=>a+moneyValue(v),0):rows.reduce((a,r)=>a+r.allocation,0));
-  const activeIds=new Set(state.bills.map(b=>String(b.id)));
+  const activeIds=new Set(obligations.map(b=>String(b.id)));
   const savedTotal=roundCash(Object.entries(cp.reserves||{}).filter(([key])=>activeIds.has(key.slice(0,key.lastIndexOf(':')))).reduce((sum,[,value])=>sum+moneyValue(value),0));
   const left=roundCash(available-reserve-essentials-extra);
   const canUndo=!!recorded && Object.entries(recorded.allocations).every(([key,amt])=>moneyValue(cp.reserves?.[key])+0.001>=moneyValue(amt));
   return {check,cadence,next,available,rows,reserve,essentials,extra,left,recorded,savedTotal,canUndo,unfunded};
 }
+// Correct the money actually held for bills, without rewriting paycheck history.
+function updateSavedBillTotal(value) {
+  const plan=getPaycheckPlan();
+  if(!plan.rows.length)return;
+  const cp=state.cashPlan;
+  cp.reserves={...(cp.reserves||{})};
+  const ids=new Set(plan.rows.map(row=>String(row.bill.id)));
+  const weights=plan.rows.map(row=>Object.entries(cp.reserves).reduce((sum,[key,amount])=>
+    key.slice(0,key.lastIndexOf(':'))===String(row.bill.id)?sum+moneyValue(amount):sum,0));
+  if(!weights.some(amount=>amount>0))plan.rows.forEach((row,i)=>weights[i]=moneyValue(row.bill.amount));
+  const totalWeight=weights.reduce((sum,amount)=>sum+amount,0);
+  let remaining=Math.round(moneyValue(value)*100);
+  const target=remaining;
+  for(const key of Object.keys(cp.reserves))if(ids.has(key.slice(0,key.lastIndexOf(':'))))delete cp.reserves[key];
+  plan.rows.forEach((row,i)=>{
+    const cents=i===plan.rows.length-1?remaining:Math.min(remaining,Math.floor(target*weights[i]/totalWeight));
+    cp.reserves[row.key]=cents/100;remaining-=cents;
+  });
+  // Recalculate the next suggestion from the corrected balance.
+  if(cp.paycheckDrafts && plan.check)delete cp.paycheckDrafts[plan.check.id];
+}
+
 function recordPaycheckSetAside() {
   const p=getPaycheckPlan();
   if(!p.check || p.recorded || p.reserve<=0 || p.left<0)return false;
@@ -5785,12 +5811,14 @@ function renderBudget() {
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
  ${sh('This paycheck',{meta:p.recorded?'Saved':'Your allocation'})}
  ${paycheckChart}
- <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span><span>Saved for bills <strong>${fmtMoney(p.savedTotal)}</strong></span></div>
+ <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span></div>
  <div class="worksheet-body">
+ <div class="saved-bills-total"><label for="saved-bills-total">Saved for unpaid bills</label><label class="worksheet-entry"><span aria-hidden="true">$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
+ <p class="worksheet-note saved-bills-hint">Update this to what you have set aside right now.</p>
  <div class="worksheet-columns sh"><h3>Bills</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
  ${p.rows.map(r=>`<div class="worksheet-bill">
- <details class="budget-fund" data-fund="${escHTML(r.bill.id)}"><summary><span class="worksheet-name">${escHTML(r.bill.name)} <span class="worksheet-chevron" aria-hidden="true">⌄</span></span><span class="worksheet-meta">${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}${r.due?' · '+shortDate(r.bill.dueDate):''}</span></summary>
- <div class="budget-fund-edit"><label>Already saved<input data-reserve="${escHTML(r.key)}" aria-label="Already saved for ${escHTML(r.bill.name)}" type="number" min="0" step="0.01" value="${r.saved}"></label><p>${r.paychecks===1?'Due before your next payday.':`Spread across ${r.paychecks} paychecks.`}</p><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit expense</button></div></details>
+ <details class="budget-fund" data-fund="${escHTML(r.bill.id)}"><summary><span class="worksheet-name">${escHTML(r.bill.name)} <span class="worksheet-chevron" aria-hidden="true">⌄</span></span></summary>
+ <div class="budget-fund-edit"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.bill.amount)}</p><label>Already saved<input data-reserve="${escHTML(r.key)}" aria-label="Already saved for ${escHTML(r.bill.name)}" type="number" min="0" step="0.01" value="${r.saved}"></label><p>${r.paychecks===1?'Due before your next payday.':`Spread across ${r.paychecks} paychecks.`}</p><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit expense</button></div></details>
  ${p.recorded?`<strong class="worksheet-amount">${fmtMoney(r.allocation)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Set aside for ${escHTML(r.bill.name)}</span><span aria-hidden="true">$</span><input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)}" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation.toFixed(2)}"></label>`}
  </div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
  ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review. Tap a bill to update it.</p>':''}
@@ -6329,10 +6357,11 @@ document.getElementById('file-import').addEventListener('change', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.dataset.plan || e.target.dataset.reserve || e.target.dataset.allocation || e.target.dataset.totalAllocation) {
+  if (e.target.dataset.plan || e.target.dataset.reserve || e.target.dataset.allocation || e.target.dataset.totalAllocation || e.target.dataset.savedTotal) {
     const plan = getPaycheckPlan();
     state.cashPlan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}) };
-    if(e.target.dataset.totalAllocation && !plan.recorded){
+    if(e.target.dataset.savedTotal){updateSavedBillTotal(e.target.value);}
+    else if(e.target.dataset.totalAllocation && !plan.recorded){
       let remaining=roundCash(Math.min(moneyValue(e.target.value),Math.max(0,plan.available-plan.essentials-plan.extra)));
       const allocations={};
       // Fill earlier due bills first, up to the amount still needed.
