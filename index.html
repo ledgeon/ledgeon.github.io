@@ -3646,25 +3646,64 @@ body {
 .average-key{font-size:10px;color:var(--ink-3);margin-left:8px;white-space:nowrap}
 .average-key::before{content:"";display:inline-block;width:14px;border-top:1.5px solid #d58b88;vertical-align:middle;margin-right:4px}
 .budget-check-totals{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}.budget-check-totals>div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;font-size:12px}.budget-check-totals strong{font-weight:500;font-variant-numeric:tabular-nums}.budget-check-totals input{width:105px;min-width:0;text-align:right;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-check-totals .budget-check-left{border-top:1px solid var(--border);margin-top:5px;padding-top:14px}.budget-check-left strong{font-size:22px}
-/* Income and Budget follow the shared Expenses typography and neutral palette. */
-.income-overview .blk-s{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px!important;font-weight:400}
+/* Shared UI rules: Expenses is the reference for every screen. */
+:root{
+ --ui-font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+ --ui-label:11px;--ui-meta:11.25px;--ui-body:13.5px;--ui-stat:16px;
+ --ui-medium:500;--ui-strong:600;--ui-radius:6px;--ui-gutter:20px;
+}
+body,button,input,select,textarea{font-family:var(--ui-font)!important}
+button,input,select,textarea{line-height:1.4}
+.blk{padding:18px var(--ui-gutter) 7px!important}
+.blk-l{font-size:var(--ui-label)!important;font-weight:var(--ui-medium)!important;color:var(--ink-3)!important;letter-spacing:0!important;text-transform:none!important}
+.blk-v{font-weight:700!important;font-variant-numeric:tabular-nums}
+.blk-s{font-size:var(--ui-meta)!important;font-weight:400!important;line-height:1.5!important;color:var(--ink-3)!important;margin-top:6px!important}
+.sh h3{font-size:var(--ui-label)!important;font-weight:700!important;letter-spacing:1.2px!important}
+.sh .x,.chart-mode-links button,.average-key{font-size:var(--ui-label)!important}
+.sh .add,.back-btn,.budget-text-action,.budget-fund-edit button,.schedule-tools .action-light{font-size:var(--ui-meta)!important;font-weight:var(--ui-medium)!important;color:var(--accent)}
+.row .r-name,.source-payment-date,.budget-fund summary{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;line-height:1.4!important;color:var(--ink)!important}
+.row .r-meta,.source-payment-meta,.budget-fund-edit p,.budget-fund-edit label,.budget-caption,.budget-options summary,.source-delete p,.schedule-tools p,.schedule-tools summary{font-size:var(--ui-meta)!important;font-weight:400!important;line-height:1.5!important;color:var(--ink-3)!important}
+.row .r-amt,.source-right .r-amt,.source-payment-row .r-amt,.budget-fund summary strong,.budget-check-totals strong,.budget-history-row strong{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;font-variant-numeric:tabular-nums;color:var(--ink)}
+/* Income totals are neutral, like expense totals; status colors remain semantic. */
+.row .r-amt.pos{color:var(--ink)!important}
+.row.source-row,.source-payment-row{padding-top:12px!important;padding-bottom:12px!important}
+.source-payment-main{flex-direction:column;align-items:flex-start!important;gap:3px!important;white-space:normal}
+.source-payment-meta{white-space:normal;overflow:visible;text-overflow:clip}
+.source-payment-row{gap:14px}.source-payment-row .r-amt{white-space:nowrap;flex-shrink:0}
+.income-overview .blk-s{display:flex;flex-wrap:wrap;gap:4px 12px}
 .income-overview .blk-s>span{white-space:nowrap}
 .income-overview .stat-trio{margin-top:12px!important;padding-top:0!important;padding-bottom:4px!important}
-.income-overview .stat-trio .st-label{text-transform:none!important;letter-spacing:0!important;font-size:11px!important;font-weight:400!important;color:var(--ink-3)!important}
-.income-overview .stat-trio .st-value{font-size:16px!important;font-weight:600!important;margin-top:6px!important}
+.stat-trio .st-label,.income-overview .stat-trio .st-label,.source-summary-label{font-size:var(--ui-label)!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-3)!important;line-height:1.4!important;white-space:normal}
+.stat-trio .st-value,.income-overview .stat-trio .st-value,.source-summary-value{font-size:var(--ui-stat)!important;font-weight:var(--ui-strong)!important;letter-spacing:-.25px!important;color:var(--ink)!important;margin-top:6px!important;line-height:1.4!important;font-variant-numeric:tabular-nums}
+.source-summary-grid{margin:8px var(--ui-gutter) 2px!important;padding:12px 0!important}
+.source-summary-item{padding-right:8px}.source-summary-item+.source-summary-item{padding-left:8px}
+.source-summary-value{overflow:visible;text-overflow:clip;font-size:clamp(13px,3.5vw,16px)!important}
 .income-overview .trend-head>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;min-width:0}
-.income-overview .trend-head h3{flex-basis:100%}
-.income-overview .average-key{margin-left:0;font-size:10px}
+.income-overview .trend-head h3{flex-basis:100%}.income-overview .average-key{margin-left:0}
+.budget-compact-body{padding:5px var(--ui-gutter) 18px}
 .budget-compact .budget-compact-title{padding:18px 0 9px!important;margin:0}
-.budget-fund summary{padding:12px 0;font-size:13.5px;font-weight:500;color:var(--ink)}
-.budget-fund summary strong{font-size:13px;font-weight:600}
-.budget-fund-edit p,.budget-fund-edit label{font-size:11.25px;line-height:1.4}
-.budget-check-totals>div{font-size:12px;color:var(--ink-3)}
-.budget-check-totals strong{color:var(--ink);font-weight:600}
-.budget-check-left{color:var(--ink)!important}
-.budget-check-left strong{font-size:22px}
-.budget-caption,.budget-review{font-size:11px;line-height:1.5}
-.budget-options summary{font-size:11.25px}
+.budget-fund summary{padding:12px 0;gap:14px}
+.budget-fund summary strong{white-space:nowrap}
+.budget-fund-edit{padding:4px 0 12px}
+.budget-fund-edit p{margin:6px 0}.budget-fund-edit label{margin:10px 0;gap:14px}
+.budget-check-totals>div{font-size:var(--ui-body);line-height:1.4;color:var(--ink-3);padding:10px 0}
+.budget-check-totals .budget-check-left{color:var(--ink);padding-top:14px}
+.budget-check-totals .budget-check-left strong{font-size:22px!important}
+.budget-review{font-size:var(--ui-meta);line-height:1.5;color:var(--warning)}
+.budget-caption{margin:10px 0}.budget-options{margin-top:14px}
+.budget-history-row{font-size:var(--ui-meta);line-height:1.5}
+/* All editable values use the same border, padding and focus treatment. */
+.input,.select,textarea,.simple-fields input,.simple-fields select,.budget-fund-edit input,.budget-check-totals input{font-size:var(--ui-body)!important;font-weight:400!important;line-height:1.4!important;border:1px solid var(--border)!important;border-radius:var(--ui-radius)!important;padding:8px 10px!important;background:var(--bg)!important;color:var(--ink)!important;min-height:36px;box-sizing:border-box}
+.flbl,.simple-fields label{font-size:var(--ui-label)!important;font-weight:var(--ui-medium)!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-3)!important;line-height:1.5}
+.input:focus,.select:focus,textarea:focus,.simple-fields input:focus,.simple-fields select:focus,.budget-fund-edit input:focus,.budget-check-totals input:focus{outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-soft)}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--ui-radius)}
+.budget-save-button,.schedule-tools .action-primary,.factions button{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;line-height:1.4;border-radius:var(--ui-radius)!important;padding:10px 14px!important;min-height:40px}
+.modal-t{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;letter-spacing:0!important;padding:16px var(--ui-gutter)!important;width:100%;box-sizing:border-box}
+.modal-t::before{display:none}.modal form{padding:16px var(--ui-gutter)}
+.source-delete button{font-size:var(--ui-meta);font-weight:var(--ui-medium)}
+@media(max-width:390px){.simple-fields{gap:12px}.source-summary-item{padding-right:6px}.source-summary-item+.source-summary-item{padding-left:6px}}
+@media(pointer:coarse){.input,.select,textarea,.simple-fields input,.simple-fields select,.budget-fund-edit input,.budget-check-totals input{font-size:16px!important}}
+.worksheet-context{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;margin:8px 20px 0;padding:12px 0;border-top:1px solid var(--border-light);font-size:11px;color:var(--ink-3)}.worksheet-context strong{display:inline-block;margin-left:4px;color:var(--ink-2);font-weight:500}.worksheet-body{padding:0 20px 24px}.worksheet-columns{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0 8px;color:var(--ink-3);font-size:11px}.worksheet-columns h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--ink)}.worksheet-bill{display:grid;grid-template-columns:minmax(0,1fr) 102px;gap:12px;align-items:start;border-bottom:1px solid var(--border-light)}.worksheet-bill .budget-fund{border:0;min-width:0}.worksheet-bill .budget-fund summary{display:block;padding:12px 0!important}.worksheet-name{display:block}.worksheet-chevron{font-size:11px;color:var(--ink-4);font-weight:400}.worksheet-meta{display:block;margin-top:3px;font-size:11.25px;font-weight:400;color:var(--ink-3);line-height:1.5}.worksheet-entry{display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:6px;padding:0 8px;color:var(--ink-3);background:var(--bg);width:102px;box-sizing:border-box;margin-top:12px}.worksheet-entry input,.worksheet-totals .worksheet-entry input{font-family:var(--ui-font);font-size:13.5px!important;font-weight:500!important;text-align:right;min-width:0;width:100%;height:34px;min-height:34px;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--ink);font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}.worksheet-entry input::-webkit-inner-spin-button,.worksheet-entry input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.worksheet-entry:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}.worksheet-amount{text-align:right;margin-top:14px;font-size:13.5px;font-weight:600}.worksheet-totals{border-top:0;margin-top:8px}.worksheet-totals .worksheet-entry{margin-top:0}.worksheet-note{font-size:11.25px;line-height:1.5;color:var(--ink-3);margin:8px 0 12px}.worksheet-save{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px}.worksheet-body .plan-settings{border-top:1px solid var(--border-light);padding-top:14px;margin-top:18px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(pointer:coarse){.worksheet-entry input,.worksheet-totals .worksheet-entry input{font-size:16px!important}}
 </style>
 </head>
 
@@ -5770,28 +5809,30 @@ function undoPaycheckSetAside() {
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
- const groups=[...new Set(p.rows.map(r=>r.bill.id))].map(id=>p.rows.filter(r=>r.bill.id===id));
- const needsReview=p.rows.some(r=>!r.due || r.due<todayStart());
  const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
- return `<section class="budget-compact">
- ${blk('Latest paycheck',fmtMoney(p.check.amount),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
- <div class="budget-compact-body">
- <div class="sh budget-compact-title"><h3>Bills</h3><span class="x">${p.recorded?'Recorded':'This check'}</span></div>
- ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses. Each bill is counted once.</div>':''}
- ${p.unfunded>0?`<div class="budget-review">${fmtMoney(p.unfunded)} of the planned bill funding still needs covering. This check funds the earliest due bills first.</div>`:''}
- ${groups.map(rs=>`<details class="budget-fund" data-fund="${escHTML(rs[0].bill.id)}"><summary><span>${escHTML(rs[0].bill.name)}</span><strong>${fmtMoney(rs.reduce((v,r)=>v+r.allocation,0))}</strong></summary><div class="budget-fund-edit">${rs.map(r=>`<div class="budget-fund-cycle"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}</p><label>Total already saved<input data-reserve="${escHTML(r.key)}" aria-label="Total saved for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')}" type="number" min="0" step="0.01" value="${r.saved}"></label>${!p.recorded?`<label>Set aside from this check<input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')} from this check" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation}"></label>`:''}<p>${r.paychecks===1?'Remaining balance is needed before next payday.':`Remaining balance spread over ${r.paychecks} paychecks.`}</p></div>`).join('')}<button data-action="edit" data-type="expenses" data-id="${escHTML(rs[0].bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
- <div class="budget-check-totals">
+ return `<section class="budget-worksheet">
+ ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
+ <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span><span>Saved for bills <strong>${fmtMoney(p.savedTotal)}</strong></span></div>
+ <div class="worksheet-body">
+ <div class="worksheet-columns"><h3>Bill allocation</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
+ ${p.rows.map(r=>`<div class="worksheet-bill">
+ <details class="budget-fund" data-fund="${escHTML(r.bill.id)}"><summary><span class="worksheet-name">${escHTML(r.bill.name)} <span class="worksheet-chevron" aria-hidden="true">⌄</span></span><span class="worksheet-meta">${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}${r.due?' · '+shortDate(r.bill.dueDate):''}</span></summary>
+ <div class="budget-fund-edit"><label>Already saved<input data-reserve="${escHTML(r.key)}" aria-label="Already saved for ${escHTML(r.bill.name)}" type="number" min="0" step="0.01" value="${r.saved}"></label><p>${r.paychecks===1?'Due before your next payday.':`Spread across ${r.paychecks} paychecks.`}</p><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit expense</button></div></details>
+ ${p.recorded?`<strong class="worksheet-amount">${fmtMoney(r.allocation)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Set aside for ${escHTML(r.bill.name)}</span><span aria-hidden="true">$</span><input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)}" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation.toFixed(2)}"></label>`}
+ </div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
+ ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review. Tap a bill to update it.</p>':''}
+ <div class="budget-check-totals worksheet-totals">
+ <div><span>Total for bills</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Total set aside</span><span aria-hidden="true">$</span><input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></label>`}</div>
  ${p.essentials?`<div><span>Food, gas & essentials</span><strong>${fmtMoney(p.essentials)}</strong></div>`:''}
  ${p.extra?`<div><span>Cushion</span><strong>${fmtMoney(p.extra)}</strong></div>`:''}
- <div><span>${p.recorded?'Set aside from this check':'Set aside for bills'}</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve}">`}</div>
- <div><span>Total allocated</span><strong>${fmtMoney(p.reserve+p.essentials+p.extra)}</strong></div>
- <div class="budget-check-left"><span>${p.left<0?'Short by':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
+ ${p.essentials || p.extra?`<div><span>Total allocated</span><strong>${fmtMoney(p.reserve+p.essentials+p.extra)}</strong></div>`:''}
+ <div class="budget-check-left"><span>${p.left<0?'Over this paycheck':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
  </div>
- <p class="budget-caption">${p.recorded?'':'Change the total or tap a bill to adjust its amount. '}Saved for bills across paychecks: <strong>${fmtMoney(p.savedTotal)}</strong>${!p.recorded?` · After saving: <strong>${fmtMoney(p.savedTotal+p.reserve)}</strong>`:''}</p>
- <div class="budget-save-row">${p.recorded?`<span class="budget-recorded">✓ ${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside ${fmtMoney(p.reserve)}</button>`}</div>
- <div class="budget-caption">${p.recorded?'Saved totals carry forward to your next paycheck.':p.left<0?'Tap bills to adjust amounts to what this check can cover.':'Record money you’ve put aside. No bank transfer is made.'}</div>
- <details class="budget-options plan-settings"><summary>Adjust plan · Next payday ${shortDate(isoDate(p.next))}</summary><div class="simple-fields"><label>Check amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Extra cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div><p class="budget-caption">Check amount includes any money already set aside from this check.</p></details>
- ${history.length?`<details class="budget-options"><summary>Set-aside history</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
+ ${p.unfunded>0?`<p class="budget-review">${fmtMoney(p.unfunded)} of planned bill funding is still uncovered.</p>`:''}
+ <div class="worksheet-save">${p.recorded?`<span class="budget-recorded">${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside · ${fmtMoney(p.reserve)}</button>`}</div>
+ <p class="worksheet-note">${p.recorded?'Your saved amounts carry forward to the next paycheck.':`${fmtMoney(p.savedTotal+p.reserve)} saved for bills after this set-aside.`}</p>
+ <details class="budget-options plan-settings"><summary>Paycheck settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details>
+ ${history.length?`<details class="budget-options"><summary>Saved paychecks</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
  </div></section>`;
 }
 
