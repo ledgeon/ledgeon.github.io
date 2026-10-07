@@ -3630,6 +3630,40 @@ body {
   box-sizing: border-box !important;
 }
 
+
+/* Paycheck planning and consistent shared controls */
+.source-summary-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.source-summary-grid .source-summary-item:first-child { grid-column:1 / -1; }
+.source-average-note { font-size:10px; color:var(--ink-3); line-height:1.5; margin-top:6px; }
+body { padding-bottom:calc(88px + env(safe-area-inset-bottom)) !important; }
+button, input, select { -webkit-tap-highlight-color:transparent; }
+button:focus-visible, summary:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+.top-pages.bottom-pages button { min-height:44px; }
+.plan-intro { padding:28px 20px 20px; }
+.eyebrow { color:var(--accent); font-size:10px; letter-spacing:1.5px; font-weight:700; }
+.plan-intro h1 { font-size:27px; line-height:1.2; letter-spacing:-1px; margin:10px 0 8px; }
+.plan-intro p,.plan-muted,.plan-explainer { font-size:12px; color:var(--ink-3); line-height:1.6; }
+.paycheck-card { margin:0 20px 24px; border:1px solid var(--border); border-radius:12px; padding:20px; background:var(--bg-subtle); }
+.paycheck-value { font-size:34px; font-weight:700; letter-spacing:-1px; margin:5px 0 18px; font-variant-numeric:tabular-nums; }
+.plan-settings summary,.payment-log summary { font-size:12px; cursor:pointer; color:var(--ink-2); padding:10px 0; }
+.plan-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px 0; }
+.plan-fields label { font-size:11px; color:var(--ink-2); line-height:1.5; min-width:0; }
+.plan-fields input,.plan-fields select { width:100%; min-width:0; height:40px; margin-top:5px; border:1px solid var(--border); border-radius:7px; background:var(--bg); padding:8px; }
+.plan-totals { margin:12px 0 18px; border-top:1px solid var(--border); padding-top:8px; }
+.plan-totals>div { display:flex; justify-content:space-between; gap:12px; padding:8px 0; font-size:12px; }
+.plan-result { padding:16px; border-radius:9px; background:var(--positive-soft); color:var(--positive); }
+.plan-result.short { background:var(--negative-soft); color:var(--negative); }
+.plan-result>span { font-size:12px; font-weight:600; }.plan-result>strong { display:block; font-size:29px; margin:6px 0; }
+.plan-result p { font-size:11px; line-height:1.5; }
+.plan-section-title { display:flex; justify-content:space-between; align-items:center; margin:0 20px 8px; }.plan-section-title h2 { font-size:14px; }.plan-section-title button { color:var(--accent); font-size:12px; padding:8px; }
+.plan-explainer { margin:0 20px 18px; }.plan-notice { margin:0 20px 24px; padding:12px; font-size:12px; line-height:1.5; border-radius:8px; background:var(--warning-soft); color:var(--warning); }
+.allocation-list { margin:0 20px 24px; }.allocation-row { padding:16px 0; border-bottom:1px solid var(--border-light); }.allocation-heading { display:flex; justify-content:space-between; gap:16px; font-size:14px; margin-bottom:5px; }.allocation-heading button { text-align:left; font-weight:600; }.allocation-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px; font-size:10px; color:var(--ink-3); }.allocation-foot label { display:flex; align-items:center; gap:6px; }.allocation-foot input { width:72px; padding:6px; border:1px solid var(--border); border-radius:6px; background:var(--bg); font-size:12px; }
+.bill-item { padding:16px 20px; border-bottom:1px solid var(--border-light); }.bill-main { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:14px; }.bill-edit { text-align:left; min-width:0; }.bill-edit span { display:block; font-size:11px; color:var(--ink-3); margin-top:5px; }.bill-controls { display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }.bill-status { color:var(--ink-3); font-size:10px; margin-right:auto; }.bill-status.late { color:var(--negative); }.small-action { padding:7px 10px; border-radius:7px; background:var(--accent-soft); color:var(--accent); font-size:11px; font-weight:600; }.subtle-action { font-size:11px; color:var(--ink-3); padding:6px 0; }
+.payment-log { margin:24px 20px; }.payment-history { display:flex; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid var(--border-light); font-size:12px; }.payment-history>div { flex:1; }.payment-history span { display:block; font-size:10px; color:var(--ink-3); margin-top:4px; }.payment-history button { color:var(--accent); font-size:11px; }
+.source-delete { margin:32px 20px; padding-top:20px; border-top:1px solid var(--border); }.source-delete button { color:var(--negative); font-size:12px; padding:8px 0; }.source-delete p { font-size:11px; color:var(--ink-3); line-height:1.5; }
+.plan-primary { margin-top:18px; padding:12px 16px; border-radius:8px; background:var(--accent); color:var(--bg); font-weight:600; }
+@media(max-width:360px) { .plan-fields { grid-template-columns:1fr; }.allocation-foot { align-items:flex-start; flex-direction:column; } }
+
 </style>
 </head>
 
@@ -3744,7 +3778,7 @@ body {
         </div>
         <div class="fcol"><label class="flbl">recurrence</label>
           <select class="select" name="recurring">
-            <option value="monthly" selected>monthly</option><option value="weekly">weekly</option><option value="yearly">yearly</option><option value="once">one-time</option>
+            <option value="monthly" selected>monthly</option><option value="weekly">weekly</option><option value="biweekly">biweekly</option><option value="yearly">yearly</option><option value="once">one-time</option>
           </select>
         </div>
       </div>
@@ -4887,6 +4921,12 @@ function renderSourceDetail(sourceName) {
   const totalHours = entries.reduce((sum, i) => sum + (Number(i.hours) || 0), 0);
   const entriesWithHours = entries.filter(i => (Number(i.hours) || 0) > 0);
 
+  const monthStart = new Date(todayStart().getFullYear(), todayStart().getMonth(), 1);
+  const datedEntries = entries.filter(i => parseISODate(i.receivedAt || i.createdAt) && parseISODate(i.receivedAt || i.createdAt) <= todayStart());
+  const earliest = datedEntries.map(i=>parseISODate(i.receivedAt || i.createdAt)).sort((a,b)=>a-b)[0];
+  const completedMonths = earliest ? Math.max(0,(monthStart.getFullYear()-earliest.getFullYear())*12+monthStart.getMonth()-earliest.getMonth()) : 0;
+  const completedTotal = earliest ? datedEntries.reduce((sum,i)=>sum+incomeOccurrences(i,new Date(earliest.getFullYear(),earliest.getMonth(),1),monthStart).reduce((a,o)=>a+o.amount,0),0) : 0;
+  const avgMonthlyTakeHome = completedMonths ? completedTotal / completedMonths : null;
   const avgPaycheck = entries.length ? total / entries.length : 0;
   const avgHourly = totalHours > 0 ? total / totalHours : 0;
   const avgHoursPerCheck = entriesWithHours.length ? totalHours / entriesWithHours.length : 0;
@@ -4910,6 +4950,11 @@ function renderSourceDetail(sourceName) {
     ${blk(sourceName, fmtMoney(total, {round:true}), heroSub)}`;
 
   const summary = `<div class="source-summary-grid">
+    <div class="source-summary-item">
+      <div class="source-summary-label">Avg monthly take-home</div>
+      <div class="source-summary-value">${avgMonthlyTakeHome === null ? '—' : fmtMoney(avgMonthlyTakeHome)}</div>
+      <div class="source-average-note">${completedMonths ? completedMonths+' completed month'+(completedMonths===1?'':'s')+' · includes cash tips' : 'Available after your first completed month'}</div>
+    </div>
     <div class="source-summary-item">
       <div class="source-summary-label">Avg paycheck</div>
       <div class="source-summary-value">${fmtMoney(avgPaycheck, {round:true})}</div>
@@ -4975,7 +5020,7 @@ function renderSourceDetail(sourceName) {
     ${sh('Paystubs', {
       add: { action: 'open-modal', type: 'income', label: '+ Add', source: sourceName }
     })}
-    ${rows}`;
+    ${rows}<div class="source-delete"><button class="danger" data-action="delete-source" data-source="${escHTML(sourceName)}">Delete income source</button><p>Removes this source and all ${entries.length} recorded paychecks.</p></div>`;
 }
 
 function renderIncome() {
@@ -5457,47 +5502,18 @@ function renderExpenses() {
 
   const pieHTML = buildExpensePieChart(recurringMonthly, catData, ytdMonthlyIncome);
 
-  const bills = state.bills.slice().sort((a, b) => {
-    const ar = a.recurring && a.recurring !== 'once' ? 0 : 1;
-    const br = b.recurring && b.recurring !== 'once' ? 0 : 1;
-    if (ar !== br) return ar - br;
-    return (a.name || '').localeCompare(b.name || '');
-  });
-
-  let rowsHTML = '';
-  if (bills.length === 0) {
-    rowsHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="expenses">Add your first expense</span></div>`;
-  } else {
-    rowsHTML = bills.map(b => {
-      const cat = CATEGORIES[b.category] || CATEGORIES.other;
-      const isOnce = !b.recurring || b.recurring === 'once';
-      const amount = isOnce ? (parseFloat(b.amount) || 0) : monthlyEq(b.amount, b.recurring);
-      const meta = [
-        cap(cat.label),
-        cap(b.recurring || 'once'),
-        b.dueDate ? compactDate(b.dueDate) : ''
-      ].filter(Boolean).join(' · ');
-
-      return `<div class="row clickable source-row" data-action="edit" data-type="expenses" data-id="${b.id}">
-        <div>
-          <div class="r-name">${escHTML(b.name)}</div>
-          <div class="r-meta">${meta}</div>
-        </div>
-        <div class="source-right">
-          <span class="r-amt">${fmtMoney(amount, {round:true})}</span>
-          <span class="row-chevron">›</span>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  return `${hero}
-    ${sh('Breakdown', { meta: ytdMonthlyIncome > 0 ? '% of income' : '' })}
-    ${pieHTML}
-    ${sh('Expenses', {
-      add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
-    })}
-    ${rowsHTML}`;
+  const bills = state.bills.slice().sort((a,b) => (a.dueDate || '9999').localeCompare(b.dueDate || '9999'));
+  const rowsHTML = bills.map(b => {
+    const done = b.paid && (!b.recurring || b.recurring === 'once');
+    const overdue = !done && b.dueDate && b.dueDate < isoDate(todayStart());
+    return `<div class="bill-item"><div class="bill-main"><button class="bill-edit" data-action="edit" data-type="expenses" data-id="${escHTML(b.id)}"><strong>${escHTML(b.name)}</strong><span>${cap(b.recurring || 'once')} · ${done?'Paid':b.dueDate?'Due '+exactDate(b.dueDate):'Add due date'}</span></button><strong>${fmtMoney(b.amount)}</strong></div>
+      <div class="bill-controls"><span class="bill-status ${overdue?'late':''}">${done?'Paid':overdue?'Overdue':b.dueDate?'Upcoming':'Unscheduled'}</span>${!done?`<button class="small-action" data-action="pay-bill" data-id="${escHTML(b.id)}">Mark paid</button>`:''}${overdue && b.recurring && b.recurring!=='once'?`<button class="subtle-action" data-action="roll-bill" data-id="${escHTML(b.id)}">Update schedule</button>`:''}</div></div>`;
+  }).join('');
+  const history = (state.payments || []).slice().reverse().slice(0,20).map(p=>`<div class="payment-history"><div><strong>${escHTML(p.name)}</strong><span>Paid ${exactDate(p.date)}${p.dueDate?' · For '+exactDate(p.dueDate):''}</span></div><strong>${fmtMoney(p.amount)}</strong>${p.previous && state.bills.some(b=>b.id===p.billId) && !state.payments.some(q=>q.billId===p.billId && q.id!==p.id && q.recordedAt>p.recordedAt)?`<button data-action="undo-bill" data-id="${escHTML(p.id)}">Undo</button>`:''}</div>`).join('');
+  return `${hero}${sh('Breakdown', {meta:ytdMonthlyIncome>0?'% of income':''})}${pieHTML}
+    ${sh('Bills & payments', {add:{action:'open-modal',type:'expenses',label:'+ Add'}})}
+    ${rowsHTML || '<p class="plan-explainer">Add your bills to track due dates and payments.</p>'}
+    ${history?`<details class="payment-log"><summary>Payment history</summary>${history}</details>`:''}`;
 }
 
 function buildPieChart(incTot, catData, savings, net) {
@@ -5559,7 +5575,7 @@ function moneyValue(value) {
 }
 
 function nextBillDate(date, recurrence, anchorDay) {
-  if (recurrence === 'weekly') return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 7);
+  if (recurrence === 'weekly' || recurrence === 'biweekly') return new Date(date.getFullYear(), date.getMonth(), date.getDate() + (recurrence === 'weekly' ? 7 : 14));
   if (recurrence === 'monthly') {
     const monthIndex = date.getFullYear() * 12 + date.getMonth() + 1;
     const year = Math.floor(monthIndex / 12), month = monthIndex % 12;
@@ -5668,141 +5684,75 @@ function renderPaydayPlan() {
   </section>`;
 }
 
+function getPaycheckPlan() {
+  const today = isoDate(todayStart());
+  const checks = state.income.filter(i => (i.receivedAt || i.createdAt || '') <= today && (i.receivedAt || i.createdAt) && moneyValue(i.amount) > 0)
+    .sort((a,b) => (b.receivedAt || b.createdAt).localeCompare(a.receivedAt || a.createdAt));
+  const check = checks[0];
+  const cp = state.cashPlan || {};
+  const cadence = ['weekly','biweekly','monthly'].includes(cp.cadence) ? cp.cadence : detectPayPeriodType();
+  const anchor = todayStart();
+  const next = cp.nextPayDate > today ? parseISODate(cp.nextPayDate) : nextBillDate(anchor, cadence, anchor.getDate());
+  const available = cp.paycheckId === check?.id && cp.paycheckAmount !== undefined ? moneyValue(cp.paycheckAmount) : moneyValue(check?.amount);
+  const obligations = state.bills.filter(b => !(b.paid && (!b.recurring || b.recurring === 'once')) && moneyValue(b.amount) > 0).flatMap(b => {
+    const due = parseISODate(b.dueDate);
+    const list = [b];
+    if (!due || !b.recurring || b.recurring === 'once') return list;
+    let d = nextBillDate(due,b.recurring,b.anchorDay || due.getDate()), guard=0;
+    while (d && d <= next && guard++ < 600) {
+      list.push({...b,dueDate:isoDate(d)});
+      d=nextBillDate(d,b.recurring,b.anchorDay || due.getDate());
+    }
+    return list;
+  });
+  const rows = obligations.map(b => {
+    const due = parseISODate(b.dueDate);
+    const key = b.id + ':' + (b.dueDate || 'undated');
+    const saved = moneyValue(cp.reserves?.[key]);
+    let paychecks = 1;
+    if (due && next) {
+      let d = new Date(next), guard = 0;
+      // A bill on payday is reserved beforehand; future paychecks are not assumed to have arrived.
+      while (d < due && guard++ < 600) {
+        paychecks++;
+        d = nextBillDate(d, cadence, next.getDate());
+      }
+    }
+    const needed = Math.max(0, moneyValue(b.amount) - saved);
+    return { bill:b, key, saved, due, paychecks, allocation: Math.ceil(needed / paychecks * 100) / 100 };
+  });
+  const reserve = rows.reduce((a,r) => a+r.allocation,0);
+  const essentials = moneyValue(cp.essentials);
+  const extra = moneyValue(cp.paycheckBuffer);
+  return { check, cadence, next, available, rows, reserve, essentials, extra, left:available-reserve-essentials-extra };
+}
+
 function renderBudget() {
-  if (budgetLogView) return renderBudgetSpendingDetail();
-
-  const now = new Date();
-  const stats = getIncomeStats();
-  const currentMonth = getMonthlyStats(now.getFullYear(), now.getMonth());
-  const avgIncome = stats.ytdAvgMonthly || stats.avgMonthly || currentMonth.income || 0;
-
-  const paydayPlan = renderPaydayPlan();
-  if (avgIncome <= 0) {
-    return `${paydayPlan}${blk('Monthly estimate', 'No income yet', `<span class="lnk" data-action="open-modal" data-type="income">Add income</span> to see the historical average`)}`;
-  }
-
-  const fixed = state.bills
-    .filter(b => b.recurring && b.recurring !== 'once')
-    .reduce((sum, b) => sum + monthlyEq(b.amount, b.recurring), 0);
-
-  const savingsInfo = getSavingsTarget();
-  const savingsTarget = savingsInfo.total || 0;
-  const spendable = Math.max(0, avgIncome - fixed - savingsTarget);
-
-  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const spent = state.petty
-    .filter(p => p.date && p.date.startsWith(monthKey))
-    .reduce((sum, p) => sum + (parseFloat(String(p.amount).replace(/[^\d.-]/g, '')) || 0), 0);
-
-  const remaining = spendable - spent;
-  const usedPct = spendable > 0 ? Math.max(0, Math.min(100, (spent / spendable) * 100)) : 0;
-
-  // One combined line instead of a separate income/fixed/savings stat-trio —
-  // this tab is meant to read as a single flowing summary, not a stack of cards.
-  const hero = blk(
-    'Average-based monthly estimate',
-    (remaining < 0 ? '−' : '') + fmtMoney(Math.abs(remaining), {round:true}),
-    `${fmtMoney(avgIncome, {round:true})} avg income · ${fmtMoney(fixed, {round:true})} fixed${savingsTarget > 0 ? ` · ${fmtMoney(savingsTarget, {round:true})} savings` : ''} · historical estimate`,
-    { color: remaining < 0 ? 'negative' : '' }
-  );
-
-  const meterCls = remaining < 0 ? 'neg' : usedPct >= 80 ? 'warn' : '';
-  const meterHTML = `<div class="budget-simple-meter">
-    <div class="budget-simple-track"><div class="budget-simple-fill ${meterCls}" style="width:${usedPct}%"></div></div>
-    <div class="budget-simple-meta">
-      <span>${fmtMoney(spent, {round:true})} spent of ${fmtMoney(spendable, {round:true})} · ${usedPct.toFixed(0)}%</span>
-      <button data-action="open-modal" data-type="petty">+ Log</button>
-    </div>
-  </div>`;
-
-  // Spending targets: the user's own categories (not a fixed preset list), shown
-  // as comparison bars so it doubles as a simple chart, not just a plain list.
-  // "Unassigned" fills out the rest of the flexible budget, same idea as the
-  // Leftover slice on the Expenses pie.
-  const targets = Array.isArray(state.budgetCats) ? state.budgetCats : [];
-  const targetTotal = targets.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
-  const unassigned = Math.max(0, spendable - targetTotal);
-  const barBasis = Math.max(spendable, targetTotal, 1);
-
-  let targetsHTML;
-  if (targets.length === 0) {
-    targetsHTML = `<div class="budget-target-empty">
-      <div>
-        <div class="budget-target-empty-title">No spending targets yet</div>
-        <div class="budget-target-empty-sub">Add whatever matters to you — food, gas, or anything else.</div>
-      </div>
-    </div>`;
-  } else {
-    const rows = targets.map((c, i) => {
-      const amt = parseFloat(c.amount) || 0;
-      const pct = Math.min(100, (amt / barBasis) * 100);
-      const color = `var(--pie-${(i % 9) + 1})`;
-      return `<div class="meter budget-target-meter clickable" data-action="edit" data-type="budgetCats" data-id="${c.id}">
-        <span class="meter-l">${escHTML(c.name)}</span>
-        <span class="meter-b"><span class="meter-f" style="width:${pct}%;background:${color}"></span></span>
-        <span class="meter-v">${fmtMoney(amt, {round:true})}</span>
-      </div>`;
-    }).join('');
-    const unassignedRow = unassigned > 0 ? `<div class="meter budget-target-meter budget-target-unassigned">
-      <span class="meter-l">Unassigned</span>
-      <span class="meter-b"><span class="meter-f" style="width:${Math.min(100, (unassigned / barBasis) * 100)}%;background:var(--border)"></span></span>
-      <span class="meter-v">${fmtMoney(unassigned, {round:true})}</span>
-    </div>` : '';
-    targetsHTML = rows + unassignedRow;
-  }
-
-  let savingsHTML = '';
-  if (state.goals.length === 0) {
-    savingsHTML = `<div class="budget-saving-simple empty-state">
-      <div>
-        <div class="budget-saving-name">No savings goal</div>
-        <div class="budget-saving-sub">Set an amount and target date.</div>
-      </div>
-      <button data-action="open-modal" data-type="goals">+ Add</button>
-    </div>`;
-  } else {
-    savingsHTML = state.goals.map(g => {
-      const target = parseFloat(g.targetAmount) || 0;
-      const saved = parseFloat(g.currentAmount) || 0;
-      const pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
-      const td = g.targetDate ? new Date(g.targetDate + 'T00:00:00') : null;
-      const req = (td && td > todayStart() && target > saved)
-        ? (target - saved) / Math.max(1, (td - todayStart()) / (30.44 * 86400000))
-        : 0;
-      return `<div class="budget-saving-simple">
-        <div class="budget-saving-top">
-          <div>
-            <div class="budget-saving-name">${escHTML(g.name)}</div>
-            <div class="budget-saving-sub">${fmtMoney(saved, {round:true})} of ${fmtMoney(target, {round:true})}${g.targetDate ? ` · By ${compactDate(g.targetDate)}` : ''}</div>
-          </div>
-          <button data-action="edit" data-type="goals" data-id="${g.id}">Edit</button>
-        </div>
-        <div class="budget-saving-track"><div class="budget-saving-fill" style="width:${pct}%"></div></div>
-        <div class="budget-saving-foot">
-          <span>${pct.toFixed(0)}%</span>
-          <span>${req > 0 ? fmtMoney(req, {round:true}) + '/mo to reach' : 'On track'}</span>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  const activityRow = `<div class="row clickable budget-spending-row" data-action="view-budget-log">
-    <div><div class="n">Spending activity</div><div class="m">This month's entries</div></div>
-    <span class="v">${fmtMoney(spent, {round:true})} ›</span>
-  </div>`;
-
-  return `${paydayPlan}
-    <div class="cash-plan-legacy">The monthly budget below is an estimate from recorded income averages. Use the Payday safety plan above before deciding what cash is safe for extra debt payments.</div>
-    ${hero}
-    ${meterHTML}
-    ${sh('Spending targets', {
-      meta: targets.length ? `${fmtMoney(unassigned, {round:true})} unassigned` : '',
-      add: { action: 'open-modal', type: 'budgetCats', label: '+ Add' }
-    })}
-    ${targetsHTML}
-    ${sh('Savings', { add: { action: 'open-modal', type: 'goals', label: '+ Goal' } })}
-    ${savingsHTML}
-    ${activityRow}`;
+  const p = getPaycheckPlan();
+  if (!p.check) return `<div class="plan-intro"><div class="eyebrow">PAYCHECK PLAN</div><h1>Give your paycheck a plan.</h1><p>Add a paycheck to see what to put toward bills and what’s left to spend.</p><button class="plan-primary" data-action="open-modal" data-type="income">+ Add paycheck</button></div>`;
+  const missing = p.rows.filter(r=>!r.due).length;
+  const overdue = p.rows.filter(r=>r.due && r.due < todayStart()).length;
+  const rows = p.rows.map(r => `<div class="allocation-row">
+    <div class="allocation-heading"><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">${escHTML(r.bill.name)}</button><strong>${fmtMoney(r.allocation)}</strong></div>
+    <div class="plan-muted">${fmtMoney(r.bill.amount)} · ${r.due ? 'Due '+exactDate(r.bill.dueDate) : 'No due date'}${r.due && r.due < todayStart() ? ' · Overdue' : ''}</div>
+    <div class="allocation-foot"><label>Already set aside <input aria-label="Already set aside for ${escHTML(r.bill.name)}" data-reserve="${escHTML(r.key)}" type="number" min="0" step="0.01" value="${r.saved}" inputmode="decimal"></label><span>${r.paychecks === 1 ? 'Cover with this check' : '1 of '+r.paychecks+' paychecks'}</span></div>
+  </div>`).join('');
+  return `<div class="plan-intro"><div class="eyebrow">PAYCHECK PLAN</div><h1>Make this check last.</h1><p>${escHTML(p.check.source || 'Income')} · Received ${exactDate(p.check.receivedAt || p.check.createdAt)}</p></div>
+    <section class="paycheck-card"><div class="plan-muted">Latest recorded paycheck</div><div class="paycheck-value">${fmtMoney(p.check.amount)}</div>
+    <details class="plan-settings"><summary>Adjust this plan</summary><div class="plan-fields">
+      <label>Amount left to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label>
+      <label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label>
+      <label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label>
+      <label>Essentials this check<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label>
+      <label>Extra cushion this check<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label>
+    </div><p class="plan-muted">Use the amount still available if you’ve already spent part of this check. Include food and gas under essentials.</p></details>
+    <div class="plan-totals"><div><span>Available to budget</span><strong>${fmtMoney(p.available)}</strong></div><div><span>Set aside for bills</span><strong>${fmtMoney(p.reserve)}</strong></div><div><span>Essentials & cushion</span><strong>${fmtMoney(p.essentials+p.extra)}</strong></div></div>
+    <div class="plan-result ${p.left<0?'short':''}"><span>${p.left<0?'Still needed':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong><p>${p.left<0?'This paycheck does not cover the plan. Review the bill amounts and money already saved.':'After the bill set-asides, essentials, and cushion shown above.'}</p></div></section>
+    ${missing || overdue ? `<p class="plan-notice">${overdue?`${overdue} overdue bill${overdue>1?'s':''} included in full. Mark paid or update the schedule in Expenses. `:''}${missing?`${missing} bill${missing>1?'s have':' has'} no due date; the remaining amount is reserved in full.`:''}</p>`:''}
+    <div class="plan-section-title"><h2>Set aside from this check</h2><button data-action="open-modal" data-type="expenses">+ Bill</button></div>
+    <p class="plan-explainer">Each bill’s remaining balance is split across this check and the paydays before it’s due. “Already set aside” is money saved before this plan; these suggestions don’t move or save money automatically.</p>
+    <div class="allocation-list">${rows || '<p class="plan-explainer">No bills yet. Add your recurring bills to build a breakdown.</p>'}</div>
+    <p class="plan-explainer">Based on your latest recorded check, not estimated future income. New paychecks recalculate the plan. Review saved amounts each payday.</p>`;
 }
 
 function renderBudgetSpendingDetail() {
@@ -6112,6 +6062,43 @@ document.addEventListener('click', e => {
     return;
   }
 
+  if (act === 'delete-source') {
+    const source = btn.dataset.source;
+    const count = state.income.filter(i=>(i.source || 'Unknown')===source).length;
+    if (confirm(`Delete “${source}” and all ${count} paychecks? This changes your income totals and cannot be undone. Export a backup first if needed.`)) {
+      state.income = state.income.filter(i=>(i.source || 'Unknown')!==source);
+      sourceDetailView = null; saveState(); render();
+    }
+    return;
+  }
+  if (act === 'pay-bill' || act === 'roll-bill') {
+    const b = state.bills.find(b=>b.id===btn.dataset.id);
+    if (!b) return;
+    const due = parseISODate(b.dueDate);
+    const recurring = b.recurring && b.recurring !== 'once';
+    if (recurring && !due) { openModal('expenses',b.id); return; }
+    if (act === 'roll-bill') {
+      if (!confirm('Move this bill to its next upcoming due date? Older dates will be skipped, not recorded as paid. Use Mark paid if you want a payment record.')) return;
+      b.anchorDay = b.anchorDay || due.getDate();
+      let next = due, guard = 0;
+      while (next < todayStart() && guard++ < 600) next = nextBillDate(next,b.recurring,b.anchorDay);
+      b.dueDate = isoDate(next); b.paid=false;
+    } else {
+      const next = recurring ? nextBillDate(due,b.recurring,b.anchorDay || due.getDate()) : null;
+      state.payments.push({id:nextId('payments'),billId:b.id,name:b.name,amount:moneyValue(b.amount),category:b.category,date:isoDate(todayStart()),dueDate:b.dueDate,recordedAt:Date.now(),previous:{dueDate:b.dueDate,paid:!!b.paid,anchorDay:b.anchorDay},afterDue:next?isoDate(next):b.dueDate});
+      if (next) { b.anchorDay=b.anchorDay || due.getDate(); b.dueDate=isoDate(next); b.paid=false; }
+      else b.paid=true;
+    }
+    saveState(); render(); return;
+  }
+  if (act === 'undo-bill') {
+    const p = state.payments.find(p=>p.id===btn.dataset.id);
+    const b = p && state.bills.find(b=>b.id===p.billId);
+    if (!b || !p.previous) return;
+    if (b.dueDate !== p.afterDue) { alert('This bill’s schedule has changed. Edit its due date before undoing this payment.'); return; }
+    Object.assign(b,p.previous); state.payments=state.payments.filter(q=>q.id!==p.id);
+    saveState(); render(); return;
+  }
   if (act === 'toggle-menu') { if (_menu) _menu.hidden = !_menu.hidden; return; }
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
@@ -6239,7 +6226,21 @@ document.getElementById('file-import').addEventListener('change', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.dataset.cashPlan) {
+  if (e.target.dataset.plan || e.target.dataset.reserve) {
+    const plan = getPaycheckPlan();
+    state.cashPlan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}) };
+    if (e.target.dataset.reserve) state.cashPlan.reserves = { ...(state.cashPlan.reserves || {}), [e.target.dataset.reserve]:moneyValue(e.target.value) };
+    else {
+      state.cashPlan[e.target.dataset.plan] = e.target.value;
+      if (e.target.dataset.plan === 'paycheckAmount') state.cashPlan.paycheckId=plan.check?.id;
+    }
+    const settingsOpen = document.querySelector('.plan-settings')?.open;
+    const scroll = window.scrollY;
+    saveState(); render();
+    if (settingsOpen && document.querySelector('.plan-settings')) document.querySelector('.plan-settings').open=true;
+    window.scrollTo(0,scroll);
+  }
+  else if (e.target.dataset.cashPlan) {
     const field = e.target.dataset.cashPlan;
     if (['cashOnHand', 'nextPayDate', 'essentials', 'cushion'].includes(field)) {
       state.cashPlan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}), [field]: e.target.value };
@@ -6289,6 +6290,7 @@ function openModal(type, id = null, prefill = null) {
   const f = document.querySelector(`#modal-${type} form`);
   if (!f) return;
   f.reset();
+  if (type === 'income' && !id) { f.elements.frequency.value='once'; f.elements.receivedAt.value=isoDate(todayStart()); }
   editingItem = id ? { type, id } : null;
   if (prefill) {
     Object.keys(prefill).forEach(k => { if (f.elements[k]) f.elements[k].value = prefill[k]; });
@@ -6387,7 +6389,9 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     } else if (type === 'expenses') {
       item.name = fd.get('name');
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
-      item.dueDate = fd.get('date') || null;
+      const newDue = fd.get('date') || null;
+      if (newDue !== item.dueDate) { item.anchorDay = newDue ? parseISODate(newDue).getDate() : null; item.paid = false; }
+      item.dueDate = newDue;
 
       delete item.isPercent;
       delete item.pctValue;
