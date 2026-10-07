@@ -3764,6 +3764,11 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .sf-bill-details{border-top:1px solid var(--border-light);margin-top:20px}.sf-bill-details summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:12px;cursor:pointer}.sf-bill-details summary::-webkit-details-marker{display:none}.sf-bill-details summary>span+span{font-size:11px;color:var(--ink-3)}.sf-bill-row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;font-size:13px}.sf-bill-row+.sf-bill-row{border-top:1px solid var(--border-light)}.sf-bill-row strong{font-weight:500;font-variant-numeric:tabular-nums}.sf-settings{margin-top:10px}.sf-settings .plan-settings{margin:0}.sf-settings summary{font-size:11px;color:var(--ink-3)}.sf-alert{font-size:11px;line-height:1.5;color:var(--warning);margin:10px 0}
 @media(max-width:359px){.sf-hero{font-size:32px}.sf-ring{width:86px;height:86px}.sf-spending-grid{column-gap:16px}.sf-heading{gap:6px}}
 .sf-bill-heading{display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;font-size:12px}.sf-bill-heading>span+span{font-size:11px;color:var(--ink-3)}.spending-first .sf-bill-row{padding:7px 0;font-size:12px}
+/* Paycheck category tracking and restrained bill controls. */
+.sf-track-cell{text-align:left;width:100%;background:transparent;border:0;color:var(--ink);font-family:inherit;cursor:pointer}.sf-track-cell .sf-category{width:100%}.sf-track-plus{margin-left:auto;color:var(--accent);font-size:15px}.sf-track-cell>strong small{font-size:10px;font-weight:400;letter-spacing:0;margin-left:5px;color:var(--ink-3)}.sf-track-meta{display:block;font-size:10.5px;color:var(--ink-3);margin-top:4px;line-height:1.5}.sf-track-meter{display:block;height:3px;background:var(--border-light);margin-top:9px;border-radius:2px;overflow:hidden}.sf-track-meter>span{display:block;height:100%}.sf-over{color:var(--negative)}
+.spending-first .sf-fund-simple{background:none;border-radius:0;padding:0;margin-top:22px;border-top:1px solid var(--border-light)}.sf-fund-simple .sf-fund-heading{padding-top:14px;margin-bottom:8px}.sf-fund-simple .sf-fund-heading>strong{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)}.sf-fund-simple .sf-fund-row{padding:6px 0;margin:0;font-size:12px}.sf-fund-simple .sf-save-line{margin-top:4px}.sf-fund-simple .sf-save{background:none;padding:5px 0}
+.sf-activity{margin-top:16px;border-top:1px solid var(--border-light)}.sf-activity summary{font-size:11px;color:var(--ink-3);padding:12px 0;cursor:pointer}.sf-activity summary>span{float:right}.sf-activity-row{display:flex;align-items:center;gap:12px;padding:9px 0;font-size:11px;border-top:1px solid var(--border-light)}.sf-activity-row>div{flex:1;min-width:0}.sf-activity-row strong{font-weight:500}.sf-activity-row small{display:block;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere}.sf-activity-row>span{white-space:nowrap;font-variant-numeric:tabular-nums}.sf-past-check{margin-left:8px}
+.sf-bill-heading>strong{font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
 </style>
 </head>
 
@@ -3813,6 +3818,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <button data-tab="budget">Budget</button>
 </nav>
 
+<div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><select class="select" id="spending-category"><option value="groceries">Groceries</option><option value="gas">Gas</option><option value="savings">Savings</option><option value="other">Other spending</option></select></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Add</button></div></div></div></div>
 <div class="modal" id="modal-budget-amounts" role="dialog" aria-modal="true" aria-labelledby="budget-amounts-title">
  <div class="modal-bd" data-action="close-modal"></div>
  <div class="modal-c"><div class="modal-t" id="budget-amounts-title">Bill money</div><div class="budget-amounts-form">
@@ -5927,29 +5933,57 @@ function getPaycheckSpendingSuggestions(plan) {
   return [{label:'Bills',total:plan.reserve},{label:'Groceries',total:groceries},{label:'Gas',total:gas},{label:plan.extra>0?'Cushion':'Savings',total:savings},{label:'Other spending',total:other}].filter(item=>item.total>0);
 }
 
+const SPENDING_CATEGORIES={groceries:'Groceries',gas:'Gas',savings:'Savings',other:'Other spending'};
+function paycheckSpending(plan=getPaycheckPlan()) {
+ const stored=state.cashPlan?.spendingByPaycheck?.[plan.check?.id];
+ const suggestions=getPaycheckSpendingSuggestions(plan);
+ const targetFor=label=>suggestions.find(item=>item.label===label)?.total||0;
+ const targets=stored?.targets||{groceries:targetFor('Groceries'),gas:targetFor('Gas'),savings:targetFor(plan.extra>0?'Cushion':'Savings'),other:targetFor('Other spending')};
+ const entries=stored?.entries||[];
+ const spent={groceries:0,gas:0,savings:0,other:0};
+ for(const entry of entries)if(Object.prototype.hasOwnProperty.call(spent,entry.category))spent[entry.category]=roundCash(spent[entry.category]+moneyValue(entry.amount));
+ return {targets,entries,spent,total:roundCash(Object.values(spent).reduce((sum,v)=>sum+v,0))};
+}
+function addPaycheckSpending(checkId,category,amount,date,note='') {
+ const plan=getPaycheckPlan();amount=roundCash(moneyValue(amount));
+ if(!plan.check || plan.check.id!==checkId || !Object.prototype.hasOwnProperty.call(SPENDING_CATEGORIES,category) || amount<=0 || !parseISODate(date) || date>isoDate(todayStart()))return false;
+ const tracking=paycheckSpending(plan),cp=state.cashPlan;
+ cp.spendingByPaycheck={...(cp.spendingByPaycheck||{})};
+ const record=cp.spendingByPaycheck[checkId]||{targets:{...tracking.targets},entries:[],paycheckDate:paycheckDate(plan.check),source:plan.check.source||'Income'};
+ record.entries.push({id:'sp-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10),category,amount,date,note:String(note).trim().slice(0,120)});
+ cp.spendingByPaycheck[checkId]=record;return true;
+}
+function removePaycheckSpending(checkId,entryId) {
+ const record=state.cashPlan?.spendingByPaycheck?.[checkId];if(!record)return;
+ record.entries=record.entries.filter(entry=>entry.id!==entryId);
+}
+
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
- const split=getPaycheckSpendingSuggestions(p);
+ const tracking=paycheckSpending(p);
+ const split=[{label:'Bills',total:p.reserve},...Object.entries(SPENDING_CATEGORIES).map(([key,label])=>({label,total:tracking.targets[key]}))];
  const colors={Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'};
  const basis=Math.max(p.available,split.reduce((sum,item)=>sum+item.total,0),1);
  let offset=0;
  const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.label]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
- const afterBills=roundCash(p.available-p.reserve);
+ const afterBills=roundCash(p.available-p.reserve-tracking.total);
  const categories=['Groceries','Gas',p.extra>0?'Cushion':'Savings','Other spending'];
  const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${r.fundingPaused && !r.allocation?'Paid':fmtMoney(r.allocation)}</strong></div>`).join('');
  return `<section class="budget-worksheet spending-first">
- <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'After bills'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div></div>
+ <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Available'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.reserve,{round:true})}</strong></div></div></div>
  <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
- <div class="sf-spending-grid">${categories.map(label=>`<div class="sf-spending-cell"><div class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span></div><strong>${fmtMoney(split.find(item=>item.label===label)?.total||0,{round:true})}</strong></div>`).join('')}</div>
- <div class="sf-fund-band"><div class="sf-fund-heading"><strong>Bill money</strong><button class="sf-action" data-action="edit-budget-amounts">Edit amounts</button></div>
+ <div class="sf-spending-grid">${Object.entries(SPENDING_CATEGORIES).map(([key,label])=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[label]}"></span></span></button>`}).join('')}</div>
+ <div class="sf-fund-band sf-fund-simple"><div class="sf-fund-heading"><strong>Bills</strong><button class="sf-action" data-action="edit-budget-amounts">Edit</button></div>
  <div class="sf-fund-row sf-muted"><span>Already saved</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
  <div class="sf-fund-row"><span>From this check</span><strong>${fmtMoney(p.reserve)}</strong></div>
  <div class="sf-save-line"><span>Next payday ${shortDate(isoDate(p.next))}</span>${p.recorded?`<div class="sf-saved"><span>Saved</span>${p.canUndo?'<button class="sf-action" data-action="undo-set-aside">Undo</button>':''}</div>`:`<button class="sf-save" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div></div>
  ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
- <section class="sf-bill-details"><div class="sf-bill-heading"><span>Bill breakdown</span><span>${p.rows.length} bills</span></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
+ <section class="sf-bill-details"><div class="sf-bill-heading"><span>Bill breakdown</span><strong>${fmtMoney(p.rows.reduce((sum,row)=>sum+row.allocation,0))}</strong></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
+ <details class="sf-activity"><summary>Spending activity <span>${tracking.entries.length}</span></summary>${tracking.entries.slice().reverse().map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span><button class="sf-action" data-action="remove-spending" data-check="${escHTML(p.check.id)}" data-entry="${escHTML(entry.id)}" aria-label="Remove ${escHTML(SPENDING_CATEGORIES[entry.category])} entry of ${fmtMoney(entry.amount)}">Remove</button></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>
+ ${Object.entries(state.cashPlan.spendingByPaycheck||{}).some(([id])=>id!==p.check.id)?`<details class="sf-activity"><summary>Previous paychecks</summary>${Object.entries(state.cashPlan.spendingByPaycheck).filter(([id])=>id!==p.check.id).sort((a,b)=>String(b[1].paycheckDate).localeCompare(String(a[1].paycheckDate))).map(([,record])=>`<details class="sf-past-check"><summary>${shortDate(record.paycheckDate)} · ${escHTML(record.source)}</summary>${record.entries.map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>`).join('')}</details>`:''}
  <div class="sf-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  </section>`;
 }
@@ -6289,6 +6323,24 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const act = btn.dataset.action;
+  if(act==='open-spending'){
+    const plan=getPaycheckPlan();if(!plan.check)return;
+    const modal=document.getElementById('modal-spending');modal.dataset.check=plan.check.id;
+    document.getElementById('spending-category').value=btn.dataset.category;
+    document.getElementById('spending-amount').value='';document.getElementById('spending-note').value='';
+    const date=document.getElementById('spending-date');date.value=isoDate(todayStart());date.max=date.value;
+    modal.classList.add('open');syncOverlayHistory();document.getElementById('spending-amount').focus();return;
+  }
+  if(act==='save-spending'){
+    const modal=document.getElementById('modal-spending');if(!modal.classList.contains('open'))return;
+    const amount=document.getElementById('spending-amount'),date=document.getElementById('spending-date');
+    if(!amount.reportValidity() || !date.reportValidity())return;
+    if(addPaycheckSpending(modal.dataset.check,document.getElementById('spending-category').value,amount.value,date.value,document.getElementById('spending-note').value)){
+      modal.classList.remove('open');saveState();render();
+    }return;
+  }
+  if(act==='remove-spending'){removePaycheckSpending(btn.dataset.check,btn.dataset.entry);saveState();render();return;}
+
   if(act==='edit-budget-amounts'){
     const plan=getPaycheckPlan();
     const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
