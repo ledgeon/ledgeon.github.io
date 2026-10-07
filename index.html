@@ -3735,6 +3735,20 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-confirm-row button{font-size:11px;font-weight:600;padding:4px 0}.budget-confirm-row button:disabled{opacity:.4;cursor:default}
 .budget-refined .paycheck-footer{margin-top:14px}
 @media(pointer:coarse){.budget-amount-edit input{font-size:16px;min-height:24px}}
+/* Budget composes the existing hero, stat row, chart and Expenses list. */
+.budget-native .blk-v{color:var(--accent)}
+.budget-native-stats .st-label{text-transform:none!important;letter-spacing:0!important;font-size:10.5px!important;font-weight:500!important;color:var(--ink-3)!important}
+.budget-native-stats .st-value{font-size:16px!important;font-weight:600!important}.budget-native-stats .st-value.negative{color:var(--negative)!important}
+.budget-native .budget-native-bill{padding-top:8px!important;padding-bottom:8px!important;gap:16px}
+.budget-native .budget-native-bill .r-name{font-weight:500!important;font-size:12.5px!important}
+.budget-native .budget-native-bill .r-amt{font-size:12.5px!important;white-space:nowrap}
+.budget-native-saved{display:flex;justify-content:space-between;gap:16px;margin:0 20px 5px;padding:0 0 10px;border-bottom:1px solid var(--border-light);font-size:11.25px;color:var(--ink-3)}
+.budget-native-saved strong{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.budget-native-total{display:flex;justify-content:space-between;gap:16px;margin:7px 20px 0;padding:12px 0;border-top:1px solid var(--border);font-size:12px;font-weight:600}
+.budget-native-total strong{font-size:14px;font-variant-numeric:tabular-nums}
+.budget-native-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:0 20px 12px}.budget-native-actions button{font-size:11.25px;padding:5px 0}.budget-native-actions button:disabled{opacity:.4;cursor:default}
+.budget-native-alert{margin:6px 20px;font-size:11px;color:var(--warning);line-height:1.5}
+.budget-native-settings{margin:18px 20px 24px;border-top:1px solid var(--border-light);padding-top:12px}.budget-native-settings .plan-settings{margin:0}.budget-native-settings .simple-fields{margin-top:12px}.budget-amounts-form{padding:16px 18px}.budget-native .expense-composition{margin-bottom:0}
 </style>
 </head>
 
@@ -3784,6 +3798,14 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <button data-tab="budget">Budget</button>
 </nav>
 
+<div class="modal" id="modal-budget-amounts" role="dialog" aria-modal="true" aria-labelledby="budget-amounts-title">
+ <div class="modal-bd" data-action="close-modal"></div>
+ <div class="modal-c"><div class="modal-t" id="budget-amounts-title">Bill money</div><div class="budget-amounts-form">
+ <div class="frow"><div class="fcol"><label class="flbl" for="budget-edit-saved">Already set aside</label><input class="input" id="budget-edit-saved" type="number" min="0" step="0.01"></div></div>
+ <div class="frow"><div class="fcol"><label class="flbl" for="budget-edit-check">From this paycheck</label><input class="input" id="budget-edit-check" type="number" min="0" step="0.01"></div></div>
+ <div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="apply-budget-amounts">Apply</button></div>
+ </div></div>
+</div>
 <div class="modal" id="modal-income">
   <div class="modal-bd" data-action="close-modal"></div>
   <div class="modal-c">
@@ -5874,29 +5896,29 @@ function getPaycheckSpendingSuggestions(plan) {
 
 function renderBudget() {
  const p=getPaycheckPlan();
- if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
+ if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
  const split=getPaycheckSpendingSuggestions(p);
  const allocated=roundCash(split.reduce((sum,item)=>sum+item.total,0));
- const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown',colors:{Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'}});
- const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
- return `<section class="budget-worksheet budget-refined">
+ const chart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown',colors:{Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'}});
+ const billRows=p.rows.map(r=>`<div class="row source-row budget-native-bill"><span class="r-name">${escHTML(r.bill.name)}</span><span class="r-amt">${fmtMoney(r.allocation)}</span></div>`).join('');
+ return `<section class="budget-worksheet budget-native">
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
+ <div class="stat-trio budget-native-stats">
+ <div class="st"><div class="st-label">For bills</div><div class="st-value">${fmtMoney(p.reserve,{round:true})}</div></div>
+ <div class="st"><div class="st-label">${p.left<0?'Short by':'Left to spend'}</div><div class="st-value ${p.left<0?'negative':''}">${fmtMoney(Math.abs(p.left),{round:true})}</div></div>
+ <div class="st"><div class="st-label">Next payday</div><div class="st-value budget-native-date">${shortDate(isoDate(p.next))}</div></div>
+ </div>
  ${sh('Breakdown',{meta:'This paycheck'})}
- ${paycheckChart}
- <div class="budget-balance-row"><span>${p.left<0?'Short by':'Left after set-aside'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
- <div class="worksheet-body">
-
- <div class="worksheet-columns sh"><h3>Bills</h3><span>This paycheck</span></div>
- <div class="budget-saved-row"><label for="saved-bills-total">Already set aside</label><label class="budget-amount-edit"><span>$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
- ${p.rows.map(r=>`<div class="worksheet-bill simple-bill-row"><span class="worksheet-name">${escHTML(r.bill.name)}</span><strong class="simple-bill-amount">${fmtMoney(r.allocation)}</strong></div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
- <div class="budget-allocation-row"><label for="check-set-aside">${p.recorded?'Saved from this check':'Set aside from this check'}</label>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<label class="budget-amount-edit"><span>$</span><input id="check-set-aside" data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></label>`}</div>
- <div class="budget-confirm-row"><span>Next payday ${shortDate(isoDate(p.next))}</span>${p.recorded?`${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':'<span class="budget-recorded">Saved</span>'}`:`<button class="budget-text-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div>
- ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review in Expenses.</p>':''}
- ${p.unfunded>0?`<p class="budget-review">${fmtMoney(p.unfunded)} of planned bill funding is still uncovered.</p>`:''}
- <div class="paycheck-footer">
- <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
- ${history.length?`<details class="budget-options"><summary>Saved paychecks</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
- </div></section>`;
+ ${chart}
+ ${sh('Bills',{meta:'From this check',add:{action:'edit-budget-amounts',label:'Edit'}})}
+ <div class="budget-native-saved"><span>Already set aside</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
+ ${billRows || '<div class="empty"><span class="lnk" data-action="open-modal" data-type="expenses">+ Add expense</span></div>'}
+ <div class="budget-native-total"><span>Total for bills</span><strong>${fmtMoney(p.reserve)}</strong></div>
+ <div class="budget-native-actions">${p.recorded?`<span class="budget-recorded">Saved</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-text-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div>
+ ${p.unfunded>0?`<p class="budget-native-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
+ ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="budget-native-alert">Review bill dates in Expenses.</p>':''}
+ <div class="budget-native-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
+ </section>`;
 }
 
 function renderBudgetSpendingDetail() {
@@ -6234,6 +6256,28 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const act = btn.dataset.action;
+  if(act==='edit-budget-amounts'){
+    const plan=getPaycheckPlan();
+    const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
+    saved.value=plan.savedTotal.toFixed(2);saved.disabled=!plan.rows.length;
+    check.value=plan.reserve.toFixed(2);check.max=Math.max(0,plan.available-plan.essentials-plan.extra);check.disabled=!!plan.recorded;
+    document.getElementById('modal-budget-amounts').classList.add('open');syncOverlayHistory();saved.focus();return;
+  }
+  if(act==='apply-budget-amounts'){
+    const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
+    if(!saved.reportValidity() || !check.reportValidity())return;
+    const before=getPaycheckPlan();
+    if(roundCash(moneyValue(saved.value))!==before.savedTotal)updateSavedBillTotal(saved.value);
+    const plan=getPaycheckPlan();
+    if(!plan.recorded){
+      let remaining=roundCash(Math.min(moneyValue(check.value),Math.max(0,plan.available-plan.essentials-plan.extra)));
+      const allocations={};
+      for(const row of plan.rows){const amount=roundCash(Math.min(row.needed,remaining));allocations[row.key]=amount;remaining=roundCash(remaining-amount);}
+      state.cashPlan.paycheckDrafts={...(state.cashPlan.paycheckDrafts||{}),[plan.check.id]:allocations};
+    }
+    document.getElementById('modal-budget-amounts').classList.remove('open');saveState();render();return;
+  }
+
   const navTab = btn.dataset.tab;
   if (navTab && TABS.includes(navTab)) {
     currentTab = navTab;
