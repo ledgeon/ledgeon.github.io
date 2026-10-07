@@ -3646,64 +3646,32 @@ body {
 .average-key{font-size:10px;color:var(--ink-3);margin-left:8px;white-space:nowrap}
 .average-key::before{content:"";display:inline-block;width:14px;border-top:1.5px solid #d58b88;vertical-align:middle;margin-right:4px}
 .budget-check-totals{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}.budget-check-totals>div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;font-size:12px}.budget-check-totals strong{font-weight:500;font-variant-numeric:tabular-nums}.budget-check-totals input{width:105px;min-width:0;text-align:right;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-check-totals .budget-check-left{border-top:1px solid var(--border);margin-top:5px;padding-top:14px}.budget-check-left strong{font-size:22px}
-/* Shared UI rules: Expenses is the reference for every screen. */
-:root{
- --ui-font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
- --ui-label:11px;--ui-meta:11.25px;--ui-body:13.5px;--ui-stat:16px;
- --ui-medium:500;--ui-strong:600;--ui-radius:6px;--ui-gutter:20px;
-}
-body,button,input,select,textarea{font-family:var(--ui-font)!important}
-button,input,select,textarea{line-height:1.4}
-.blk{padding:18px var(--ui-gutter) 7px!important}
-.blk-l{font-size:var(--ui-label)!important;font-weight:var(--ui-medium)!important;color:var(--ink-3)!important;letter-spacing:0!important;text-transform:none!important}
-.blk-v{font-weight:700!important;font-variant-numeric:tabular-nums}
-.blk-s{font-size:var(--ui-meta)!important;font-weight:400!important;line-height:1.5!important;color:var(--ink-3)!important;margin-top:6px!important}
-.sh h3{font-size:var(--ui-label)!important;font-weight:700!important;letter-spacing:1.2px!important}
-.sh .x,.chart-mode-links button,.average-key{font-size:var(--ui-label)!important}
-.sh .add,.back-btn,.budget-text-action,.budget-fund-edit button,.schedule-tools .action-light{font-size:var(--ui-meta)!important;font-weight:var(--ui-medium)!important;color:var(--accent)}
-.row .r-name,.source-payment-date,.budget-fund summary{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;line-height:1.4!important;color:var(--ink)!important}
-.row .r-meta,.source-payment-meta,.budget-fund-edit p,.budget-fund-edit label,.budget-caption,.budget-options summary,.source-delete p,.schedule-tools p,.schedule-tools summary{font-size:var(--ui-meta)!important;font-weight:400!important;line-height:1.5!important;color:var(--ink-3)!important}
-.row .r-amt,.source-right .r-amt,.source-payment-row .r-amt,.budget-fund summary strong,.budget-check-totals strong,.budget-history-row strong{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;font-variant-numeric:tabular-nums;color:var(--ink)}
-/* Income totals are neutral, like expense totals; status colors remain semantic. */
-.row .r-amt.pos{color:var(--ink)!important}
-.row.source-row,.source-payment-row{padding-top:12px!important;padding-bottom:12px!important}
-.source-payment-main{flex-direction:column;align-items:flex-start!important;gap:3px!important;white-space:normal}
-.source-payment-meta{white-space:normal;overflow:visible;text-overflow:clip}
-.source-payment-row{gap:14px}.source-payment-row .r-amt{white-space:nowrap;flex-shrink:0}
-.income-overview .blk-s{display:flex;flex-wrap:wrap;gap:4px 12px}
-.income-overview .blk-s>span{white-space:nowrap}
-.income-overview .stat-trio{margin-top:12px!important;padding-top:0!important;padding-bottom:4px!important}
-.stat-trio .st-label,.income-overview .stat-trio .st-label,.source-summary-label{font-size:var(--ui-label)!important;font-weight:400!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-3)!important;line-height:1.4!important;white-space:normal}
-.stat-trio .st-value,.income-overview .stat-trio .st-value,.source-summary-value{font-size:var(--ui-stat)!important;font-weight:var(--ui-strong)!important;letter-spacing:-.25px!important;color:var(--ink)!important;margin-top:6px!important;line-height:1.4!important;font-variant-numeric:tabular-nums}
-.source-summary-grid{margin:8px var(--ui-gutter) 2px!important;padding:12px 0!important}
-.source-summary-item{padding-right:8px}.source-summary-item+.source-summary-item{padding-left:8px}
-.source-summary-value{overflow:visible;text-overflow:clip;font-size:clamp(13px,3.5vw,16px)!important}
-.income-overview .trend-head>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;min-width:0}
-.income-overview .trend-head h3{flex-basis:100%}.income-overview .average-key{margin-left:0}
-.budget-compact-body{padding:5px var(--ui-gutter) 18px}
-.budget-compact .budget-compact-title{padding:18px 0 9px!important;margin:0}
-.budget-fund summary{padding:12px 0;gap:14px}
-.budget-fund summary strong{white-space:nowrap}
-.budget-fund-edit{padding:4px 0 12px}
-.budget-fund-edit p{margin:6px 0}.budget-fund-edit label{margin:10px 0;gap:14px}
-.budget-check-totals>div{font-size:var(--ui-body);line-height:1.4;color:var(--ink-3);padding:10px 0}
-.budget-check-totals .budget-check-left{color:var(--ink);padding-top:14px}
-.budget-check-totals .budget-check-left strong{font-size:22px!important}
-.budget-review{font-size:var(--ui-meta);line-height:1.5;color:var(--warning)}
-.budget-caption{margin:10px 0}.budget-options{margin-top:14px}
-.budget-history-row{font-size:var(--ui-meta);line-height:1.5}
-/* All editable values use the same border, padding and focus treatment. */
-.input,.select,textarea,.simple-fields input,.simple-fields select,.budget-fund-edit input,.budget-check-totals input{font-size:var(--ui-body)!important;font-weight:400!important;line-height:1.4!important;border:1px solid var(--border)!important;border-radius:var(--ui-radius)!important;padding:8px 10px!important;background:var(--bg)!important;color:var(--ink)!important;min-height:36px;box-sizing:border-box}
-.flbl,.simple-fields label{font-size:var(--ui-label)!important;font-weight:var(--ui-medium)!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-3)!important;line-height:1.5}
-.input:focus,.select:focus,textarea:focus,.simple-fields input:focus,.simple-fields select:focus,.budget-fund-edit input:focus,.budget-check-totals input:focus{outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-soft)}
-button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--ui-radius)}
-.budget-save-button,.schedule-tools .action-primary,.factions button{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;line-height:1.4;border-radius:var(--ui-radius)!important;padding:10px 14px!important;min-height:40px}
-.modal-t{font-size:var(--ui-body)!important;font-weight:var(--ui-strong)!important;letter-spacing:0!important;padding:16px var(--ui-gutter)!important;width:100%;box-sizing:border-box}
-.modal-t::before{display:none}.modal form{padding:16px var(--ui-gutter)}
-.source-delete button{font-size:var(--ui-meta);font-weight:var(--ui-medium)}
-@media(max-width:390px){.simple-fields{gap:12px}.source-summary-item{padding-right:6px}.source-summary-item+.source-summary-item{padding-left:6px}}
-@media(pointer:coarse){.input,.select,textarea,.simple-fields input,.simple-fields select,.budget-fund-edit input,.budget-check-totals input{font-size:16px!important}}
+:root{--ui-font:'Inter',-apple-system,sans-serif;--ui-body:13.5px;--ui-meta:11.25px}
+.income-overview .blk-s{display:flex;flex-wrap:wrap;gap:4px 12px}.income-overview .blk-s>span{white-space:nowrap}
+.income-overview .trend-head>div:first-child{display:flex;flex-wrap:wrap;gap:5px 10px;align-items:center;min-width:0}.income-overview .trend-head h3{flex-basis:100%}.income-overview .average-key{margin-left:0}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .worksheet-context{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;margin:8px 20px 0;padding:12px 0;border-top:1px solid var(--border-light);font-size:11px;color:var(--ink-3)}.worksheet-context strong{display:inline-block;margin-left:4px;color:var(--ink-2);font-weight:500}.worksheet-body{padding:0 20px 24px}.worksheet-columns{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0 8px;color:var(--ink-3);font-size:11px}.worksheet-columns h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:var(--ink)}.worksheet-bill{display:grid;grid-template-columns:minmax(0,1fr) 102px;gap:12px;align-items:start;border-bottom:1px solid var(--border-light)}.worksheet-bill .budget-fund{border:0;min-width:0}.worksheet-bill .budget-fund summary{display:block;padding:12px 0!important}.worksheet-name{display:block}.worksheet-chevron{font-size:11px;color:var(--ink-4);font-weight:400}.worksheet-meta{display:block;margin-top:3px;font-size:11.25px;font-weight:400;color:var(--ink-3);line-height:1.5}.worksheet-entry{display:flex;align-items:center;gap:4px;border:1px solid var(--border);border-radius:6px;padding:0 8px;color:var(--ink-3);background:var(--bg);width:102px;box-sizing:border-box;margin-top:12px}.worksheet-entry input,.worksheet-totals .worksheet-entry input{font-family:var(--ui-font);font-size:13.5px!important;font-weight:500!important;text-align:right;min-width:0;width:100%;height:34px;min-height:34px;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:var(--ink);font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}.worksheet-entry input::-webkit-inner-spin-button,.worksheet-entry input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.worksheet-entry:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}.worksheet-amount{text-align:right;margin-top:14px;font-size:13.5px;font-weight:600}.worksheet-totals{border-top:0;margin-top:8px}.worksheet-totals .worksheet-entry{margin-top:0}.worksheet-note{font-size:11.25px;line-height:1.5;color:var(--ink-3);margin:8px 0 12px}.worksheet-save{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:12px}.worksheet-body .plan-settings{border-top:1px solid var(--border-light);padding-top:14px;margin-top:18px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(pointer:coarse){.worksheet-entry input,.worksheet-totals .worksheet-entry input{font-size:16px!important}}
+/* Budget uses the actual Expenses chart and row styling. */
+.budget-worksheet .expense-composition{margin-bottom:8px}
+.budget-worksheet .worksheet-context{border-top:1px solid var(--border-light);margin-top:0;padding:12px 0;font-size:11.25px}
+.budget-worksheet .worksheet-context strong{color:var(--accent);font-weight:600}
+.budget-worksheet .worksheet-columns{padding:18px 0 9px!important}
+.budget-worksheet .worksheet-columns h3{color:var(--accent)!important}
+.budget-worksheet .worksheet-bill{grid-template-columns:minmax(0,1fr) 94px;gap:12px}
+.budget-worksheet .worksheet-name{font-size:13.5px;font-weight:600;color:var(--ink)}
+.budget-worksheet .worksheet-meta{font-size:11.25px;color:var(--ink-3)}
+.budget-worksheet .worksheet-entry{width:94px;background:var(--accent-soft);border-color:transparent;transition:border-color .12s,background .12s;color:var(--accent)}
+.budget-worksheet .worksheet-entry input,.budget-worksheet .worksheet-totals .worksheet-entry input{color:var(--accent)!important;font-weight:600!important}
+.budget-worksheet .worksheet-entry:focus-within{background:var(--bg);border-color:var(--accent)}
+.budget-worksheet .worksheet-totals{padding-top:10px;margin-top:4px;border-top:0}
+.budget-worksheet .worksheet-totals>div{font-size:12px}
+.budget-worksheet .worksheet-totals .budget-check-left{padding:14px 0;margin-top:8px;border-top:1px solid var(--border)}
+.budget-worksheet .budget-check-left strong{color:var(--accent);font-size:24px;font-weight:600;letter-spacing:-.5px}
+.budget-worksheet .budget-fund-edit input{font-family:var(--ui-font);font-size:13px}
+.budget-worksheet .worksheet-save .budget-save-button{font-family:var(--ui-font);padding:11px 14px;font-size:12px;font-weight:600;border-radius:6px}
+.budget-worksheet .budget-options summary{font-size:11.25px;color:var(--ink-3)}
+.budget-worksheet .simple-fields input,.budget-worksheet .simple-fields select{font-family:var(--ui-font)}
+@media(pointer:coarse){.budget-worksheet input,.budget-worksheet select{font-size:16px!important}}
 </style>
 </head>
 
@@ -5369,8 +5337,8 @@ function renderIncome() {
 }
 
 // ──── Render: expenses ─────────────────────────────────────
-function buildExpensePieChart(total, catData, incomeBasis) {
-  if (total <= 0 || catData.length === 0) {
+function buildExpensePieChart(total, catData, incomeBasis, options = {}) {
+  if ((total <= 0 || catData.length === 0) && !options.showAvailable) {
     return `<div class="expense-composition-empty">No expense breakdown to show yet</div>`;
   }
 
@@ -5403,13 +5371,13 @@ function buildExpensePieChart(total, catData, incomeBasis) {
   // share of income rather than a share of expenses, so unspent income shows
   // up as its own "leftover" segment instead of the ring always reading 100%
   // spent. Falls back to the old expense-only basis when income isn't set.
-  const pieBasis = incomeBasis > 0 ? incomeBasis : total;
+  const pieBasis = options.showAvailable ? Math.max(incomeBasis,total,1) : incomeBasis > 0 ? incomeBasis : total;
   if (incomeBasis > 0) {
     for (const s of slices) s.pct = (s.amount / pieBasis) * 100;
   }
   const leftoverAmount = incomeBasis > 0 ? Math.max(0, incomeBasis - total) : 0;
   const leftoverSlice = leftoverAmount > 0 ? {
-    label: 'Available',
+    label: options.availableLabel || 'Available',
     pct: (leftoverAmount / pieBasis) * 100,
     incomePct: (leftoverAmount / incomeBasis) * 100,
     amount: leftoverAmount,
@@ -5458,13 +5426,13 @@ function buildExpensePieChart(total, catData, incomeBasis) {
 
   const leftoverRow = leftoverSlice ? `<div class="expense-cat-row expense-cat-leftover"
       data-expense-category="1"
-      data-expense-label="Available"
+      data-expense-label="${escHTML(options.availableLabel || 'Available')}"
       data-expense-amount="${leftoverSlice.amount}"
       data-expense-income-pct="${leftoverSlice.incomePct.toFixed(2)}"
       data-expense-share="${leftoverSlice.pct.toFixed(2)}">
     <div class="expense-cat-left">
       <span class="expense-cat-dot" style="background:${leftoverSlice.color}"></span>
-      <span class="expense-cat-name">Available</span>
+      <span class="expense-cat-name">${escHTML(options.availableLabel || 'Available')}</span>
     </div>
     <div class="expense-cat-right">
       <span class="expense-cat-pct">${leftoverSlice.incomePct.toFixed(0)}%</span>
@@ -5475,12 +5443,12 @@ function buildExpensePieChart(total, catData, incomeBasis) {
   return `<div class="expense-composition">
     <div class="expense-donut-wrap">
       <div class="expense-donut expense-donut-svg">
-        <svg viewBox="0 0 108 108" aria-label="Expense breakdown">
+        <svg viewBox="0 0 108 108" aria-label="${escHTML(options.chartLabel || 'Expense breakdown')}">
           <circle class="expense-donut-track" cx="54" cy="54" r="42" pathLength="100"></circle>
           <g transform="rotate(-90 54 54)">${segments}</g>
         </svg>
         <div class="expense-donut-hole">
-          <span class="expense-donut-label">Expenses</span>
+          <span class="expense-donut-label">${escHTML(options.centerLabel || 'Expenses')}</span>
           <strong>${fmtMoney(total, {round:true})}</strong>
         </div>
       </div>
@@ -5809,12 +5777,17 @@ function undoPaycheckSetAside() {
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
+ const allocated=roundCash(p.reserve+p.essentials+p.extra);
+ const split=[{label:'Bills',total:p.reserve},{label:'Essentials',total:p.essentials},{label:'Cushion',total:p.extra}].filter(item=>item.total>0);
+ const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Set aside',availableLabel:'Left to spend',chartLabel:'Paycheck allocation'});
  const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
  return `<section class="budget-worksheet">
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
+ ${sh('This paycheck',{meta:p.recorded?'Saved':'Your allocation'})}
+ ${paycheckChart}
  <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span><span>Saved for bills <strong>${fmtMoney(p.savedTotal)}</strong></span></div>
  <div class="worksheet-body">
- <div class="worksheet-columns"><h3>Bill allocation</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
+ <div class="worksheet-columns sh"><h3>Bills</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
  ${p.rows.map(r=>`<div class="worksheet-bill">
  <details class="budget-fund" data-fund="${escHTML(r.bill.id)}"><summary><span class="worksheet-name">${escHTML(r.bill.name)} <span class="worksheet-chevron" aria-hidden="true">⌄</span></span><span class="worksheet-meta">${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}${r.due?' · '+shortDate(r.bill.dueDate):''}</span></summary>
  <div class="budget-fund-edit"><label>Already saved<input data-reserve="${escHTML(r.key)}" aria-label="Already saved for ${escHTML(r.bill.name)}" type="number" min="0" step="0.01" value="${r.saved}"></label><p>${r.paychecks===1?'Due before your next payday.':`Spread across ${r.paychecks} paychecks.`}</p><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit expense</button></div></details>
