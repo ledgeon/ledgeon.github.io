@@ -3673,6 +3673,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-worksheet .simple-fields input,.budget-worksheet .simple-fields select{font-family:var(--ui-font)}
 @media(pointer:coarse){.budget-worksheet input,.budget-worksheet select{font-size:16px!important}}
 .saved-bills-total{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;font-size:12px;color:var(--ink)}.budget-worksheet .saved-bills-total .worksheet-entry{margin:0;width:110px}.budget-worksheet .saved-bills-hint{font-size:11px;margin-top:6px;margin-bottom:6px}.budget-worksheet .worksheet-bill{align-items:start;min-height:49px}.budget-worksheet .worksheet-bill>.worksheet-entry{margin-top:7px}.budget-worksheet .worksheet-bill .budget-fund summary{padding:14px 0!important}
+.spending-suggestion-note{margin:0 20px 12px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
 </style>
 </head>
 
@@ -5800,17 +5801,28 @@ function undoPaycheckSetAside() {
   for(const [key,amount] of Object.entries(p.recorded.allocations))cp.reserves[key]=roundCash(Math.max(0,moneyValue(cp.reserves[key])-moneyValue(amount)));
   delete cp.paycheckPlans[p.check.id];return true;
 }
+function getPaycheckSpendingSuggestions(plan) {
+  const remaining=Math.max(0,roundCash(plan.left));
+  // Starting suggestions, not recorded spending or additional bill reserves.
+  const gas=roundCash(plan.essentials>0?plan.essentials*.3:remaining*.15);
+  const groceries=roundCash(plan.essentials>0?plan.essentials-gas:remaining*.35);
+  const savings=plan.extra>0?plan.extra:roundCash(remaining*.2);
+  const other=roundCash(Math.max(0,remaining-(plan.essentials>0?0:gas+groceries)-(plan.extra>0?0:savings)));
+  return [{label:'Bills',total:plan.reserve},{label:'Groceries',total:groceries},{label:'Gas',total:gas},{label:plan.extra>0?'Cushion':'Savings',total:savings},{label:'Other spending',total:other}].filter(item=>item.total>0);
+}
+
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
- const allocated=roundCash(p.reserve+p.essentials+p.extra);
- const split=[{label:'Bills',total:p.reserve},{label:'Essentials',total:p.essentials},{label:'Cushion',total:p.extra}].filter(item=>item.total>0);
- const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Set aside',availableLabel:'Left to spend',chartLabel:'Paycheck allocation'});
+ const split=getPaycheckSpendingSuggestions(p);
+ const allocated=roundCash(split.reduce((sum,item)=>sum+item.total,0));
+ const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown'});
  const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
  return `<section class="budget-worksheet">
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
- ${sh('This paycheck',{meta:p.recorded?'Saved':'Your allocation'})}
+ ${sh('This paycheck',{meta:'Suggested breakdown'})}
  ${paycheckChart}
+ <p class="spending-suggestion-note" title="After bills: 35% groceries, 15% gas, 20% savings and 30% other spending. Entered essentials replace the groceries/gas suggestion (70/30 split); an entered cushion replaces suggested savings.">Spending amounts are suggestions, not recorded expenses.</p>
  <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span></div>
  <div class="worksheet-body">
  <div class="saved-bills-total"><label for="saved-bills-total">Saved for unpaid bills</label><label class="worksheet-entry"><span aria-hidden="true">$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
