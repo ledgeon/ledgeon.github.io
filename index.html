@@ -3639,6 +3639,12 @@ body {
 .budget-compact .blk{padding-top:18px!important;padding-bottom:4px!important}.budget-compact .blk-v{font-size:30px!important;margin-top:5px!important}.budget-compact .blk-s{margin-top:4px!important;font-size:11px!important}.budget-mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 20px 12px;gap:10px}.budget-mini-stats>div{min-width:0}.budget-mini-stats>div+div{border-left:1px solid var(--border);padding-left:10px}.budget-mini-stats span{display:block;font-size:10px;color:var(--ink-3);margin-bottom:6px}.budget-mini-stats strong{font-size:17px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}.budget-compact-body{padding:5px 20px 18px}.budget-compact-title{display:flex;justify-content:space-between;color:var(--ink-3);font-size:11px;padding:12px 0 5px}.budget-fund{border-bottom:1px solid var(--border-light)}.budget-fund summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;cursor:pointer;font-size:12px}.budget-fund summary::-webkit-details-marker{display:none}.budget-fund summary strong{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}.budget-fund-edit{padding:0 0 12px}.budget-fund-edit p{font-size:10px;line-height:1.5;color:var(--ink-3);margin:6px 0}.budget-fund-edit label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;margin:7px 0}.budget-fund-edit input{width:105px;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-fund-edit button,.budget-text-action{font-size:11px;color:var(--accent);padding:5px 0}.budget-save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.budget-save-button{width:100%;padding:10px 12px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}.budget-save-button:disabled{opacity:.45;cursor:default}.budget-recorded{font-size:12px;color:var(--positive)}.budget-caption{font-size:10px;line-height:1.5;color:var(--ink-3);margin:7px 0 12px}.budget-review{font-size:10px;line-height:1.5;color:var(--warning);margin:6px 0}.budget-options{margin-top:13px}.budget-options summary{font-size:11px;color:var(--ink-3);cursor:pointer}.budget-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;padding:10px 0;border-bottom:1px solid var(--border-light)}.budget-history-row strong{font-weight:500}
 @media(max-width:359px){.budget-mini-stats{gap:6px}.budget-mini-stats>div+div{padding-left:6px}.budget-mini-stats strong{font-size:15px}.budget-mini-stats span{font-size:9px}}
 
+/* Quiet overlay, aligned to the existing pay-period bars. */
+.payperiod-inner{position:relative}
+.payperiod-average{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.payperiod-average path{fill:none;stroke:var(--accent);stroke-width:1.25;stroke-opacity:.8;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.average-key{font-size:10px;color:var(--ink-3);margin-left:8px;white-space:nowrap}
+.average-key::before{content:"";display:inline-block;width:14px;border-top:1px solid var(--accent);opacity:.8;vertical-align:middle;margin-right:4px}
 </style>
 </head>
 
@@ -4836,7 +4842,7 @@ function buildScrollBarChart(list, emptyMsg, options) {
     const barInner = hasIncome
       ? `<div class="bar" style="height:${heightPct}%"></div>`
       : `<div class="bar empty"></div>`;
-    return `<div class="chart-col${colCls}" data-amount="${h.income}" data-label="${escHTML(h.label)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
+    return `<div class="chart-col${colCls}" data-amount="${h.income}" ${Number.isFinite(h.movingAverage) ? `data-moving-average="${h.movingAverage}"` : ''} data-label="${escHTML(h.label)}"><div class="bar-track">${barInner}</div><div class="label">${h.label}</div></div>`;
   }).join('');
 
   let colsHTML = cols;
@@ -5156,6 +5162,7 @@ function renderIncome() {
       trendMeta = 'Pay periods';
     }
 
+    const averages = fourWeekMovingAverages(periodSlice, payHist.periodDays);
     trendList = periodSlice.map((h, idx, arr) => {
       // Tooltip should show the actual date entered on the income item, not the bucket range.
       const receivedDates = state.income
@@ -5181,6 +5188,7 @@ function renderIncome() {
         label,
         tipLabel,
         income: h.income,
+        movingAverage: averages[idx],
         current: h.current
       };
     });
@@ -5228,7 +5236,7 @@ function renderIncome() {
         </div>
         ${incomeChartMode === 'payperiod'
           ? `<div class="payperiod-scroll income-chart-scroll">
-               <div class="payperiod-inner">${cols}</div>
+               <div class="payperiod-inner" data-chart-max="${chartMax}">${cols}<svg class="payperiod-average" role="img" aria-label="Four-week moving average per pay period"><path></path></svg></div>
              </div>`
           : `<div class="monthly-scroll income-chart-scroll">
                <div class="monthly-scroll-inner">${cols}</div>
@@ -5240,7 +5248,7 @@ function renderIncome() {
   const trendHeader = `<div class="sh trend-head">
     <div>
       <h3>Trend</h3>
-      <span class="x">${trendMeta}</span>
+      <span class="x">${trendMeta}</span>${incomeChartMode === 'payperiod' ? '<span class="average-key">4-week avg</span>' : ''}
     </div>
     <div class="chart-mode-links" role="group" aria-label="Income chart interval">
       <button data-action="income-chart-mode" data-mode="monthly" class="${incomeChartMode === 'monthly' ? 'active' : ''}">Monthly</button>
@@ -5884,6 +5892,43 @@ function updateHeader() {
   titleEl.textContent = 'Ledgeon'; // single-page mode: always the app name, not the tab name
 }
 
+// A four-week window is four weekly periods or two biweekly periods.
+// Keep the value in dollars per pay period to match the bars and axis.
+function fourWeekMovingAverages(periods, periodDays) {
+  const count = 28 / periodDays;
+  const first = periods.findIndex(p => p.income > 0);
+  return periods.map((p, i) => first < 0 || i < first + count - 1 ? null :
+    periods.slice(i - count + 1, i + 1).reduce((sum, item) => sum + item.income, 0) / count);
+}
+
+let payAverageObserver = null;
+function refreshPayPeriodAverage() {
+  if (payAverageObserver) payAverageObserver.disconnect();
+  const inner = document.querySelector('.payperiod-inner');
+  if (!inner) return;
+  const draw = () => {
+    const svg = inner.querySelector('.payperiod-average');
+    if (!svg || !inner.isConnected) return;
+    const bounds = inner.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
+    const max = Number(inner.dataset.chartMax);
+    let path = '';
+    inner.querySelectorAll('[data-moving-average]').forEach(col => {
+      const track = col.querySelector('.bar-track').getBoundingClientRect();
+      const x = track.left - bounds.left + track.width / 2;
+      const y = track.bottom - bounds.top - Number(col.dataset.movingAverage) / max * track.height;
+      path += `${path ? ' L' : 'M'}${x.toFixed(2)},${y.toFixed(2)}`;
+    });
+    svg.querySelector('path').setAttribute('d', path);
+  };
+  draw();
+  if (typeof ResizeObserver !== 'undefined') {
+    payAverageObserver = new ResizeObserver(draw);
+    payAverageObserver.observe(inner);
+  }
+}
+
 function render() {
   syncPercentBills();
   updateBadges();
@@ -5896,6 +5941,7 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
+  refreshPayPeriodAverage();
   window.scrollTo({ top: 0, behavior: 'instant' });
   syncOverlayHistory();
 }
@@ -5954,8 +6000,9 @@ if (document.readyState === 'loading') {
 function showBarTooltip(col, x, y) {
   const tooltip = document.getElementById('bar-tooltip');
   const amount = parseFloat(col.dataset.amount);
-  if (!amount) { tooltip.style.opacity = '0'; return; }
-  tooltip.innerHTML = `<div class="bt-label">${col.dataset.label}</div>${fmtMoney(amount, {round:true})}`;
+  const average = parseFloat(col.dataset.movingAverage);
+  if (!amount && !Number.isFinite(average)) { tooltip.style.opacity = '0'; return; }
+  tooltip.innerHTML = `<div class="bt-label">${col.dataset.label}</div>${fmtMoney(amount, {round:true})}${Number.isFinite(average) ? `<div class="bt-label">4-week avg ${fmtMoney(average, {round:true})}</div>` : ''}`;
   tooltip.style.opacity = '0';
   tooltip.style.left = '0px';
   tooltip.style.top = '0px';
