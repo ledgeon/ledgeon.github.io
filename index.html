@@ -3701,6 +3701,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .paycheck-footer .plan-settings>summary::-webkit-details-marker{display:none}
 .paycheck-footer .plan-settings[open]>.simple-fields{grid-column:1/-1;margin-top:8px;padding-top:12px;border-top:1px solid var(--border-light)}
 .paycheck-footer .plan-settings:not([open])>.simple-fields{display:none}
+.income-overview>.blk .blk-v{color:var(--accent)!important}
+.blk-s .expense-income-ratio{color:var(--accent)!important;font-weight:600}
 </style>
 </head>
 
@@ -5051,7 +5053,7 @@ function renderIncome() {
   const nowD = new Date();
 
   const ytdSub = stats.ytdHours > 0
-    ? `<span>${fmtHM(stats.ytdHours)}</span><span>$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? '<span>' + fmtMoney(stats.ytdTips, {round:true}) + ' cash</span>' : ''}`
+    ? `<span>${Math.round(stats.ytdHours).toLocaleString()} hrs</span><span>$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? '<span>' + fmtMoney(stats.ytdTips, {round:true}) + ' cash</span>' : ''}`
     : '';
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
@@ -5520,7 +5522,7 @@ function renderExpenses() {
     'Expenses',
     fmtMoney(recurringMonthly, {round:true}),
     ytdMonthlyIncome > 0
-      ? `<span class="a">${expensePctIncome.toFixed(0)}% of ${fmtMoney(ytdMonthlyIncome, {round:true})} avg income</span>`
+      ? `<span class="expense-income-ratio">${expensePctIncome.toFixed(0)}%</span> of ${fmtMoney(ytdMonthlyIncome, {round:true})} avg income`
       : ''
   );
 
