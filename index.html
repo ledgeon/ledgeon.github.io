@@ -3682,8 +3682,25 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-worksheet .worksheet-save .budget-save-button{width:auto;min-height:0;padding:6px 0;border-radius:0;background:transparent;color:var(--accent);font-size:12px;font-weight:600;text-align:left}
 .budget-worksheet .worksheet-save .budget-save-button:hover{text-decoration:underline}
 /* Distinct, muted Budget colors; Expenses keeps its purple palette. */
-.budget-worksheet{--budget-bills:var(--accent);--budget-groceries:#dfa56c;--budget-gas:#d58b88;--budget-savings:#8db29b;--budget-other:#88a9c7}
-[data-theme="dark"] .budget-worksheet{--budget-groceries:#d8a475;--budget-gas:#d99491;--budget-savings:#93b79f;--budget-other:#93b1cf}
+.budget-worksheet{--budget-bills:var(--accent);--budget-groceries:#e58e46;--budget-gas:#e54e46;--budget-savings:#46e58e;--budget-other:#469be5}
+[data-theme="dark"] .budget-worksheet{--budget-groceries:#f8bc8b;--budget-gas:#f8908b;--budget-savings:#8bf8bc;--budget-other:#8bc5f8}
+/* Compact bill list and a single paycheck summary/footer. */
+.budget-worksheet .simple-bill-row{padding:8px 0;gap:12px}
+.budget-worksheet .simple-bill-row .worksheet-name,.budget-worksheet .simple-bill-amount{font-size:12px;font-weight:500}
+.budget-worksheet .worksheet-columns{padding-top:14px!important;padding-bottom:6px!important}
+.budget-worksheet .paycheck-summary{margin-top:14px;padding:10px 12px;background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:6px}
+.budget-worksheet .paycheck-summary>div{padding:6px 0;font-size:12px;min-height:28px}
+.budget-worksheet .paycheck-summary strong{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.budget-worksheet .paycheck-summary .worksheet-entry{width:94px;margin:0;background:var(--bg)}
+.budget-worksheet .paycheck-summary .budget-check-left{margin:6px 0 0;padding:10px 0 2px;border-top:1px solid var(--border)}
+.budget-worksheet .paycheck-summary .budget-check-left strong{font-size:18px;color:var(--accent)}
+.paycheck-footer{display:grid;grid-template-columns:1fr auto;align-items:center;gap:0 16px;margin-top:8px}
+.budget-worksheet .paycheck-footer .worksheet-save{grid-column:1;grid-row:1;margin:0;justify-content:flex-start;gap:12px;min-height:34px}
+.budget-worksheet .paycheck-footer .plan-settings{display:contents}
+.paycheck-footer .plan-settings>summary{grid-column:2;grid-row:1;list-style:none;text-align:right;padding:8px 0;cursor:pointer;font-size:11px;color:var(--ink-3)}
+.paycheck-footer .plan-settings>summary::-webkit-details-marker{display:none}
+.paycheck-footer .plan-settings[open]>.simple-fields{grid-column:1/-1;margin-top:8px;padding-top:12px;border-top:1px solid var(--border-light)}
+.paycheck-footer .plan-settings:not([open])>.simple-fields{display:none}
 </style>
 </head>
 
@@ -5832,25 +5849,22 @@ function renderBudget() {
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
  ${sh('This paycheck',{meta:'Suggested breakdown'})}
  ${paycheckChart}
- <p class="spending-suggestion-note" title="After bills: 35% groceries, 15% gas, 20% savings and 30% other spending. Entered essentials replace the groceries/gas suggestion (70/30 split); an entered cushion replaces suggested savings.">Spending amounts are suggestions, not recorded expenses.</p>
  <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span></div>
  <div class="worksheet-body">
  <div class="saved-bills-total"><label for="saved-bills-total">Saved for unpaid bills</label><label class="worksheet-entry"><span aria-hidden="true">$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
- <p class="worksheet-note saved-bills-hint">Update this to what you have set aside right now.</p>
  <div class="worksheet-columns sh"><h3>Bills</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
  ${p.rows.map(r=>`<div class="worksheet-bill simple-bill-row"><span class="worksheet-name">${escHTML(r.bill.name)}</span><strong class="simple-bill-amount">${fmtMoney(r.allocation)}</strong></div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
  ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review in Expenses.</p>':''}
- <div class="budget-check-totals worksheet-totals">
+ <div class="budget-check-totals worksheet-totals paycheck-summary">
+ <div><span>Paycheck</span><strong>${fmtMoney(p.available)}</strong></div>
  <div><span>Total for bills</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Total set aside</span><span aria-hidden="true">$</span><input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></label>`}</div>
  ${p.essentials?`<div><span>Food, gas & essentials</span><strong>${fmtMoney(p.essentials)}</strong></div>`:''}
  ${p.extra?`<div><span>Cushion</span><strong>${fmtMoney(p.extra)}</strong></div>`:''}
- ${p.essentials || p.extra?`<div><span>Total allocated</span><strong>${fmtMoney(p.reserve+p.essentials+p.extra)}</strong></div>`:''}
  <div class="budget-check-left"><span>${p.left<0?'Over this paycheck':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
  </div>
  ${p.unfunded>0?`<p class="budget-review">${fmtMoney(p.unfunded)} of planned bill funding is still uncovered.</p>`:''}
- <div class="worksheet-save">${p.recorded?`<span class="budget-recorded">${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside · ${fmtMoney(p.reserve)}</button>`}</div>
- <p class="worksheet-note">${p.recorded?'Your saved amounts carry forward to the next paycheck.':`${fmtMoney(p.savedTotal+p.reserve)} saved for bills after this set-aside.`}</p>
- <details class="budget-options plan-settings"><summary>Paycheck settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details>
+ <div class="paycheck-footer"><div class="worksheet-save">${p.recorded?`<span class="budget-recorded">${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div>
+ <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  ${history.length?`<details class="budget-options"><summary>Saved paychecks</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
  </div></section>`;
 }
