@@ -3633,6 +3633,12 @@ body {
 
 .simple-plan{padding:24px 20px 30px}.simple-heading,.simple-total,.simple-left{display:flex;justify-content:space-between;align-items:center;gap:12px}.simple-heading{font-size:12px;font-weight:600;margin-bottom:12px}.quiet,.simple-note{color:var(--ink-3)}.simple-bill{border-bottom:1px solid var(--border-light)}.simple-bill summary{display:flex;align-items:center;justify-content:space-between;gap:14px;list-style:none;padding:13px 0;cursor:pointer}.simple-bill summary::-webkit-details-marker{display:none}.simple-name{font-size:13px;font-weight:500}.simple-bill small,.simple-total small{display:block;color:var(--ink-3);font-size:11px;margin-top:4px}.simple-bill strong{font-size:14px;font-weight:600}.simple-total{padding:15px 0;font-size:12px;color:var(--ink-3)}.simple-left{border-top:1px solid var(--border);padding:22px 0;margin-top:8px;font-size:12px}.simple-left strong{font-size:27px;letter-spacing:-.7px}.simple-settings{margin:9px 0 20px}.simple-settings summary,.simple-history summary{font-size:12px;color:var(--ink-3);cursor:pointer}.simple-fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.simple-fields label{font-size:11px;color:var(--ink-3)}.simple-fields input,.simple-fields select,.simple-bill-edit input{width:100%;min-width:0;padding:9px;margin-top:6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:14px;color:var(--ink)}.simple-bill-edit{padding:8px 0 16px}.simple-bill-edit label{font-size:12px;display:flex;align-items:center;justify-content:space-between}.simple-bill-edit input{width:105px}.simple-bill-edit button,.simple-history button{font-size:12px;color:var(--accent);margin-top:9px}.simple-note{font-size:11px;line-height:1.6;margin:8px 0 18px}.simple-history{margin:24px 20px}.source-delete{margin:26px 20px}.source-delete button{color:var(--negative);font-size:12px}.source-delete p,.source-average-note{font-size:10px;color:var(--ink-3);margin-top:6px}.source-summary-grid .source-summary-item:first-child{grid-column:1/-1}.schedule-tools{border-top:1px solid var(--border);margin-top:16px;padding-top:16px}.schedule-tools p{font-size:12px;line-height:1.5;margin-bottom:12px}.schedule-tools .action-primary{background:var(--accent-soft);color:var(--accent);padding:10px 14px;border-radius:7px;width:100%;margin-bottom:14px;font-size:12px;font-weight:600}.schedule-tools summary{font-size:11px;color:var(--ink-3);cursor:pointer}.schedule-tools details p{margin-top:12px}.schedule-tools .action-light{font-size:12px;color:var(--accent);padding:8px 0}
 
+
+.budget-fund-cycle+.budget-fund-cycle{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}
+/* Compact paycheck ledger; scoped to Budget, using the existing site palette. */
+.budget-compact .blk{padding-top:18px!important;padding-bottom:4px!important}.budget-compact .blk-v{font-size:30px!important;margin-top:5px!important}.budget-compact .blk-s{margin-top:4px!important;font-size:11px!important}.budget-mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 20px 12px;gap:10px}.budget-mini-stats>div{min-width:0}.budget-mini-stats>div+div{border-left:1px solid var(--border);padding-left:10px}.budget-mini-stats span{display:block;font-size:10px;color:var(--ink-3);margin-bottom:6px}.budget-mini-stats strong{font-size:17px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}.budget-compact-body{padding:5px 20px 18px}.budget-compact-title{display:flex;justify-content:space-between;color:var(--ink-3);font-size:11px;padding:12px 0 5px}.budget-fund{border-bottom:1px solid var(--border-light)}.budget-fund summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;cursor:pointer;font-size:12px}.budget-fund summary::-webkit-details-marker{display:none}.budget-fund summary strong{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}.budget-fund-edit{padding:0 0 12px}.budget-fund-edit p{font-size:10px;line-height:1.5;color:var(--ink-3);margin:6px 0}.budget-fund-edit label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;margin:7px 0}.budget-fund-edit input{width:105px;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-fund-edit button,.budget-text-action{font-size:11px;color:var(--accent);padding:5px 0}.budget-save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.budget-save-button{width:100%;padding:10px 12px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}.budget-save-button:disabled{opacity:.45;cursor:default}.budget-recorded{font-size:12px;color:var(--positive)}.budget-caption{font-size:10px;line-height:1.5;color:var(--ink-3);margin:7px 0 12px}.budget-review{font-size:10px;line-height:1.5;color:var(--warning);margin:6px 0}.budget-options{margin-top:13px}.budget-options summary{font-size:11px;color:var(--ink-3);cursor:pointer}.budget-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;padding:10px 0;border-bottom:1px solid var(--border-light)}.budget-history-row strong{font-weight:500}
+@media(max-width:359px){.budget-mini-stats{gap:6px}.budget-mini-stats>div+div{padding-left:6px}.budget-mini-stats strong{font-size:15px}.budget-mini-stats span{font-size:9px}}
+
 </style>
 </head>
 
@@ -5682,64 +5688,91 @@ function renderPaydayPlan() {
   </section>`;
 }
 
+function shortDate(value) { const d=parseISODate(value); return d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'No date'; }
+function paycheckDate(item) {
+  const raw=item?.receivedAt || item?.createdAt;
+  return typeof raw==='number' ? isoDate(new Date(raw)) : String(raw || '');
+}
+function roundCash(value) { return Math.round((Number(value)||0)*100)/100; }
+function billFundKey(bill) { return bill.id+':'+(bill.dueDate||'undated'); }
+function moveBillFund(bill,newDate) {
+  const cp=state.cashPlan || {},oldKey=billFundKey(bill),newKey=bill.id+':'+(newDate||'undated');
+  if(oldKey===newKey || !cp.reserves || !moneyValue(cp.reserves[oldKey]))return;
+  cp.reserves[newKey]=roundCash(moneyValue(cp.reserves[newKey])+moneyValue(cp.reserves[oldKey]));
+  delete cp.reserves[oldKey];
+}
 function getPaycheckPlan() {
   const today = isoDate(todayStart());
-  const checks = state.income.filter(i => (i.receivedAt || i.createdAt || '') <= today && (i.receivedAt || i.createdAt) && moneyValue(i.amount) > 0)
-    .sort((a,b) => (b.receivedAt || b.createdAt).localeCompare(a.receivedAt || a.createdAt));
-  const check = checks[0];
-  const cp = state.cashPlan || {};
-  const cadence = ['weekly','biweekly','monthly'].includes(cp.cadence) ? cp.cadence : detectPayPeriodType();
-  const anchor = todayStart();
-  const next = cp.nextPayDate > today ? parseISODate(cp.nextPayDate) : nextBillDate(anchor, cadence, anchor.getDate());
-  const available = cp.paycheckId === check?.id && cp.paycheckAmount !== undefined ? moneyValue(cp.paycheckAmount) : moneyValue(check?.amount);
-  const obligations = state.bills.filter(b => !(b.paid && (!b.recurring || b.recurring === 'once')) && moneyValue(b.amount) > 0).flatMap(b => {
-    const due = parseISODate(b.dueDate);
-    const list = [b];
-    if (!due || !b.recurring || b.recurring === 'once') return list;
-    let d = nextBillDate(due,b.recurring,b.anchorDay || due.getDate()), guard=0;
-    while (d && d <= next && guard++ < 600) {
-      list.push({...b,dueDate:isoDate(d)});
-      d=nextBillDate(d,b.recurring,b.anchorDay || due.getDate());
-    }
+  const checks = state.income.filter(i => paycheckDate(i) && paycheckDate(i)<=today && moneyValue(i.amount)>0)
+    .sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
+  const check=checks[0],cp=state.cashPlan || {};
+  const cadence=['weekly','biweekly','monthly'].includes(cp.cadence)?cp.cadence:detectPayPeriodType();
+  const anchor=parseISODate(paycheckDate(check)) || todayStart();
+  let inferred=nextBillDate(anchor,cadence,anchor.getDate()),guard=0;
+  while(inferred && isoDate(inferred)<=today && guard++<600)inferred=nextBillDate(inferred,cadence,anchor.getDate());
+  const next=cp.nextPayDate>today?parseISODate(cp.nextPayDate):inferred;
+  const available=cp.paycheckId===check?.id && cp.paycheckAmount!==undefined?moneyValue(cp.paycheckAmount):moneyValue(check?.amount);
+  const recorded=cp.paycheckPlans?.[check?.id] || null;
+  const draft=cp.paycheckDrafts?.[check?.id] || {};
+  const obligations=state.bills.filter(b=>!(b.paid && (!b.recurring || b.recurring==='once')) && moneyValue(b.amount)>0).flatMap(b=>{
+    const due=parseISODate(b.dueDate),list=[b];
+    if(!due || !b.recurring || b.recurring==='once')return list;
+    let d=nextBillDate(due,b.recurring,b.anchorDay||due.getDate()),g=0;
+    while(d && d<=next && g++<600){list.push({...b,dueDate:isoDate(d)});d=nextBillDate(d,b.recurring,b.anchorDay||due.getDate());}
     return list;
   });
-  const rows = obligations.map(b => {
-    const due = parseISODate(b.dueDate);
-    const key = b.id + ':' + (b.dueDate || 'undated');
-    const saved = moneyValue(cp.reserves?.[key]);
-    let paychecks = 1;
-    if (due && next) {
-      let d = new Date(next), guard = 0;
-      // A bill on payday is reserved beforehand; future paychecks are not assumed to have arrived.
-      while (d < due && guard++ < 600) {
-        paychecks++;
-        d = nextBillDate(d, cadence, next.getDate());
-      }
-    }
-    const needed = Math.max(0, moneyValue(b.amount) - saved);
-    return { bill:b, key, saved, due, paychecks, allocation: Math.ceil(needed / paychecks * 100) / 100 };
-  });
-  const reserve = rows.reduce((a,r) => a+r.allocation,0);
-  const essentials = moneyValue(cp.essentials);
-  const extra = moneyValue(cp.paycheckBuffer);
-  return { check, cadence, next, available, rows, reserve, essentials, extra, left:available-reserve-essentials-extra };
+  const rows=obligations.map(b=>{
+    const due=parseISODate(b.dueDate),key=billFundKey(b),saved=moneyValue(cp.reserves?.[key]);
+    let paychecks=1;
+    if(due && next){let d=new Date(next),g=0;while(d<due && g++<600){paychecks++;d=nextBillDate(d,cadence,next.getDate());}}
+    const needed=roundCash(Math.max(0,moneyValue(b.amount)-saved));
+    const suggested=Math.ceil(needed/paychecks*100)/100;
+    const allocation=recorded?moneyValue(recorded.allocations[key]):Object.prototype.hasOwnProperty.call(draft,key)?Math.min(needed,moneyValue(draft[key])):suggested;
+    return {bill:b,key,saved,due,paychecks,needed,suggested,allocation};
+  }).sort((a,b)=>(a.bill.dueDate||'9999').localeCompare(b.bill.dueDate||'9999'));
+  const reserve=roundCash(recorded?Object.values(recorded.allocations).reduce((a,v)=>a+moneyValue(v),0):rows.reduce((a,r)=>a+r.allocation,0));
+  const activeIds=new Set(state.bills.map(b=>String(b.id)));
+  const savedTotal=roundCash(Object.entries(cp.reserves||{}).filter(([key])=>activeIds.has(key.slice(0,key.lastIndexOf(':')))).reduce((sum,[,value])=>sum+moneyValue(value),0));
+  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
+  const left=roundCash(available-reserve-essentials-extra);
+  const canUndo=!!recorded && Object.entries(recorded.allocations).every(([key,amt])=>moneyValue(cp.reserves?.[key])+0.001>=moneyValue(amt));
+  return {check,cadence,next,available,rows,reserve,essentials,extra,left,recorded,savedTotal,canUndo};
 }
-
-function shortDate(value) { const d=parseISODate(value); return d ? d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'No date'; }
+function recordPaycheckSetAside() {
+  const p=getPaycheckPlan();
+  if(!p.check || p.recorded || p.reserve<=0 || p.left<0)return false;
+  const cp=state.cashPlan={...DEFAULT_CASH_PLAN,...(state.cashPlan||{})};
+  cp.reserves={...(cp.reserves||{})};cp.paycheckPlans={...(cp.paycheckPlans||{})};
+  const allocations={};
+  for(const r of p.rows){if(r.allocation>0){allocations[r.key]=r.allocation;cp.reserves[r.key]=roundCash(moneyValue(cp.reserves[r.key])+r.allocation);}}
+  cp.paycheckPlans[p.check.id]={allocations,date:isoDate(todayStart()),paycheckDate:paycheckDate(p.check),source:p.check.source||'Income',recordedAt:Date.now()};
+  if(cp.paycheckDrafts)delete cp.paycheckDrafts[p.check.id];
+  return true;
+}
+function undoPaycheckSetAside() {
+  const p=getPaycheckPlan();if(!p.recorded || !p.canUndo)return false;
+  const cp=state.cashPlan;
+  for(const [key,amount] of Object.entries(p.recorded.allocations))cp.reserves[key]=roundCash(Math.max(0,moneyValue(cp.reserves[key])-moneyValue(amount)));
+  delete cp.paycheckPlans[p.check.id];return true;
+}
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
- const alert=p.rows.some(r=>!r.due || r.due<todayStart());
- return `${blk('Latest paycheck',fmtMoney(p.check.amount),`${escHTML(p.check.source||'Income')} · ${exactDate(p.check.receivedAt||p.check.createdAt)}`)}
- <div class="simple-plan">
- <div class="simple-heading"><span>Set aside for bills</span><span class="quiet">This check</span></div>
- ${alert?'<p class="simple-note">Some bill dates need review in Expenses. Overdue amounts are included until you mark them paid or update their dates.</p>':''}
- ${p.rows.map(r=>`<details class="simple-bill"><summary><span><span class="simple-name">${escHTML(r.bill.name)}</span><small>${fmtMoney(r.bill.amount)} · ${r.due?exactDate(r.bill.dueDate):'No due date'}</small></span><strong>${fmtMoney(r.allocation)}</strong></summary><div class="simple-bill-edit"><label>Already saved <input data-reserve="${escHTML(r.key)}" type="number" min="0" step="0.01" value="${r.saved}" aria-label="Already saved for ${escHTML(r.bill.name)}"></label><small>${r.paychecks===1?'Needed before next payday':`Spread across ${r.paychecks} paychecks before the due date`}</small><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
- <div class="simple-total"><span>Total for bills</span><strong>${fmtMoney(p.reserve)}</strong></div>
- ${p.essentials+p.extra>0?`<div class="simple-total"><span>Essentials & cushion</span><strong>${fmtMoney(p.essentials+p.extra)}</strong></div>`:''}
- <div class="simple-left"><span>${p.left<0?'Short by':'Left after set-asides'}</span><strong class="${p.left<0?'negative':''}">${fmtMoney(Math.abs(p.left))}</strong></div>
- <details class="simple-settings plan-settings"><summary>Next payday ${exactDate(isoDate(p.next))} · Adjust plan</summary><div class="simple-fields"><label>Amount available<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Extra cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details>
- <p class="simple-note">Tap a bill to update money already saved. This is a suggested split, not an automatic transfer. Allow for food and gas before spending the remainder.</p></div>`;
+ const groups=[...new Set(p.rows.map(r=>r.bill.id))].map(id=>p.rows.filter(r=>r.bill.id===id));
+ const needsReview=p.rows.some(r=>!r.due || r.due<todayStart());
+ const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
+ return `<section class="budget-compact">
+ ${blk('Latest paycheck',fmtMoney(p.check.amount),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
+ <div class="budget-mini-stats"><div><span>Saved for bills</span><strong>${fmtMoney(p.savedTotal)}</strong></div><div><span>${p.recorded?'From this check':'Set aside now'}</span><strong>${fmtMoney(p.reserve)}</strong></div><div><span>${p.left<0?'Short by':'Left to spend'}</span><strong class="${p.left<0?'negative':''}">${fmtMoney(Math.abs(p.left))}</strong></div></div>
+ <div class="budget-compact-body">
+ <div class="budget-compact-title"><span>Bills</span><span>${p.recorded?'Recorded':'This check'}</span></div>
+ ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses.</div>':''}
+ ${groups.map(rs=>`<details class="budget-fund" data-fund="${escHTML(rs[0].bill.id)}"><summary><span>${escHTML(rs[0].bill.name)}</span><strong>${fmtMoney(rs.reduce((v,r)=>v+r.allocation,0))}</strong></summary><div class="budget-fund-edit">${rs.map(r=>`<div class="budget-fund-cycle"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}</p><label>Total already saved<input data-reserve="${escHTML(r.key)}" aria-label="Total saved for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')}" type="number" min="0" step="0.01" value="${r.saved}"></label>${!p.recorded?`<label>Set aside from this check<input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')} from this check" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation}"></label>`:''}<p>${r.paychecks===1?'Remaining balance is needed before next payday.':`Remaining balance spread over ${r.paychecks} paychecks.`}</p></div>`).join('')}<button data-action="edit" data-type="expenses" data-id="${escHTML(rs[0].bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
+ <div class="budget-save-row">${p.recorded?`<span class="budget-recorded">✓ ${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside ${fmtMoney(p.reserve)}</button>`}</div>
+ <div class="budget-caption">${p.recorded?'Saved totals carry forward to your next paycheck.':p.left<0?'Tap bills to adjust amounts to what this check can cover.':'Record money you’ve put aside. No bank transfer is made.'}</div>
+ <details class="budget-options plan-settings"><summary>Adjust plan · Next payday ${shortDate(isoDate(p.next))}</summary><div class="simple-fields"><label>Check amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Extra cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div><p class="budget-caption">Check amount includes any money already set aside from this check.</p></details>
+ ${history.length?`<details class="budget-options"><summary>Set-aside history</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
+ </div></section>`;
 }
 
 function renderBudgetSpendingDetail() {
@@ -6058,6 +6091,10 @@ document.addEventListener('click', e => {
     }
     return;
   }
+  if(act==='record-set-aside' || act==='undo-set-aside') {
+    const changed=act==='record-set-aside'?recordPaycheckSetAside():undoPaycheckSetAside();
+    if(changed){saveState();render();}return;
+  }
   if (act === 'pay-bill' || act === 'roll-bill') {
     const b = state.bills.find(b=>b.id===btn.dataset.id);
     if (!b) return;
@@ -6069,10 +6106,14 @@ document.addEventListener('click', e => {
       b.anchorDay = b.anchorDay || due.getDate();
       let next = due, guard = 0;
       while (next < todayStart() && guard++ < 600) next = nextBillDate(next,b.recurring,b.anchorDay);
+      moveBillFund(b,isoDate(next));
       b.dueDate = isoDate(next); b.paid=false;
     } else {
       const next = recurring ? nextBillDate(due,b.recurring,b.anchorDay || due.getDate()) : null;
-      state.payments.push({id:nextId('payments'),billId:b.id,name:b.name,amount:moneyValue(b.amount),category:b.category,date:isoDate(todayStart()),dueDate:b.dueDate,recordedAt:Date.now(),previous:{dueDate:b.dueDate,paid:!!b.paid,anchorDay:b.anchorDay},afterDue:next?isoDate(next):b.dueDate});
+      const fundKey=billFundKey(b);
+      const fundUsed=Math.min(moneyValue(state.cashPlan?.reserves?.[fundKey]),moneyValue(b.amount));
+      if(fundUsed>0)state.cashPlan.reserves[fundKey]=roundCash(moneyValue(state.cashPlan.reserves[fundKey])-fundUsed);
+      state.payments.push({fundKey,fundUsed,id:nextId('payments'),billId:b.id,name:b.name,amount:moneyValue(b.amount),category:b.category,date:isoDate(todayStart()),dueDate:b.dueDate,recordedAt:Date.now(),previous:{dueDate:b.dueDate,paid:!!b.paid,anchorDay:b.anchorDay},afterDue:next?isoDate(next):b.dueDate});
       if (next) { b.anchorDay=b.anchorDay || due.getDate(); b.dueDate=isoDate(next); b.paid=false; }
       else b.paid=true;
     }
@@ -6084,6 +6125,7 @@ document.addEventListener('click', e => {
     const b = p && state.bills.find(b=>b.id===p.billId);
     if (!b || !p.previous) return;
     if (b.dueDate !== p.afterDue) { alert('This bill’s schedule has changed. Edit its due date before undoing this payment.'); return; }
+    if(p.fundUsed){state.cashPlan.reserves={...(state.cashPlan.reserves||{}),[p.fundKey]:roundCash(moneyValue(state.cashPlan.reserves?.[p.fundKey])+p.fundUsed)};}
     Object.assign(b,p.previous); state.payments=state.payments.filter(q=>q.id!==p.id);
     saveState(); render(); return;
   }
@@ -6214,18 +6256,21 @@ document.getElementById('file-import').addEventListener('change', e => {
 });
 
 document.addEventListener('change', e => {
-  if (e.target.dataset.plan || e.target.dataset.reserve) {
+  if (e.target.dataset.plan || e.target.dataset.reserve || e.target.dataset.allocation) {
     const plan = getPaycheckPlan();
     state.cashPlan = { ...DEFAULT_CASH_PLAN, ...(state.cashPlan || {}) };
-    if (e.target.dataset.reserve) state.cashPlan.reserves = { ...(state.cashPlan.reserves || {}), [e.target.dataset.reserve]:moneyValue(e.target.value) };
+    if(e.target.dataset.allocation){const key=e.target.dataset.allocation,r=plan.rows.find(r=>r.key===key);if(r && !plan.recorded){state.cashPlan.paycheckDrafts={...(state.cashPlan.paycheckDrafts||{}),[plan.check.id]:{...(state.cashPlan.paycheckDrafts?.[plan.check.id]||{}),[key]:Math.min(r.needed,moneyValue(e.target.value))}};}}
+    else if (e.target.dataset.reserve) state.cashPlan.reserves = { ...(state.cashPlan.reserves || {}), [e.target.dataset.reserve]:moneyValue(e.target.value) };
     else {
       state.cashPlan[e.target.dataset.plan] = e.target.value;
       if (e.target.dataset.plan === 'paycheckAmount') state.cashPlan.paycheckId=plan.check?.id;
     }
+    const openFunds=[...document.querySelectorAll('.budget-fund[open]')].map(el=>el.dataset.fund);
     const settingsOpen = document.querySelector('.plan-settings')?.open;
     const scroll = window.scrollY;
     saveState(); render();
     if (settingsOpen && document.querySelector('.plan-settings')) document.querySelector('.plan-settings').open=true;
+    document.querySelectorAll('.budget-fund').forEach(el=>{el.open=openFunds.includes(el.dataset.fund)});
     window.scrollTo(0,scroll);
   }
   else if (e.target.dataset.cashPlan) {
@@ -6390,7 +6435,7 @@ document.querySelectorAll('form[data-type]').forEach(f => {
       item.name = fd.get('name');
       item.category = fd.get('category'); item.recurring = fd.get('recurring') || 'monthly';
       const newDue = fd.get('date') || null;
-      if (newDue !== item.dueDate) { item.anchorDay = newDue ? parseISODate(newDue).getDate() : null; item.paid = false; }
+      if (newDue !== item.dueDate) { moveBillFund(item,newDue); item.anchorDay = newDue ? parseISODate(newDue).getDate() : null; item.paid = false; }
       item.dueDate = newDue;
 
       delete item.isPercent;
