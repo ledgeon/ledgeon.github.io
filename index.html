@@ -5727,13 +5727,8 @@ function getPaycheckPlan() {
   const available=cp.paycheckId===check?.id && cp.paycheckAmount!==undefined?moneyValue(cp.paycheckAmount):moneyValue(check?.amount);
   const recorded=cp.paycheckPlans?.[check?.id] || null;
   const draft=cp.paycheckDrafts?.[check?.id] || {};
-  const obligations=state.bills.filter(b=>!(b.paid && (!b.recurring || b.recurring==='once')) && moneyValue(b.amount)>0).flatMap(b=>{
-    const due=parseISODate(b.dueDate),list=[b];
-    if(!due || !b.recurring || b.recurring==='once')return list;
-    let d=nextBillDate(due,b.recurring,b.anchorDay||due.getDate()),g=0;
-    while(d && d<=next && g++<600){list.push({...b,dueDate:isoDate(d)});d=nextBillDate(d,b.recurring,b.anchorDay||due.getDate());}
-    return list;
-  });
+  // Use each entered expense once; stale dates are not evidence of unpaid arrears.
+  const obligations=state.bills.filter(b=>!(b.paid && (!b.recurring || b.recurring==='once')) && moneyValue(b.amount)>0);
   const rows=obligations.map(b=>{
     const due=parseISODate(b.dueDate),key=billFundKey(b),saved=moneyValue(cp.reserves?.[key]);
     let paychecks=1;
@@ -5743,13 +5738,20 @@ function getPaycheckPlan() {
     const allocation=recorded?moneyValue(recorded.allocations[key]):Object.prototype.hasOwnProperty.call(draft,key)?Math.min(needed,moneyValue(draft[key])):suggested;
     return {bill:b,key,saved,due,paychecks,needed,suggested,allocation};
   }).sort((a,b)=>(a.bill.dueDate||'9999').localeCompare(b.bill.dueDate||'9999'));
+  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
+  const requested=roundCash(rows.reduce((sum,r)=>sum+r.allocation,0));
+  let remaining=Math.max(0,roundCash(available-essentials-extra));
+  if(!recorded)for(const row of rows){
+    row.allocation=roundCash(Math.min(row.allocation,remaining));
+    remaining=roundCash(remaining-row.allocation);
+  }
+  const unfunded=recorded?0:roundCash(Math.max(0,requested-Math.max(0,available-essentials-extra)));
   const reserve=roundCash(recorded?Object.values(recorded.allocations).reduce((a,v)=>a+moneyValue(v),0):rows.reduce((a,r)=>a+r.allocation,0));
   const activeIds=new Set(state.bills.map(b=>String(b.id)));
   const savedTotal=roundCash(Object.entries(cp.reserves||{}).filter(([key])=>activeIds.has(key.slice(0,key.lastIndexOf(':')))).reduce((sum,[,value])=>sum+moneyValue(value),0));
-  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
   const left=roundCash(available-reserve-essentials-extra);
   const canUndo=!!recorded && Object.entries(recorded.allocations).every(([key,amt])=>moneyValue(cp.reserves?.[key])+0.001>=moneyValue(amt));
-  return {check,cadence,next,available,rows,reserve,essentials,extra,left,recorded,savedTotal,canUndo};
+  return {check,cadence,next,available,rows,reserve,essentials,extra,left,recorded,savedTotal,canUndo,unfunded};
 }
 function recordPaycheckSetAside() {
   const p=getPaycheckPlan();
@@ -5779,7 +5781,8 @@ function renderBudget() {
  <div class="budget-mini-stats"><div><span>Saved for bills</span><strong>${fmtMoney(p.savedTotal)}</strong></div><div><span>${p.recorded?'From this check':'Set aside now'}</span><strong>${fmtMoney(p.reserve)}</strong></div><div><span>${p.left<0?'Short by':'Left to spend'}</span><strong class="${p.left<0?'negative':''}">${fmtMoney(Math.abs(p.left))}</strong></div></div>
  <div class="budget-compact-body">
  <div class="budget-compact-title"><span>Bills</span><span>${p.recorded?'Recorded':'This check'}</span></div>
- ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses.</div>':''}
+ ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses. Each bill is counted once.</div>':''}
+ ${p.unfunded>0?`<div class="budget-review">${fmtMoney(p.unfunded)} of the planned bill funding still needs covering. This check funds the earliest due bills first.</div>`:''}
  ${groups.map(rs=>`<details class="budget-fund" data-fund="${escHTML(rs[0].bill.id)}"><summary><span>${escHTML(rs[0].bill.name)}</span><strong>${fmtMoney(rs.reduce((v,r)=>v+r.allocation,0))}</strong></summary><div class="budget-fund-edit">${rs.map(r=>`<div class="budget-fund-cycle"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}</p><label>Total already saved<input data-reserve="${escHTML(r.key)}" aria-label="Total saved for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')}" type="number" min="0" step="0.01" value="${r.saved}"></label>${!p.recorded?`<label>Set aside from this check<input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')} from this check" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation}"></label>`:''}<p>${r.paychecks===1?'Remaining balance is needed before next payday.':`Remaining balance spread over ${r.paychecks} paychecks.`}</p></div>`).join('')}<button data-action="edit" data-type="expenses" data-id="${escHTML(rs[0].bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
  <div class="budget-save-row">${p.recorded?`<span class="budget-recorded">✓ ${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside ${fmtMoney(p.reserve)}</button>`}</div>
  <div class="budget-caption">${p.recorded?'Saved totals carry forward to your next paycheck.':p.left<0?'Tap bills to adjust amounts to what this check can cover.':'Record money you’ve put aside. No bank transfer is made.'}</div>
