@@ -3818,13 +3818,13 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <button data-tab="budget">Budget</button>
 </nav>
 
-<div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><select class="select" id="spending-category"><option value="groceries">Groceries</option><option value="gas">Gas</option><option value="savings">Savings</option><option value="other">Other spending</option></select></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Add</button></div></div></div></div>
+<div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><select class="select" id="spending-category"><option value="groceries">Groceries</option><option value="gas">Gas</option><option value="savings">Savings</option><option value="other">Other spending</option></select></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Add</button></div><div id="category-spending-entries"></div></div></div></div>
 <div class="modal" id="modal-budget-amounts" role="dialog" aria-modal="true" aria-labelledby="budget-amounts-title">
  <div class="modal-bd" data-action="close-modal"></div>
  <div class="modal-c"><div class="modal-t" id="budget-amounts-title">Bill money</div><div class="budget-amounts-form">
  <div class="frow"><div class="fcol"><label class="flbl" for="budget-edit-saved">Already set aside</label><input class="input" id="budget-edit-saved" type="number" min="0" step="0.01"></div></div>
  <div class="frow"><div class="fcol"><label class="flbl" for="budget-edit-check">From this paycheck</label><input class="input" id="budget-edit-check" type="number" min="0" step="0.01"></div></div>
- <div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="apply-budget-amounts">Apply</button></div>
+ <div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" id="budget-undo" data-action="undo-set-aside" hidden>Undo set-aside</button><button type="button" class="primary" data-action="apply-budget-amounts">Apply</button></div>
  </div></div>
 </div>
 <div class="modal" id="modal-income">
@@ -5958,6 +5958,12 @@ function removePaycheckSpending(checkId,entryId) {
  record.entries=record.entries.filter(entry=>entry.id!==entryId);
 }
 
+function refreshCategorySpendingEntries() {
+ const plan=getPaycheckPlan(),category=document.getElementById('spending-category').value;
+ document.getElementById('category-spending-entries').innerHTML=paycheckSpending(plan).entries.filter(entry=>entry.category===category).slice().reverse().map(entry=>`<div class="sf-activity-row"><div><strong>${fmtMoney(entry.amount)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><button class="sf-action" data-action="remove-spending" data-check="${escHTML(plan.check.id)}" data-entry="${escHTML(entry.id)}">Remove</button></div>`).join('');
+}
+document.getElementById('spending-category').addEventListener('change',refreshCategorySpendingEntries);
+
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
@@ -5971,20 +5977,18 @@ function renderBudget() {
  const categories=['Groceries','Gas',p.extra>0?'Cushion':'Savings','Other spending'];
  const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${r.fundingPaused && !r.allocation?'Paid':fmtMoney(r.allocation)}</strong></div>`).join('');
  return `<section class="budget-worksheet spending-first">
- <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Available'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div></div>
+ <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div><div class="sf-sub sf-spending-total">${fmtMoney(tracking.total)} spent &amp; saved / ${fmtMoney(roundCash(p.available-p.reserve))} available</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.reserve,{round:true})}</strong></div></div></div>
  <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${Object.entries(SPENDING_CATEGORIES).map(([key,label])=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[label]}"></span></span></button>`}).join('')}</div>
  <div class="sf-fund-band sf-fund-simple"><div class="sf-fund-heading"><strong>Bills</strong><button class="sf-action" data-action="edit-budget-amounts">Edit</button></div>
  <div class="sf-fund-row sf-muted"><span>Already saved</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
  <div class="sf-fund-row"><span>From this check</span><strong>${fmtMoney(p.reserve)}</strong></div>
- <div class="sf-save-line"><span>Next payday ${shortDate(isoDate(p.next))}</span>${p.recorded?`<div class="sf-saved"><span>Saved</span>${p.canUndo?'<button class="sf-action" data-action="undo-set-aside">Undo</button>':''}</div>`:`<button class="sf-save" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div></div>
+ ${!p.recorded?`<button class="sf-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside</button>`:''}</div>
  ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
  <section class="sf-bill-details"><div class="sf-bill-heading"><span>Bill breakdown</span><strong>${fmtMoney(p.rows.reduce((sum,row)=>sum+row.allocation,0))}</strong></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
- <details class="sf-activity"><summary>Spending activity <span>${tracking.entries.length}</span></summary>${tracking.entries.slice().reverse().map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span><button class="sf-action" data-action="remove-spending" data-check="${escHTML(p.check.id)}" data-entry="${escHTML(entry.id)}" aria-label="Remove ${escHTML(SPENDING_CATEGORIES[entry.category])} entry of ${fmtMoney(entry.amount)}">Remove</button></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>
  ${Object.entries(state.cashPlan.spendingByPaycheck||{}).some(([id])=>id!==p.check.id)?`<details class="sf-activity"><summary>Previous paychecks</summary>${Object.entries(state.cashPlan.spendingByPaycheck).filter(([id])=>id!==p.check.id).sort((a,b)=>String(b[1].paycheckDate).localeCompare(String(a[1].paycheckDate))).map(([,record])=>`<details class="sf-past-check"><summary>${shortDate(record.paycheckDate)} · ${escHTML(record.source)}</summary>${record.entries.map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>`).join('')}</details>`:''}
- <div class="sf-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  </section>`;
 }
 
@@ -6329,7 +6333,7 @@ document.addEventListener('click', e => {
     document.getElementById('spending-category').value=btn.dataset.category;
     document.getElementById('spending-amount').value='';document.getElementById('spending-note').value='';
     const date=document.getElementById('spending-date');date.value=isoDate(todayStart());date.max=date.value;
-    modal.classList.add('open');syncOverlayHistory();document.getElementById('spending-amount').focus();return;
+    refreshCategorySpendingEntries();modal.classList.add('open');syncOverlayHistory();document.getElementById('spending-amount').focus();return;
   }
   if(act==='save-spending'){
     const modal=document.getElementById('modal-spending');if(!modal.classList.contains('open'))return;
@@ -6339,11 +6343,12 @@ document.addEventListener('click', e => {
       modal.classList.remove('open');saveState();render();
     }return;
   }
-  if(act==='remove-spending'){removePaycheckSpending(btn.dataset.check,btn.dataset.entry);saveState();render();return;}
+  if(act==='remove-spending'){removePaycheckSpending(btn.dataset.check,btn.dataset.entry);saveState();render();refreshCategorySpendingEntries();return;}
 
   if(act==='edit-budget-amounts'){
     const plan=getPaycheckPlan();
     const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
+    document.getElementById('budget-undo').hidden=!plan.canUndo;
     saved.value=plan.savedTotal.toFixed(2);saved.disabled=!plan.rows.length;
     check.value=plan.reserve.toFixed(2);check.max=Math.max(0,plan.available-plan.essentials-plan.extra);check.disabled=!!plan.recorded;
     document.getElementById('modal-budget-amounts').classList.add('open');syncOverlayHistory();saved.focus();return;
@@ -6385,7 +6390,7 @@ document.addEventListener('click', e => {
   }
   if(act==='record-set-aside' || act==='undo-set-aside') {
     const changed=act==='record-set-aside'?recordPaycheckSetAside():undoPaycheckSetAside();
-    if(changed){saveState();render();}return;
+    if(changed){document.getElementById('modal-budget-amounts').classList.remove('open');saveState();render();}return;
   }
   if (act === 'pay-bill' || act === 'roll-bill') {
     const b = state.bills.find(b=>b.id===btn.dataset.id);
