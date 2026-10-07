@@ -3674,6 +3674,16 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 @media(pointer:coarse){.budget-worksheet input,.budget-worksheet select{font-size:16px!important}}
 .saved-bills-total{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;font-size:12px;color:var(--ink)}.budget-worksheet .saved-bills-total .worksheet-entry{margin:0;width:110px}.budget-worksheet .saved-bills-hint{font-size:11px;margin-top:6px;margin-bottom:6px}.budget-worksheet .worksheet-bill{align-items:start;min-height:49px}.budget-worksheet .worksheet-bill>.worksheet-entry{margin-top:7px}.budget-worksheet .worksheet-bill .budget-fund summary{padding:14px 0!important}
 .spending-suggestion-note{margin:0 20px 12px;font-size:10.5px;line-height:1.5;color:var(--ink-3)}
+/* Plain bill rows; only the overall balances are editable. */
+.budget-worksheet .simple-bill-row{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:0;padding:12px 0}
+.simple-bill-amount{font-size:13.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.budget-worksheet .worksheet-entry{background:var(--bg);border:1px solid var(--border);color:var(--ink-3)}
+.budget-worksheet .worksheet-entry input,.budget-worksheet .worksheet-totals .worksheet-entry input{color:var(--ink)!important;font-weight:500!important}
+.budget-worksheet .worksheet-save .budget-save-button{width:auto;min-height:0;padding:6px 0;border-radius:0;background:transparent;color:var(--accent);font-size:12px;font-weight:600;text-align:left}
+.budget-worksheet .worksheet-save .budget-save-button:hover{text-decoration:underline}
+/* Distinct, muted Budget colors; Expenses keeps its purple palette. */
+.budget-worksheet{--budget-bills:var(--accent);--budget-groceries:#dfa56c;--budget-gas:#d58b88;--budget-savings:#8db29b;--budget-other:#88a9c7}
+[data-theme="dark"] .budget-worksheet{--budget-groceries:#d8a475;--budget-gas:#d99491;--budget-savings:#93b79f;--budget-other:#93b1cf}
 </style>
 </head>
 
@@ -5368,7 +5378,7 @@ function buildExpensePieChart(total, catData, incomeBasis, options = {}) {
       pct: (c.total / total) * 100,
       incomePct: incomeBasis > 0 ? (c.total / incomeBasis) * 100 : 0,
       amount: c.total,
-      color: palette[i % palette.length]
+      color: options.colors?.[c.label] || palette[i % palette.length]
     }))
     .sort((a, b) => b.amount - a.amount);
 
@@ -5816,7 +5826,7 @@ function renderBudget() {
  if(!p.check)return `${blk('Your paycheck','No paycheck yet','Add your latest paycheck to make a plan.')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add paycheck'}})}`;
  const split=getPaycheckSpendingSuggestions(p);
  const allocated=roundCash(split.reduce((sum,item)=>sum+item.total,0));
- const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown'});
+ const paycheckChart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown',colors:{Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'}});
  const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
  return `<section class="budget-worksheet">
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
@@ -5828,12 +5838,8 @@ function renderBudget() {
  <div class="saved-bills-total"><label for="saved-bills-total">Saved for unpaid bills</label><label class="worksheet-entry"><span aria-hidden="true">$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
  <p class="worksheet-note saved-bills-hint">Update this to what you have set aside right now.</p>
  <div class="worksheet-columns sh"><h3>Bills</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
- ${p.rows.map(r=>`<div class="worksheet-bill">
- <details class="budget-fund" data-fund="${escHTML(r.bill.id)}"><summary><span class="worksheet-name">${escHTML(r.bill.name)} <span class="worksheet-chevron" aria-hidden="true">⌄</span></span></summary>
- <div class="budget-fund-edit"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.bill.amount)}</p><label>Already saved<input data-reserve="${escHTML(r.key)}" aria-label="Already saved for ${escHTML(r.bill.name)}" type="number" min="0" step="0.01" value="${r.saved}"></label><p>${r.paychecks===1?'Due before your next payday.':`Spread across ${r.paychecks} paychecks.`}</p><button data-action="edit" data-type="expenses" data-id="${escHTML(r.bill.id)}">Edit expense</button></div></details>
- ${p.recorded?`<strong class="worksheet-amount">${fmtMoney(r.allocation)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Set aside for ${escHTML(r.bill.name)}</span><span aria-hidden="true">$</span><input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)}" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation.toFixed(2)}"></label>`}
- </div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
- ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review. Tap a bill to update it.</p>':''}
+ ${p.rows.map(r=>`<div class="worksheet-bill simple-bill-row"><span class="worksheet-name">${escHTML(r.bill.name)}</span><strong class="simple-bill-amount">${fmtMoney(r.allocation)}</strong></div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
+ ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review in Expenses.</p>':''}
  <div class="budget-check-totals worksheet-totals">
  <div><span>Total for bills</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Total set aside</span><span aria-hidden="true">$</span><input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></label>`}</div>
  ${p.essentials?`<div><span>Food, gas & essentials</span><strong>${fmtMoney(p.essentials)}</strong></div>`:''}
