@@ -3763,6 +3763,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .sf-action{border:0;background:none;color:var(--accent);padding:5px 0;font-size:11px;font-weight:600}.sf-save-line{margin-top:8px}.sf-save-line>span{font-size:11px;color:var(--ink-3)}.sf-save{background:var(--accent-soft);color:var(--accent);border:0;border-radius:5px;padding:8px 12px;font-size:11px;font-weight:600}.sf-save:disabled{opacity:.45;cursor:default}.sf-saved{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-3)}
 .sf-bill-details{border-top:1px solid var(--border-light);margin-top:20px}.sf-bill-details summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:12px;cursor:pointer}.sf-bill-details summary::-webkit-details-marker{display:none}.sf-bill-details summary>span+span{font-size:11px;color:var(--ink-3)}.sf-bill-row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;font-size:13px}.sf-bill-row+.sf-bill-row{border-top:1px solid var(--border-light)}.sf-bill-row strong{font-weight:500;font-variant-numeric:tabular-nums}.sf-settings{margin-top:10px}.sf-settings .plan-settings{margin:0}.sf-settings summary{font-size:11px;color:var(--ink-3)}.sf-alert{font-size:11px;line-height:1.5;color:var(--warning);margin:10px 0}
 @media(max-width:359px){.sf-hero{font-size:32px}.sf-ring{width:86px;height:86px}.sf-spending-grid{column-gap:16px}.sf-heading{gap:6px}}
+.sf-bill-heading{display:flex;justify-content:space-between;align-items:center;padding:12px 0 6px;font-size:12px}.sf-bill-heading>span+span{font-size:11px;color:var(--ink-3)}.spending-first .sf-bill-row{padding:7px 0;font-size:12px}
 </style>
 </head>
 
@@ -5820,6 +5821,23 @@ function moveBillFund(bill,newDate) {
   cp.reserves[newKey]=roundCash(moneyValue(cp.reserves[newKey])+moneyValue(cp.reserves[oldKey]));
   delete cp.reserves[oldKey];
 }
+function billFundingPaused(bill, nextPayday) {
+  if(!bill.recurring || bill.recurring==='once')return !!bill.paid;
+  const due=parseISODate(bill.dueDate);
+  if(!due)return !!bill.paid;
+  // Never skip a payment that comes due before another paycheck arrives.
+  if(!nextPayday || due<=nextPayday)return false;
+  const payment=(state.payments||[]).filter(p=>p.billId===bill.id && p.afterDue===bill.dueDate)
+    .sort((a,b)=>(b.recordedAt||0)-(a.recordedAt||0))[0];
+  if(!payment)return !!bill.paid;
+  const paidCycle=parseISODate(payment.dueDate);
+  if(!paidCycle)return false;
+  const today=todayStart();
+  if(bill.recurring==='monthly')return today < new Date(paidCycle.getFullYear(),paidCycle.getMonth()+1,1);
+  // Other schedules resume funding with the next actual paycheck.
+  return paycheckDate(state.income.filter(i=>paycheckDate(i)<=isoDate(today)).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)))[0]) <= payment.date;
+}
+
 function getPaycheckPlan() {
   const today = isoDate(todayStart());
   const checks = state.income.filter(i => paycheckDate(i) && paycheckDate(i)<=today && moneyValue(i.amount)>0)
@@ -5839,10 +5857,11 @@ function getPaycheckPlan() {
     const due=parseISODate(b.dueDate),key=billFundKey(b),saved=moneyValue(cp.reserves?.[key]);
     let paychecks=1;
     if(due && next){let d=new Date(next),g=0;while(d<due && g++<600){paychecks++;d=nextBillDate(d,cadence,next.getDate());}}
-    const needed=roundCash(Math.max(0,moneyValue(b.amount)-saved));
+    const fundingPaused=billFundingPaused(b,next);
+    const needed=fundingPaused?0:roundCash(Math.max(0,moneyValue(b.amount)-saved));
     const suggested=Math.ceil(needed/paychecks*100)/100;
     const allocation=recorded?moneyValue(recorded.allocations[key]):Object.prototype.hasOwnProperty.call(draft,key)?Math.min(needed,moneyValue(draft[key])):suggested;
-    return {bill:b,key,saved,due,paychecks,needed,suggested,allocation};
+    return {bill:b,key,saved,due,paychecks,needed,suggested,allocation,fundingPaused};
   }).sort((a,b)=>(a.bill.dueDate||'9999').localeCompare(b.bill.dueDate||'9999'));
   const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
   const requested=roundCash(rows.reduce((sum,r)=>sum+r.allocation,0));
@@ -5918,11 +5937,11 @@ function renderBudget() {
  const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.label]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
  const afterBills=roundCash(p.available-p.reserve);
  const categories=['Groceries','Gas',p.extra>0?'Cushion':'Savings','Other spending'];
- const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${fmtMoney(r.allocation)}</strong></div>`).join('');
+ const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${r.fundingPaused && !r.allocation?'Paid':fmtMoney(r.allocation)}</strong></div>`).join('');
  return `<section class="budget-worksheet spending-first">
- <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over paycheck':'Left after bills'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">From your ${fmtMoney(p.available)} paycheck</div></div>
+ <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'After bills'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.reserve,{round:true})}</strong></div></div></div>
- <div class="sf-heading"><h3>Your spending plan</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${categories.map(label=>`<div class="sf-spending-cell"><div class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span></div><strong>${fmtMoney(split.find(item=>item.label===label)?.total||0,{round:true})}</strong></div>`).join('')}</div>
  <div class="sf-fund-band"><div class="sf-fund-heading"><strong>Bill money</strong><button class="sf-action" data-action="edit-budget-amounts">Edit amounts</button></div>
  <div class="sf-fund-row sf-muted"><span>Already saved</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
@@ -5930,7 +5949,7 @@ function renderBudget() {
  <div class="sf-save-line"><span>Next payday ${shortDate(isoDate(p.next))}</span>${p.recorded?`<div class="sf-saved"><span>Saved</span>${p.canUndo?'<button class="sf-action" data-action="undo-set-aside">Undo</button>':''}</div>`:`<button class="sf-save" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div></div>
  ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
- <details class="sf-bill-details"><summary><span>Bill breakdown</span><span>${p.rows.length} bills <span aria-hidden="true">⌄</span></span></summary>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</details>
+ <section class="sf-bill-details"><div class="sf-bill-heading"><span>Bill breakdown</span><span>${p.rows.length} bills</span></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
  <div class="sf-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  </section>`;
 }
