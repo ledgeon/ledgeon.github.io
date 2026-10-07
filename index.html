@@ -3749,6 +3749,20 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-native-actions{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:0 20px 12px}.budget-native-actions button{font-size:11.25px;padding:5px 0}.budget-native-actions button:disabled{opacity:.4;cursor:default}
 .budget-native-alert{margin:6px 20px;font-size:11px;color:var(--warning);line-height:1.5}
 .budget-native-settings{margin:18px 20px 24px;border-top:1px solid var(--border-light);padding-top:12px}.budget-native-settings .plan-settings{margin:0}.budget-native-settings .simple-fields{margin-top:12px}.budget-amounts-form{padding:16px 18px}.budget-native .expense-composition{margin-bottom:0}
+/* Selected preview: Spending first. */
+.spending-first{padding:0 20px 24px;--budget-savings:#36b77a}
+[data-theme="dark"] .spending-first{--budget-savings:#72d6a6}
+.sf-lead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 24px}
+.sf-eyebrow,.sf-sub{font-size:11px;color:var(--ink-3);line-height:1.45}
+.sf-hero{font-size:36px;letter-spacing:-1.3px;font-weight:700;line-height:1.15;margin:5px 0;color:var(--accent);font-variant-numeric:tabular-nums}
+.sf-ring{position:relative;width:94px;height:94px;flex-shrink:0}.sf-ring svg{width:100%;height:100%;display:block}
+.sf-ring-label{position:absolute;inset:20px 0;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none}.sf-ring-label span{font-size:10px;color:var(--ink-3)}.sf-ring-label strong{font-size:13px;font-weight:600;letter-spacing:-.3px}
+.sf-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 12px}.sf-heading h3{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0}.sf-heading>span{font-size:11px;color:var(--ink-3);white-space:nowrap}
+.sf-spending-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}.sf-spending-cell{border-top:1px solid var(--border-light);padding:11px 0}.sf-category{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-3)}.sf-category i{width:6px;height:6px;border-radius:50%;flex-shrink:0}.sf-spending-cell>strong{display:block;font-size:19px;font-weight:600;letter-spacing:-.4px;margin-top:6px;font-variant-numeric:tabular-nums}
+.sf-fund-band{padding:14px;background:color-mix(in srgb,var(--accent) 3%,var(--bg));border-radius:6px;margin-top:20px}.sf-fund-heading,.sf-fund-row,.sf-save-line{display:flex;justify-content:space-between;align-items:center;gap:12px}.sf-fund-heading{margin-bottom:12px;font-size:13px}.sf-fund-heading strong{font-weight:600}.sf-fund-row{font-size:13px;margin-bottom:7px}.sf-fund-row strong{font-weight:500;font-variant-numeric:tabular-nums}.sf-muted{font-size:11px;color:var(--ink-3)}.sf-muted strong{color:var(--ink)}
+.sf-action{border:0;background:none;color:var(--accent);padding:5px 0;font-size:11px;font-weight:600}.sf-save-line{margin-top:8px}.sf-save-line>span{font-size:11px;color:var(--ink-3)}.sf-save{background:var(--accent-soft);color:var(--accent);border:0;border-radius:5px;padding:8px 12px;font-size:11px;font-weight:600}.sf-save:disabled{opacity:.45;cursor:default}.sf-saved{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-3)}
+.sf-bill-details{border-top:1px solid var(--border-light);margin-top:20px}.sf-bill-details summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;font-size:12px;cursor:pointer}.sf-bill-details summary::-webkit-details-marker{display:none}.sf-bill-details summary>span+span{font-size:11px;color:var(--ink-3)}.sf-bill-row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;font-size:13px}.sf-bill-row+.sf-bill-row{border-top:1px solid var(--border-light)}.sf-bill-row strong{font-weight:500;font-variant-numeric:tabular-nums}.sf-settings{margin-top:10px}.sf-settings .plan-settings{margin:0}.sf-settings summary{font-size:11px;color:var(--ink-3)}.sf-alert{font-size:11px;line-height:1.5;color:var(--warning);margin:10px 0}
+@media(max-width:359px){.sf-hero{font-size:32px}.sf-ring{width:86px;height:86px}.sf-spending-grid{column-gap:16px}.sf-heading{gap:6px}}
 </style>
 </head>
 
@@ -5898,26 +5912,26 @@ function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
  const split=getPaycheckSpendingSuggestions(p);
- const allocated=roundCash(split.reduce((sum,item)=>sum+item.total,0));
- const chart=buildExpensePieChart(allocated,split,p.available,{showAvailable:true,centerLabel:'Paycheck',availableLabel:'Other spending',chartLabel:'Suggested paycheck breakdown',colors:{Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'}});
- const billRows=p.rows.map(r=>`<div class="row source-row budget-native-bill"><span class="r-name">${escHTML(r.bill.name)}</span><span class="r-amt">${fmtMoney(r.allocation)}</span></div>`).join('');
- return `<section class="budget-worksheet budget-native">
- ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
- <div class="stat-trio budget-native-stats">
- <div class="st"><div class="st-label">For bills</div><div class="st-value">${fmtMoney(p.reserve,{round:true})}</div></div>
- <div class="st"><div class="st-label">${p.left<0?'Short by':'Left to spend'}</div><div class="st-value ${p.left<0?'negative':''}">${fmtMoney(Math.abs(p.left),{round:true})}</div></div>
- <div class="st"><div class="st-label">Next payday</div><div class="st-value budget-native-date">${shortDate(isoDate(p.next))}</div></div>
- </div>
- ${sh('Breakdown',{meta:'This paycheck'})}
- ${chart}
- ${sh('Bills',{meta:'From this check',add:{action:'edit-budget-amounts',label:'Edit'}})}
- <div class="budget-native-saved"><span>Already set aside</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
- ${billRows || '<div class="empty"><span class="lnk" data-action="open-modal" data-type="expenses">+ Add expense</span></div>'}
- <div class="budget-native-total"><span>Total for bills</span><strong>${fmtMoney(p.reserve)}</strong></div>
- <div class="budget-native-actions">${p.recorded?`<span class="budget-recorded">Saved</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-text-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div>
- ${p.unfunded>0?`<p class="budget-native-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
- ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="budget-native-alert">Review bill dates in Expenses.</p>':''}
- <div class="budget-native-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
+ const colors={Bills:'var(--budget-bills)',Groceries:'var(--budget-groceries)',Gas:'var(--budget-gas)',Savings:'var(--budget-savings)',Cushion:'var(--budget-savings)','Other spending':'var(--budget-other)'};
+ const basis=Math.max(p.available,split.reduce((sum,item)=>sum+item.total,0),1);
+ let offset=0;
+ const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.label]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
+ const afterBills=roundCash(p.available-p.reserve);
+ const categories=['Groceries','Gas',p.extra>0?'Cushion':'Savings','Other spending'];
+ const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${fmtMoney(r.allocation)}</strong></div>`).join('');
+ return `<section class="budget-worksheet spending-first">
+ <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over paycheck':'Left after bills'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="sf-sub">From your ${fmtMoney(p.available)} paycheck</div></div>
+ <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.reserve,{round:true})}</strong></div></div></div>
+ <div class="sf-heading"><h3>Your spending plan</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ <div class="sf-spending-grid">${categories.map(label=>`<div class="sf-spending-cell"><div class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span></div><strong>${fmtMoney(split.find(item=>item.label===label)?.total||0,{round:true})}</strong></div>`).join('')}</div>
+ <div class="sf-fund-band"><div class="sf-fund-heading"><strong>Bill money</strong><button class="sf-action" data-action="edit-budget-amounts">Edit amounts</button></div>
+ <div class="sf-fund-row sf-muted"><span>Already saved</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
+ <div class="sf-fund-row"><span>From this check</span><strong>${fmtMoney(p.reserve)}</strong></div>
+ <div class="sf-save-line"><span>Next payday ${shortDate(isoDate(p.next))}</span>${p.recorded?`<div class="sf-saved"><span>Saved</span>${p.canUndo?'<button class="sf-action" data-action="undo-set-aside">Undo</button>':''}</div>`:`<button class="sf-save" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div></div>
+ ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
+ ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
+ <details class="sf-bill-details"><summary><span>Bill breakdown</span><span>${p.rows.length} bills <span aria-hidden="true">⌄</span></span></summary>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</details>
+ <div class="sf-settings"> <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  </section>`;
 }
 
