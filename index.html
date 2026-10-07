@@ -3703,6 +3703,16 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .paycheck-footer .plan-settings:not([open])>.simple-fields{display:none}
 .income-overview>.blk .blk-v{color:var(--accent)!important}
 .blk-s .expense-income-ratio{color:var(--accent)!important;font-weight:600}
+/* Open Budget layout: summary above the chart, no bottom card. */
+.budget-headline-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 20px 0;padding:13px 0 7px;border-top:1px solid var(--border-light);gap:12px}
+.budget-headline-stats>div{min-width:0}.budget-headline-stats label,.budget-stat-label{display:block;font-size:10.5px;color:var(--ink-3);line-height:1.4;margin-bottom:5px;font-weight:500}
+.budget-headline-stats strong{display:block;font-size:16px;line-height:28px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}.budget-stat-left{color:var(--accent)}
+.budget-inline-value{display:flex;align-items:center;min-width:0;border-bottom:1px solid var(--border);height:28px;color:var(--ink);font-size:16px;font-weight:600}
+.budget-inline-value input{font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);background:transparent;border:0;outline:none;padding:0 0 0 2px;width:100%;min-width:0;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
+.budget-inline-value input::-webkit-inner-spin-button,.budget-inline-value input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}.budget-inline-value:focus-within{border-color:var(--accent);box-shadow:0 1px 0 var(--accent)}
+.budget-top-action{margin:0 20px}.budget-top-action .worksheet-save{margin:0;min-height:28px;justify-content:flex-start;gap:12px}.budget-worksheet .budget-top-action .budget-save-button{padding:4px 0;font-size:11px}
+.budget-worksheet .paycheck-footer{display:block;margin-top:14px;border-top:1px solid var(--border-light);padding-top:4px}.budget-worksheet .paycheck-footer .plan-settings{display:block;border:0;margin:0;padding:0}.paycheck-footer .plan-settings>summary{text-align:left;padding:10px 0}.paycheck-footer .plan-settings[open]>.simple-fields{margin-top:0}
+@media(max-width:359px){.budget-headline-stats{gap:8px}.budget-headline-stats strong,.budget-inline-value,.budget-inline-value input{font-size:14px}}
 </style>
 </head>
 
@@ -5849,23 +5859,22 @@ function renderBudget() {
  const history=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>b[1].recordedAt-a[1].recordedAt).slice(0,12);
  return `<section class="budget-worksheet">
  ${blk('Latest paycheck',fmtMoney(p.available),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
- ${sh('This paycheck',{meta:'Suggested breakdown'})}
+ <div class="budget-headline-stats">
+ <div><label for="saved-bills-total">Saved for bills</label><div class="budget-inline-value"><span>$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></div></div>
+ <div><label for="check-set-aside">This check</label>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<div class="budget-inline-value"><span>$</span><input id="check-set-aside" data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></div>`}</div>
+ <div><span class="budget-stat-label">${p.left<0?'Short by':'Left to spend'}</span><strong class="budget-stat-left">${fmtMoney(Math.abs(p.left))}</strong></div>
+ </div>
+ <div class="budget-top-action"><div class="worksheet-save">${p.recorded?`<span class="budget-recorded">${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div></div>
+ ${sh('Breakdown',{meta:'This paycheck'})}
  ${paycheckChart}
  <div class="worksheet-context"><span>Next payday <strong>${shortDate(isoDate(p.next))}</strong></span></div>
  <div class="worksheet-body">
- <div class="saved-bills-total"><label for="saved-bills-total">Saved for unpaid bills</label><label class="worksheet-entry"><span aria-hidden="true">$</span><input id="saved-bills-total" data-saved-total="true" aria-label="Saved for unpaid bills" type="number" min="0" step="0.01" value="${p.savedTotal.toFixed(2)}" ${p.rows.length?'':'disabled'}></label></div>
+
  <div class="worksheet-columns sh"><h3>Bills</h3><span>${p.recorded?'From this check':'Set aside'}</span></div>
  ${p.rows.map(r=>`<div class="worksheet-bill simple-bill-row"><span class="worksheet-name">${escHTML(r.bill.name)}</span><strong class="simple-bill-amount">${fmtMoney(r.allocation)}</strong></div>`).join('') || '<p class="budget-caption">Add expenses to start allocating your paycheck.</p>'}
  ${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="worksheet-note">Some bill dates need review in Expenses.</p>':''}
- <div class="budget-check-totals worksheet-totals paycheck-summary">
- <div><span>Paycheck</span><strong>${fmtMoney(p.available)}</strong></div>
- <div><span>Total for bills</span>${p.recorded?`<strong>${fmtMoney(p.reserve)}</strong>`:`<label class="worksheet-entry"><span class="sr-only">Total set aside</span><span aria-hidden="true">$</span><input data-total-allocation="true" aria-label="Total to set aside from this paycheck" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" value="${p.reserve.toFixed(2)}"></label>`}</div>
- ${p.essentials?`<div><span>Food, gas & essentials</span><strong>${fmtMoney(p.essentials)}</strong></div>`:''}
- ${p.extra?`<div><span>Cushion</span><strong>${fmtMoney(p.extra)}</strong></div>`:''}
- <div class="budget-check-left"><span>${p.left<0?'Over this paycheck':'Left to spend'}</span><strong>${fmtMoney(Math.abs(p.left))}</strong></div>
- </div>
  ${p.unfunded>0?`<p class="budget-review">${fmtMoney(p.unfunded)} of planned bill funding is still uncovered.</p>`:''}
- <div class="paycheck-footer"><div class="worksheet-save">${p.recorded?`<span class="budget-recorded">${fmtMoney(p.reserve)} set aside</span>${p.canUndo?'<button class="budget-text-action" data-action="undo-set-aside">Undo</button>':''}`:`<button class="budget-save-button" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Save set-aside</button>`}</div>
+ <div class="paycheck-footer">
  <details class="budget-options plan-settings"><summary>Settings</summary><div class="simple-fields"><label>Amount to budget<input data-plan="paycheckAmount" type="number" min="0" step="0.01" value="${p.available}"></label><label>Next payday<input data-plan="nextPayDate" type="date" min="${isoDate(todayStart())}" value="${isoDate(p.next)}"></label><label>Pay schedule<select data-plan="cadence">${['weekly','biweekly','monthly'].map(c=>`<option value="${c}" ${c===p.cadence?'selected':''}>${c==='biweekly'?'Every 2 weeks':cap(c)}</option>`).join('')}</select></label><label>Food, gas & essentials<input data-plan="essentials" type="number" min="0" step="0.01" value="${p.essentials}"></label><label>Cushion<input data-plan="paycheckBuffer" type="number" min="0" step="0.01" value="${p.extra}"></label></div></details></div>
  ${history.length?`<details class="budget-options"><summary>Saved paychecks</summary>${history.map(([,r])=>`<div class="budget-history-row"><span>${shortDate(r.paycheckDate)} · ${escHTML(r.source)}</span><strong>${fmtMoney(Object.values(r.allocations).reduce((sum,a)=>sum+moneyValue(a),0))}</strong></div>`).join('')}</details>`:''}
  </div></section>`;
