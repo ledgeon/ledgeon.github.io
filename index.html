@@ -3636,7 +3636,7 @@ body {
 
 .budget-fund-cycle+.budget-fund-cycle{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}
 /* Compact paycheck ledger; scoped to Budget, using the existing site palette. */
-.budget-compact .blk{padding-top:18px!important;padding-bottom:4px!important}.budget-compact .blk-v{font-size:30px!important;margin-top:5px!important}.budget-compact .blk-s{margin-top:4px!important;font-size:11px!important}.budget-mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 20px 12px;gap:10px}.budget-mini-stats>div{min-width:0}.budget-mini-stats>div+div{border-left:1px solid var(--border);padding-left:10px}.budget-mini-stats span{display:block;font-size:10px;color:var(--ink-3);margin-bottom:6px}.budget-mini-stats strong{font-size:17px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}.budget-compact-body{padding:5px 20px 18px}.budget-compact-title{display:flex;justify-content:space-between;color:var(--ink-3);font-size:11px;padding:12px 0 5px}.budget-fund{border-bottom:1px solid var(--border-light)}.budget-fund summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;cursor:pointer;font-size:12px}.budget-fund summary::-webkit-details-marker{display:none}.budget-fund summary strong{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}.budget-fund-edit{padding:0 0 12px}.budget-fund-edit p{font-size:10px;line-height:1.5;color:var(--ink-3);margin:6px 0}.budget-fund-edit label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;margin:7px 0}.budget-fund-edit input{width:105px;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-fund-edit button,.budget-text-action{font-size:11px;color:var(--accent);padding:5px 0}.budget-save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.budget-save-button{width:100%;padding:10px 12px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}.budget-save-button:disabled{opacity:.45;cursor:default}.budget-recorded{font-size:12px;color:var(--positive)}.budget-caption{font-size:10px;line-height:1.5;color:var(--ink-3);margin:7px 0 12px}.budget-review{font-size:10px;line-height:1.5;color:var(--warning);margin:6px 0}.budget-options{margin-top:13px}.budget-options summary{font-size:11px;color:var(--ink-3);cursor:pointer}.budget-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;padding:10px 0;border-bottom:1px solid var(--border-light)}.budget-history-row strong{font-weight:500}
+.budget-mini-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:15px 20px 12px;gap:10px}.budget-mini-stats>div{min-width:0}.budget-mini-stats>div+div{border-left:1px solid var(--border);padding-left:10px}.budget-mini-stats span{display:block;font-size:10px;color:var(--ink-3);margin-bottom:6px}.budget-mini-stats strong{font-size:17px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums;white-space:nowrap}.budget-compact-body{padding:5px 20px 18px}.budget-compact-title{display:flex;justify-content:space-between;color:var(--ink-3);font-size:11px;padding:12px 0 5px}.budget-fund{border-bottom:1px solid var(--border-light)}.budget-fund summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;cursor:pointer;font-size:12px}.budget-fund summary::-webkit-details-marker{display:none}.budget-fund summary strong{font-size:12px;font-weight:500;font-variant-numeric:tabular-nums}.budget-fund-edit{padding:0 0 12px}.budget-fund-edit p{font-size:10px;line-height:1.5;color:var(--ink-3);margin:6px 0}.budget-fund-edit label{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;margin:7px 0}.budget-fund-edit input{width:105px;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-fund-edit button,.budget-text-action{font-size:11px;color:var(--accent);padding:5px 0}.budget-save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.budget-save-button{width:100%;padding:10px 12px;border-radius:7px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600}.budget-save-button:disabled{opacity:.45;cursor:default}.budget-recorded{font-size:12px;color:var(--positive)}.budget-caption{font-size:10px;line-height:1.5;color:var(--ink-3);margin:7px 0 12px}.budget-review{font-size:10px;line-height:1.5;color:var(--warning);margin:6px 0}.budget-options{margin-top:13px}.budget-options summary{font-size:11px;color:var(--ink-3);cursor:pointer}.budget-history-row{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:11px;padding:10px 0;border-bottom:1px solid var(--border-light)}.budget-history-row strong{font-weight:500}
 @media(max-width:359px){.budget-mini-stats{gap:6px}.budget-mini-stats>div+div{padding-left:6px}.budget-mini-stats strong{font-size:15px}.budget-mini-stats span{font-size:9px}}
 
 /* Quiet overlay, aligned to the existing pay-period bars. */
@@ -3646,6 +3646,25 @@ body {
 .average-key{font-size:10px;color:var(--ink-3);margin-left:8px;white-space:nowrap}
 .average-key::before{content:"";display:inline-block;width:14px;border-top:1.5px solid #d58b88;vertical-align:middle;margin-right:4px}
 .budget-check-totals{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}.budget-check-totals>div{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;font-size:12px}.budget-check-totals strong{font-weight:500;font-variant-numeric:tabular-nums}.budget-check-totals input{width:105px;min-width:0;text-align:right;border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:var(--bg);color:var(--ink);font:inherit}.budget-check-totals .budget-check-left{border-top:1px solid var(--border);margin-top:5px;padding-top:14px}.budget-check-left strong{font-size:22px}
+/* Income and Budget follow the shared Expenses typography and neutral palette. */
+.income-overview .blk-s{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px!important;font-weight:400}
+.income-overview .blk-s>span{white-space:nowrap}
+.income-overview .stat-trio{margin-top:12px!important;padding-top:0!important;padding-bottom:4px!important}
+.income-overview .stat-trio .st-label{text-transform:none!important;letter-spacing:0!important;font-size:11px!important;font-weight:400!important;color:var(--ink-3)!important}
+.income-overview .stat-trio .st-value{font-size:16px!important;font-weight:600!important;margin-top:6px!important}
+.income-overview .trend-head>div:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:5px 10px;min-width:0}
+.income-overview .trend-head h3{flex-basis:100%}
+.income-overview .average-key{margin-left:0;font-size:10px}
+.budget-compact .budget-compact-title{padding:18px 0 9px!important;margin:0}
+.budget-fund summary{padding:12px 0;font-size:13.5px;font-weight:500;color:var(--ink)}
+.budget-fund summary strong{font-size:13px;font-weight:600}
+.budget-fund-edit p,.budget-fund-edit label{font-size:11.25px;line-height:1.4}
+.budget-check-totals>div{font-size:12px;color:var(--ink-3)}
+.budget-check-totals strong{color:var(--ink);font-weight:600}
+.budget-check-left{color:var(--ink)!important}
+.budget-check-left strong{font-size:22px}
+.budget-caption,.budget-review{font-size:11px;line-height:1.5}
+.budget-options summary{font-size:11.25px}
 </style>
 </head>
 
@@ -4993,7 +5012,7 @@ function renderIncome() {
   const nowD = new Date();
 
   const ytdSub = stats.ytdHours > 0
-    ? `${fmtHM(stats.ytdHours)} · <span class="a">$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? ' · cash ' + fmtMoney(stats.ytdTips, {round:true}) : ''}`
+    ? `<span>${fmtHM(stats.ytdHours)}</span><span>$${stats.ytdHourly.toFixed(2)}/hr</span>${stats.ytdTips > 0 ? '<span>' + fmtMoney(stats.ytdTips, {round:true}) + ' cash</span>' : ''}`
     : '';
   const ytdBlock = blk('Year to date', fmtMoney(stats.ytdIncome, {round:true}), ytdSub);
 
@@ -5109,17 +5128,17 @@ function renderIncome() {
     <div class="st">
       <div class="st-label">This month</div>
       <div class="st-value positive">${fmtMoney(curMonthStats.income, {round:true})}</div>
-      ${statDelta(monthDelta)}
+      
     </div>
     <div class="st">
       <div class="st-label">Monthly avg</div>
       <div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div>
-      ${statDelta(monthlyAvgDelta)}
+      
     </div>
     <div class="st">
       <div class="st-label" title="Most recent income entry">Latest paystub</div>
       <div class="st-value">${fmtMoney(latestPaystubAmount, {round:true})}</div>
-      ${statDelta(paystubDelta)}
+      
     </div>
   </div>`;
 
@@ -5300,14 +5319,14 @@ function renderIncome() {
     }).join('');
   }
 
-  return `${ytdBlock}
+  return `<section class="income-overview">${ytdBlock}
     ${statTrioHTML}
     ${trendHeader}
     ${trendChartHTML}
     ${sh('Sources', {
       add: { action: 'open-modal', type: 'income', label: '+ Add' }
     })}
-    ${sourcesHTML}`;
+    ${sourcesHTML}</section>`;
 }
 
 // ──── Render: expenses ─────────────────────────────────────
@@ -5508,7 +5527,7 @@ function renderExpenses() {
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
-    ${rowsHTML}${state.payments.length?`<details class="simple-history"><summary>Payment history</summary>${state.payments.slice().reverse().slice(0,20).map(p=>`<div class="simple-total"><span>${escHTML(p.name)}<small>${shortDate(p.date)} · ${fmtMoney(p.amount)}</small></span>${p.previous && state.bills.some(b=>b.id===p.billId) && !state.payments.some(q=>q.billId===p.billId && q.id!==p.id && q.recordedAt>p.recordedAt)?`<button data-action="undo-bill" data-id="${escHTML(p.id)}">Undo</button>`:''}</div>`).join('')}</details>`:''}`;
+    ${rowsHTML}`;
 }
 
 function buildPieChart(incTot, catData, savings, net) {
@@ -5757,7 +5776,7 @@ function renderBudget() {
  return `<section class="budget-compact">
  ${blk('Latest paycheck',fmtMoney(p.check.amount),`${escHTML(p.check.source||'Income')} · ${shortDate(paycheckDate(p.check))}`)}
  <div class="budget-compact-body">
- <div class="budget-compact-title"><span>Bills</span><span>${p.recorded?'Recorded':'This check'}</span></div>
+ <div class="sh budget-compact-title"><h3>Bills</h3><span class="x">${p.recorded?'Recorded':'This check'}</span></div>
  ${needsReview?'<div class="budget-review">Review older or missing due dates in Expenses. Each bill is counted once.</div>':''}
  ${p.unfunded>0?`<div class="budget-review">${fmtMoney(p.unfunded)} of the planned bill funding still needs covering. This check funds the earliest due bills first.</div>`:''}
  ${groups.map(rs=>`<details class="budget-fund" data-fund="${escHTML(rs[0].bill.id)}"><summary><span>${escHTML(rs[0].bill.name)}</span><strong>${fmtMoney(rs.reduce((v,r)=>v+r.allocation,0))}</strong></summary><div class="budget-fund-edit">${rs.map(r=>`<div class="budget-fund-cycle"><p>${r.due?'Due '+shortDate(r.bill.dueDate):'No due date'} · ${fmtMoney(r.saved)} saved of ${fmtMoney(r.bill.amount)}</p><label>Total already saved<input data-reserve="${escHTML(r.key)}" aria-label="Total saved for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')}" type="number" min="0" step="0.01" value="${r.saved}"></label>${!p.recorded?`<label>Set aside from this check<input data-allocation="${escHTML(r.key)}" aria-label="Set aside for ${escHTML(r.bill.name)} due ${escHTML(r.bill.dueDate||'unscheduled')} from this check" type="number" min="0" max="${r.needed}" step="0.01" value="${r.allocation}"></label>`:''}<p>${r.paychecks===1?'Remaining balance is needed before next payday.':`Remaining balance spread over ${r.paychecks} paychecks.`}</p></div>`).join('')}<button data-action="edit" data-type="expenses" data-id="${escHTML(rs[0].bill.id)}">Edit bill</button></div></details>`).join('') || '<p class="simple-note">Add bills in Expenses to build your plan.</p>'}
