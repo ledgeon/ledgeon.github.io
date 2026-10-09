@@ -4426,45 +4426,33 @@ function incomeOccurrences(item, rangeStart, rangeEnd) {
   return out;
 }
 
-// Picks weekly vs. biweekly. Most people log each paycheck individually (frequency: 'once') rather than
-// setting up a recurring weekly/biweekly source, so we infer the real cadence from the actual gaps between
-// paycheck dates on whichever income source earns the most — falling back to explicit recurring
-// weekly/biweekly entries if those exist instead.
+// Recent dates from the newest source determine the current pay pattern.
+function getIncomePaySchedule() {
+ const entries=state.income.filter(i=>parseISODate(paycheckDate(i)) && moneyValue(i.amount)>0).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
+ const latest=entries[0];
+ if(!latest)return {cadence:'weekly',periodDays:7,anchor:todayStart()};
+ const source=latest.source||'Unknown';
+ const active=entries.filter(i=>(i.source||'Unknown')===source).slice(0,12);
+ const dates=[...new Set(active.map(paycheckDate))].sort().slice(-8).map(parseISODate);
+ const gaps=[];
+ for(let i=1;i<dates.length;i++){const gap=Math.round((dates[i]-dates[i-1])/86400000);if(gap>=4 && gap<=21)gaps.push(gap);}
+ gaps.sort((a,b)=>a-b);
+ const median=gaps.length?gaps[Math.floor(gaps.length/2)]:7;
+ const explicit=['weekly','biweekly'].includes(latest.frequency)?latest.frequency:null;
+ const cadence=explicit || (median>=11?'biweekly':'weekly'),periodDays=cadence==='biweekly'?14:7;
+ let anchor=new Date(dates[dates.length-1]);
+ // An isolated early/late deposit should not change a well-established weekday.
+ const weekdays=Array(7).fill(0);dates.forEach(d=>weekdays[d.getDay()]++);
+ const weekday=weekdays.indexOf(Math.max(...weekdays));
+ if(weekdays[weekday]>=3 && weekdays[weekday]>dates.length/2 && anchor.getDay()!==weekday){
+  const previous=dates.slice(0,-1).reverse().find(d=>d.getDay()===weekday);
+  const expected=new Date(previous);expected.setDate(expected.getDate()+periodDays);
+  if(Math.abs((expected-anchor)/86400000)<=4)anchor=expected;
+ }
+ return {source,cadence,periodDays,anchor,latestDate:dates[dates.length-1]};
+}
 function detectPayPeriodType() {
-  let weeklyTotal = 0, biweeklyTotal = 0;
-  for (const i of state.income) {
-    if (i.frequency === 'weekly') weeklyTotal += monthlyEq(i.amount, 'weekly');
-    else if (i.frequency === 'biweekly') biweeklyTotal += monthlyEq(i.amount, 'biweekly');
-  }
-  if (weeklyTotal > 0 || biweeklyTotal > 0) return biweeklyTotal >= weeklyTotal ? 'biweekly' : 'weekly';
-
-  const bySource = {};
-  for (const i of state.income) {
-    if (i.frequency && i.frequency !== 'once') continue;
-    const d = parseISODate(i.receivedAt || i.createdAt);
-    if (!d) continue;
-    const amt = parseFloat(String(i.amount).replace(/[^\d.-]/g, '')) || 0;
-    const key = i.source || '';
-    (bySource[key] = bySource[key] || { dates: [], total: 0 });
-    bySource[key].dates.push(d);
-    bySource[key].total += amt;
-  }
-  let bestKey = null, bestTotal = -1;
-  for (const key in bySource) {
-    if (bySource[key].total > bestTotal) { bestTotal = bySource[key].total; bestKey = key; }
-  }
-  if (!bestKey) return 'weekly';
-  const dates = bySource[bestKey].dates.sort((a, b) => a - b);
-  if (dates.length < 2) return 'weekly';
-  const gaps = [];
-  for (let k = 1; k < dates.length; k++) {
-    const g = Math.round((dates[k] - dates[k - 1]) / 86400000);
-    if (g > 0) gaps.push(g);
-  }
-  if (gaps.length === 0) return 'weekly';
-  gaps.sort((a, b) => a - b);
-  const median = gaps[Math.floor(gaps.length / 2)];
-  return median >= 11 ? 'biweekly' : 'weekly';
+ return getIncomePaySchedule().cadence;
 }
 
 function recordedIncomeOccurrences(item, start, end) {
@@ -4481,14 +4469,8 @@ function getPayPeriodHistory(periods = 12) {
   const dayMs = 86400000;
   const todayD = todayStart();
 
-  let anchor = null;
-  for (const i of state.income) {
-    const d = parseISODate(i.receivedAt || i.createdAt);
-    if (!d) continue;
-    const ds = startOfDay(d);
-    if ((ds <= todayD || !i.frequency || i.frequency === 'once') && (!anchor || ds > anchor)) anchor = ds;
-  }
-  if (!anchor) anchor = todayD;
+  const schedule = getIncomePaySchedule();
+  const anchor = schedule.latestDate || schedule.anchor;
 
   // Step forward from the anchor in exact periodDays increments to find the bucket that contains "today"
   let curStart = new Date(anchor);
@@ -4514,32 +4496,32 @@ function getPayPeriodHistory(periods = 12) {
   return { periodType, periodDays, list: out };
 }
 
-// Share the chart's latest four-week window across all monthly income estimates.
+// Share the chart's latest three-week window across all monthly income estimates.
 function getRollingMonthlyIncome(sourceName = null) {
   const history = getPayPeriodHistory(8);
-  const averages = fourWeekMovingAverages(history.list, history.periodDays);
+  const averages = threeWeekMovingAverages(history.list, history.periodDays);
   const average = averages[averages.length - 1];
   if (!Number.isFinite(average)) return null;
   if (sourceName === null) return average * (7 / history.periodDays) * 52 / 12;
-  const window = history.list.slice(-(28 / history.periodDays));
   const entries = state.income.filter(i => (i.source || 'Unknown') === sourceName);
-  const total = window.reduce((sum, period) => sum + entries.reduce((subtotal, entry) =>
-    subtotal + recordedIncomeOccurrences(entry, period.start, period.end).reduce((value, occurrence) => value + occurrence.amount, 0), 0), 0);
-  return total / 4 * 52 / 12;
+  const sourcePeriods=history.list.map(period=>({...period,income:entries.reduce((sum,entry)=>sum+recordedIncomeOccurrences(entry,period.start,period.end).reduce((n,o)=>n+o.amount,0),0)}));
+  const count=21/history.periodDays;
+  const total=sourcePeriods.slice(-Math.ceil(count)).reverse().reduce((sum,p,i)=>sum+p.income*Math.min(1,count-i),0);
+  return total/count*(7/history.periodDays)*52/12;
 }
 
 function getCurrentMonthIncomeEstimate() {
  const today=todayStart(),start=new Date(today.getFullYear(),today.getMonth(),1),end=new Date(today.getFullYear(),today.getMonth()+1,1);
- const history=getPayPeriodHistory(8),count=28/history.periodDays;
- const recent=history.list.slice(-count);
+ const history=getPayPeriodHistory(8),count=21/history.periodDays;
+ const recent=history.list.slice(-Math.ceil(count));
  const first=recent.findIndex(p=>p.income>0);
  const usable=first<0?[]:recent.slice(first);
- const averages=fourWeekMovingAverages(history.list,history.periodDays);
+ const averages=threeWeekMovingAverages(history.list,history.periodDays);
  const latestAverage=averages[averages.length-1];
  const perCheck=Number.isFinite(latestAverage)?latestAverage:usable.length?usable.reduce((sum,p)=>sum+p.income,0)/usable.length:0;
  const received=roundCash(state.income.reduce((sum,item)=>sum+recordedIncomeOccurrences(item,start,end).reduce((n,o)=>n+o.amount,0),0));
  const last=history.list[history.list.length-1];
- let next=last?new Date(last.start):new Date(today),remaining=0;
+ let next=new Date(getIncomePaySchedule().anchor),remaining=0;
  next.setDate(next.getDate()+history.periodDays);
  while(next<end){if(next>=start && next>today)remaining++;next.setDate(next.getDate()+history.periodDays);}
  return {received,remaining,perCheck,total:roundCash(received+remaining*perCheck)};
@@ -5292,7 +5274,7 @@ function renderIncome() {
       
     </div>
     <div class="st">
-      <div class="st-label" title="Logged income this month plus remaining paydays at the four-week average">Monthly est.</div>
+      <div class="st-label" title="Logged income this month plus remaining paydays at the three-week average">Monthly est.</div>
       <div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div>
       
     </div>
@@ -5325,7 +5307,7 @@ function renderIncome() {
       trendMeta = 'Pay periods';
     }
 
-    const averages = fourWeekMovingAverages(periodSlice, payHist.periodDays);
+    const averages = threeWeekMovingAverages(periodSlice, payHist.periodDays);
     trendList = periodSlice.map((h, idx, arr) => {
       // Tooltip should show the actual date entered on the income item, not the bucket range.
       const receivedDates = state.income
@@ -5399,7 +5381,7 @@ function renderIncome() {
         </div>
         ${incomeChartMode === 'payperiod'
           ? `<div class="payperiod-scroll income-chart-scroll">
-               <div class="payperiod-inner" data-chart-max="${chartMax}">${cols}<svg class="payperiod-average" role="img" aria-label="Four-week moving average per pay period"><path></path></svg></div>
+               <div class="payperiod-inner" data-chart-max="${chartMax}">${cols}<svg class="payperiod-average" role="img" aria-label="Three-week moving average per pay period"><path></path></svg></div>
              </div>`
           : `<div class="monthly-scroll income-chart-scroll">
                <div class="monthly-scroll-inner">${cols}</div>
@@ -5412,7 +5394,7 @@ function renderIncome() {
   const trendHeader = `<div class="sh trend-head">
     <div>
       <h3>Trend</h3>
-      <span class="x">${trendMeta}</span>${incomeChartMode === 'payperiod' ? `<span class="average-key">4-week avg ${Number.isFinite(latestAverage) ? fmtMoney(latestAverage) : '—'}</span>` : ''}
+      <span class="x">${trendMeta}</span>${incomeChartMode === 'payperiod' ? `<span class="average-key">3-week avg ${Number.isFinite(latestAverage) ? fmtMoney(latestAverage) : '—'}</span>` : ''}
     </div>
     <div class="chart-mode-links" role="group" aria-label="Income chart interval">
       <button data-action="income-chart-mode" data-mode="monthly" class="${incomeChartMode === 'monthly' ? 'active' : ''}">Monthly</button>
@@ -5944,7 +5926,7 @@ function getPaycheckPlan() {
     .sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
   const check=checks[0],cp=state.cashPlan || {};
   const cadence=['weekly','biweekly','monthly'].includes(cp.cadence)?cp.cadence:detectPayPeriodType();
-  const anchor=parseISODate(paycheckDate(check)) || todayStart();
+  const anchor=getIncomePaySchedule().anchor;
   let inferred=nextBillDate(anchor,cadence,anchor.getDate()),guard=0;
   while(inferred && isoDate(inferred)<=today && guard++<600)inferred=nextBillDate(inferred,cadence,anchor.getDate());
   const next=cp.nextPayDate>today && cp.nextPayDate>paycheckDate(check)?parseISODate(cp.nextPayDate):inferred;
@@ -6205,13 +6187,13 @@ function updateHeader() {
   titleEl.textContent = 'Ledgeon'; // single-page mode: always the app name, not the tab name
 }
 
-// A four-week window is four weekly periods or two biweekly periods.
-// Keep the value in dollars per pay period to match the bars and axis.
-function fourWeekMovingAverages(periods, periodDays) {
-  const count = 28 / periodDays;
-  const first = periods.findIndex(p => p.income > 0);
-  return periods.map((p, i) => first < 0 || i < first + count - 1 ? null :
-    periods.slice(i - count + 1, i + 1).reduce((sum, item) => sum + item.income, 0) / count);
+// Three weeks: three weekly periods, or one full and half a biweekly period.
+// Values stay in dollars per pay period to match the chart.
+function threeWeekMovingAverages(periods, periodDays) {
+ const count=21/periodDays,needed=Math.ceil(count);
+ const first=periods.findIndex(p=>p.income>0);
+ return periods.map((p,i)=>first<0 || i<first+needed-1?null:
+  periods.slice(i-needed+1,i+1).reverse().reduce((sum,item,j)=>sum+item.income*Math.min(1,count-j),0)/count);
 }
 
 let payAverageObserver = null;
@@ -6315,7 +6297,7 @@ function showBarTooltip(col, x, y) {
   const amount = parseFloat(col.dataset.amount);
   const average = parseFloat(col.dataset.movingAverage);
   if (!amount && !Number.isFinite(average)) { tooltip.style.opacity = '0'; return; }
-  tooltip.innerHTML = `<div class="bt-label">${col.dataset.label}</div>${fmtMoney(amount, {round:true})}${Number.isFinite(average) ? `<div class="bt-label">4-week avg ${fmtMoney(average, {round:true})}</div>` : ''}`;
+  tooltip.innerHTML = `<div class="bt-label">${col.dataset.label}</div>${fmtMoney(amount, {round:true})}${Number.isFinite(average) ? `<div class="bt-label">3-week avg ${fmtMoney(average, {round:true})}</div>` : ''}`;
   tooltip.style.opacity = '0';
   tooltip.style.left = '0px';
   tooltip.style.top = '0px';
