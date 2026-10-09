@@ -3819,6 +3819,11 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 @media(max-width:359px){.sf-ring{width:96px;height:96px;margin-right:6px}}
 .bill-name-date{display:flex;align-items:baseline;gap:8px;min-width:0}.bill-name-date>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bill-name-date small{font-size:10px;color:var(--ink-3);font-weight:400;white-space:nowrap;flex-shrink:0}
 .bill-amount-label{display:block;margin-top:3px;font-size:11px;color:var(--ink-3);font-weight:400}
+.budget-due-note{margin:20px 0 0;font-size:11px;line-height:1.5;color:var(--ink-3)}
+.bill-progress-segments{display:flex;height:100%;overflow:hidden;border-radius:5px}.bill-progress-segments i{flex-shrink:0;border-radius:0;box-sizing:border-box}.bill-progress-segments i+i{border-left:1px solid var(--bg)}
+
+.starter-bill{border-bottom:1px solid var(--border-light);padding:11px 0}.starter-bill-choice{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}.starter-bill-choice input{accent-color:var(--accent)}.starter-bill-choice small{margin-left:auto;color:var(--ink-3);font-size:11px}.starter-bill .frow{margin:12px 0 2px}.starter-bill .frow[hidden]{display:none!important}
+.bill-progress-track{margin-top:28px}.bill-target-label{position:absolute;bottom:19px;left:1px;white-space:nowrap;font-size:10px;line-height:1.2;font-weight:500;color:var(--ink-3);font-variant-numeric:tabular-nums}
 </style>
 </head>
 
@@ -4047,9 +4052,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 <div class="modal" id="modal-presets">
   <div class="modal-bd" data-action="close-modal"></div>
   <div class="modal-c" style="display: flex; flex-direction: column;">
-    <div class="modal-t">starter expenses</div>
+    <div class="modal-t">Add recurring bills</div>
     <div style="font-size: 11px; color: var(--t-faint); margin-bottom: 10px; line-height: 1.5;">
-      typical rule-of-thumb amounts based on your monthly income.
+      Choose bills and enter their amounts and next due dates.
     </div>
     <div id="preset-list" style="overflow-y: auto; flex: 1;"></div>
     <div class="factions">
@@ -4167,13 +4172,15 @@ const CATEGORIES = {
 };
 
 const PRESET_BILLS = [
-  { name: 'Housing (Rent/Mortgage)',     recurring: 'monthly', category: 'housing',   pct: 30 },
-  { name: 'Utilities & Internet',        recurring: 'monthly', category: 'utilities', pct: 5 },
-  { name: 'Groceries',                   recurring: 'monthly', category: 'food',      pct: 15 },
-  { name: 'Transportation',              recurring: 'monthly', category: 'transport', pct: 10 },
-  { name: 'Insurance',                   recurring: 'monthly', category: 'insurance', pct: 5 },
-  { name: 'Subscriptions & Media',       recurring: 'monthly', category: 'media',     pct: 2 },
-  { name: 'Debt Repayment',              recurring: 'monthly', category: 'debt',      pct: 10 },
+ {name:'Rent / Mortgage',category:'housing'},
+ {name:'Electricity',category:'utilities'},
+ {name:'Water',category:'utilities'},
+ {name:'Internet',category:'utilities'},
+ {name:'Cell phone',category:'utilities'},
+ {name:'Car payment',category:'transport'},
+ {name:'Insurance',category:'insurance'},
+ {name:'Subscription',category:'media'},
+ {name:'Minimum debt payment',category:'debt'}
 ];
 
 // ──── State ──────────────────────────────────────────────────
@@ -6146,6 +6153,23 @@ function refreshCategorySpendingEntries() {
 document.getElementById('spending-category').addEventListener('change',refreshCategorySpendingEntries);
 
 
+function billSavingsSegments(plan) {
+ const palette=['#5846e8','#8873eb','#6d5bc7','#aca0ee'];
+ let held=Math.round(plan.savedTotal*100);
+ const records=Object.entries(state.cashPlan.paycheckPlans||{}).sort((a,b)=>String(b[1].paycheckDate||b[1].date||'').localeCompare(String(a[1].paycheckDate||a[1].date||'')));
+ const parts=[];
+ // Pooled withdrawals consume the oldest contributions first.
+ records.forEach(([id,record],index)=>{
+  const amount=Math.min(held,Math.round(Object.values(record.allocations||{}).reduce((sum,v)=>sum+moneyValue(v),0)*100));
+  if(amount>0){parts.push({amount:amount/100,color:palette[(records.length-1-index)%palette.length],label:'Paycheck '+shortDate(record.paycheckDate||record.date)});held-=amount;}
+ });
+ parts.reverse();
+ if(held>0)parts.unshift({amount:held/100,color:'#c2b8ec',label:'Adjusted savings'});
+ if(plan.paidTotal>0)parts.unshift({amount:plan.paidTotal,color:'#aaa4c2',label:'Bills paid'});
+ let remaining=plan.monthlyTotal;
+ return parts.map(part=>{const amount=Math.min(remaining,part.amount);remaining-=amount;return {...part,amount};}).filter(part=>part.amount>0);
+}
+
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
@@ -6166,15 +6190,15 @@ function renderBudget() {
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
  <div class="sf-fund-heading"><strong>Bill savings</strong></div>
- <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bill breakdown</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
- <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><i style="width:${p.monthlyTotal?Math.min(100,(p.savedTotal+p.paidTotal)/p.monthlyTotal*100):100}%"></i><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"></b></div>
+ <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bills per paycheck</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
+ <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><div class="bill-progress-segments">${billSavingsSegments(p).map(segment=>`<i style="width:${p.monthlyTotal?segment.amount/p.monthlyTotal*100:0}%;background:${segment.color}" title="${escHTML(segment.label)} · ${fmtMoney(segment.amount)}"></i>`).join('')}</div><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"><span class="bill-target-label" style="transform:translateX(${p.monthlyTotal && p.target/p.monthlyTotal<.15?'0':p.monthlyTotal && p.target/p.monthlyTotal>.85?'-100%':'-50%'})">${fmtMoney(p.target)}</span></b></div>
  <div class="bill-progress-caption"><span><strong>${fmtMoney(p.savedTotal)}</strong> saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal)} paid`:''} <button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
  ${unpaidBills.map(b=>`<div class="bill-compact-row"><span class="bill-name-date"><span>${escHTML(b.name)}</span>${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
  </section>
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
 
- ${Object.entries(state.cashPlan.spendingByPaycheck||{}).some(([id])=>id!==p.check.id)?`<details class="sf-activity"><summary>Previous paychecks</summary>${Object.entries(state.cashPlan.spendingByPaycheck).filter(([id])=>id!==p.check.id).sort((a,b)=>String(b[1].paycheckDate).localeCompare(String(a[1].paycheckDate))).map(([,record])=>`<details class="sf-past-check"><summary>${shortDate(record.paycheckDate)} · ${escHTML(record.source)}</summary>${record.entries.map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(record.labels?.[entry.category]||SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>`).join('')}</details>`:''}
+ <p class="budget-due-note">Update due dates in Expenses to change which bills appear here.</p>
  </section>`;
 }
 
@@ -6989,58 +7013,41 @@ document.querySelectorAll('form[data-type]').forEach(f => {
 
     if (!isEdit) tArr.push(item);
 
-    if (!isEdit && type === 'income' && state.bills.length === 0) {
-      if (confirm('Add starter budget based on this income?')) {
-        const iMo = monthlyEq(item.amount, item.frequency);
-        PRESET_BILLS.forEach(p => state.bills.push({
-          id: nextId('bills'), name: p.name, amount: Math.round(iMo*(p.pct/100)),
-          category: p.category, recurring: p.recurring, paid: false,
-          createdAt: isoDate(todayStart())
-        }));
-        currentTab = 'expenses'; localStorage.setItem(TAB_KEY, currentTab);
-      }
-    }
+    const offerBills=!isEdit && type==='income' && state.bills.length===0;
 
     saveState();
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
     render();
+    if(offerBills && confirm('Set up recurring bills?'))openPresetPicker();
   });
 });
 
 let presetSel = new Set();
 function openPresetPicker() {
-  presetSel.clear();
-  const { year, month } = getViewMonth();
-  const { income: inc } = getMonthlyStats(year, month);
-  const list = document.getElementById('preset-list');
-  if (inc === 0) list.innerHTML = `<div class="empty">add income first</div>`;
-  else {
-    const ex = new Set(state.bills.map(b => b.name.toLowerCase()));
-    list.innerHTML = PRESET_BILLS.map((p, i) => `<div class="preset-row ${ex.has(p.name.toLowerCase())?'exists':''}" data-idx="${i}"><div class="box"></div><div class="nm">${p.name}</div><div class="pct">${fmtMoney(inc*(p.pct/100),{round:true})} · ${p.pct}%</div></div>`).join('');
-    list.querySelectorAll('.preset-row:not(.exists)').forEach(r => r.addEventListener('click', () => {
-      const i = parseInt(r.dataset.idx);
-      if (presetSel.has(i)) { presetSel.delete(i); r.classList.remove('sel'); }
-      else { presetSel.add(i); r.classList.add('sel'); }
-      document.getElementById('preset-apply-btn').disabled = presetSel.size === 0;
-    }));
-  }
-  document.getElementById('modal-presets').classList.add('open');
+ presetSel.clear();
+ document.getElementById('preset-apply-btn').disabled=true;
+ const existing=new Set(state.bills.map(b=>b.name.toLowerCase().replace(/[^a-z0-9]/g,'')));
+ document.getElementById('preset-list').innerHTML=PRESET_BILLS.map((p,i)=>{
+  const exists=existing.has(p.name.toLowerCase().replace(/[^a-z0-9]/g,''));
+  return `<div class="starter-bill"><label class="starter-bill-choice"><input type="checkbox" data-preset="${i}" ${exists?'disabled':''}><span>${escHTML(p.name)}</span>${exists?'<small>Added</small>':''}</label><div class="frow" id="preset-fields-${i}" hidden><div class="fcol"><label class="flbl" for="preset-amount-${i}">Monthly amount</label><input class="input" id="preset-amount-${i}" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="preset-due-${i}">Next due date</label><input class="input" id="preset-due-${i}" type="date" required></div></div></div>`;
+ }).join('');
+ document.getElementById('preset-list').querySelectorAll('[data-preset]').forEach(input=>input.addEventListener('change',()=>{
+  const i=Number(input.dataset.preset);if(input.checked)presetSel.add(i);else presetSel.delete(i);
+  document.getElementById('preset-fields-'+i).hidden=!input.checked;
+  document.getElementById('preset-apply-btn').disabled=presetSel.size===0;
+ }));
+ document.getElementById('modal-presets').classList.add('open');syncOverlayHistory();
 }
 
 document.getElementById('preset-apply-btn').addEventListener('click', () => {
-  const { year, month } = getViewMonth();
-  const { income: inc } = getMonthlyStats(year, month);
-  presetSel.forEach(idx => {
-    const p = PRESET_BILLS[idx];
-    state.bills.push({
-      id: nextId('bills'), name: p.name, amount: Math.round(inc*(p.pct/100)),
-      category: p.category, recurring: p.recurring, paid: false,
-      createdAt: isoDate(todayStart())
-    });
-  });
-  saveState();
-  document.getElementById('modal-presets').classList.remove('open');
-  render();
+ const entries=[];
+ for(const idx of presetSel){
+  const preset=PRESET_BILLS[idx],amount=document.getElementById('preset-amount-'+idx),due=document.getElementById('preset-due-'+idx);
+  if(!amount.reportValidity() || !due.reportValidity())return;
+  entries.push({name:preset.name,amount:roundCash(Number(amount.value)),category:preset.category,recurring:'monthly',dueDate:due.value,anchorDay:parseISODate(due.value).getDate(),paid:false,createdAt:isoDate(todayStart())});
+ }
+ entries.forEach(entry=>state.bills.push({id:nextId('bills'),...entry}));
+ presetSel.clear();saveState();document.getElementById('modal-presets').classList.remove('open');render();
 });
 
 // ──── Cloud sync ─────────────────────────────────────────────
