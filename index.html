@@ -3794,6 +3794,17 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .sf-bill-entry input{display:block;margin-top:7px;width:100%;box-sizing:border-box}.sf-bill-entry button{padding:10px 4px;white-space:nowrap}
 .sf-balance-adjust{margin-top:14px}.sf-balance-adjust summary{font-size:11px;color:var(--ink-3);cursor:pointer}.sf-balance-adjust .sf-bill-entry{margin-top:12px}
 .sf-unpaid-row{align-items:center}.sf-unpaid-row>span{flex:1;min-width:0}.sf-unpaid-row>strong{white-space:nowrap}.sf-unpaid-row>.sf-action{font-size:11px;padding:6px 0 6px 8px}.sf-bill-details .sf-bill-heading{padding-bottom:10px;color:var(--accent)}
+
+.budget-bills-native{margin:24px -20px 0;border-top:1px solid var(--border-light)}
+.budget-money-control,.budget-bill-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.budget-money-control .sf-action{font-size:12px;min-width:42px;text-align:right}
+.budget-money-input{display:flex;align-items:center;gap:3px;border-bottom:1px solid var(--border);padding:5px 0;color:var(--accent)}
+.budget-money-input input{font:inherit;font-size:15px;font-weight:500;color:var(--accent);background:transparent;border:0;width:82px;min-width:0;text-align:right;outline-offset:4px;font-variant-numeric:tabular-nums;appearance:textfield}
+.budget-money-input input::-webkit-inner-spin-button,.budget-money-input input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.budget-paid{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--border-light);border-radius:50%;color:var(--accent);background:transparent;cursor:pointer}.budget-paid:hover{background:var(--accent-soft);border-color:var(--accent)}
+.budget-bills-native .r-name{overflow-wrap:anywhere;padding-right:8px}
+@media(max-width:380px){.budget-money-control{gap:7px}.budget-money-input input{width:68px}}
+.budget-required-row .r-amt{color:var(--accent);font-weight:600}.budget-required-row{background:var(--accent-soft)}
 </style>
 </head>
 
@@ -6101,13 +6112,14 @@ function renderBudget() {
  <div class="sf-heading"><h3>Suggested spending <button class="sf-action" data-action="edit-spending-categories">Edit</button></h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
- <section class="sf-bill-savings">
- <div class="sf-fund-heading"><strong>Bill savings</strong></div>
- <div class="sf-bill-balance"><strong>${fmtMoney(p.savedTotal)}</strong><span>Set aside</span></div>
- <div class="sf-bill-entry"><label for="bill-contribution">${p.recorded?'Added from this paycheck':'From this paycheck'}<input class="input" id="bill-contribution" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" required value="${p.reserve.toFixed(2)}"></label><button class="sf-action" data-action="save-bill-entry">${p.recorded?'Update':'+ Add'}</button></div>
- <details class="sf-balance-adjust"><summary>Adjust balance</summary><div class="sf-bill-entry"><label for="bill-balance">Current balance<input class="input" id="bill-balance" type="number" min="0" step="0.01" required value="${p.savedTotal.toFixed(2)}"></label><button class="sf-action" data-action="save-bill-balance">Save</button></div></details>
+ <section class="budget-bills-native">
+ ${sh('Bill savings')}
+ <div class="row budget-required-row"><div class="r-name">Needed from this paycheck</div><span class="r-amt">${fmtMoney(p.suggested)}</span></div>
+ <div class="row"><div class="r-name">Saved balance</div><div class="budget-money-control"><label class="budget-money-input"><span>$</span><input aria-label="Saved balance" id="bill-balance" type="number" min="0" step="0.01" required value="${p.savedTotal.toFixed(2)}"></label><button class="sf-action" data-action="save-bill-balance">Save</button></div></div>
+ <div class="row"><div><div class="r-name">Your contribution</div><div class="r-meta">${p.recorded?'Recorded':'Amount to add'}</div></div><div class="budget-money-control"><label class="budget-money-input"><span>$</span><input aria-label="This paycheck contribution" id="bill-contribution" type="number" min="0" max="${Math.max(0,p.available-p.essentials-p.extra)}" step="0.01" required value="${p.reserve.toFixed(2)}"></label><button class="sf-action" data-action="save-bill-entry">${p.recorded?'Update':'+ Add'}</button></div></div>
+ ${sh('Unpaid bills',{meta:fmtMoney(p.monthly)})}
+ ${unpaidBills.map(b=>`<div class="row"><div class="r-name">${escHTML(b.name)}</div><div class="budget-bill-right"><span class="r-amt">${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</span><button class="budget-paid" data-action="pay-bill" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid" title="Mark paid"><svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="m5 10 3 3 7-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>`).join('')||'<div class="empty">All bills paid</div>'}
  </section>
- <section class="sf-bill-details"><div class="sf-bill-heading"><span>Unpaid bills</span><strong>${fmtMoney(p.monthly)}</strong></div>${unpaidBills.map(b=>`<div class="sf-bill-row sf-unpaid-row"><span>${escHTML(b.name)}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}</section>
  ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} short of this check’s bill target.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
 
