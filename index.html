@@ -4054,7 +4054,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <div class="modal-c" style="display: flex; flex-direction: column;">
     <div class="modal-t">Add recurring bills</div>
     <div style="font-size: 11px; color: var(--t-faint); margin-bottom: 10px; line-height: 1.5;">
-      Choose bills and enter their amounts and next due dates.
+      Editable starting estimates based on take-home income. Use your actual bills when known.
     </div>
     <div id="preset-list" style="overflow-y: auto; flex: 1;"></div>
     <div class="factions">
@@ -4172,15 +4172,15 @@ const CATEGORIES = {
 };
 
 const PRESET_BILLS = [
- {name:'Rent / Mortgage',category:'housing'},
- {name:'Electricity',category:'utilities'},
- {name:'Water',category:'utilities'},
- {name:'Internet',category:'utilities'},
- {name:'Cell phone',category:'utilities'},
- {name:'Car payment',category:'transport'},
- {name:'Insurance',category:'insurance'},
- {name:'Subscription',category:'media'},
- {name:'Minimum debt payment',category:'debt'}
+ {name:'Rent / Mortgage',category:'housing',pct:25},
+ {name:'Electricity',category:'utilities',pct:3},
+ {name:'Water',category:'utilities',pct:1},
+ {name:'Internet',category:'utilities',pct:1.5},
+ {name:'Cell phone',category:'utilities',pct:1.5},
+ {name:'Car payment',category:'transport',pct:5},
+ {name:'Insurance',category:'insurance',pct:4},
+ {name:'Subscription',category:'media',pct:1},
+ {name:'Minimum debt payment',category:'debt',pct:3}
 ];
 
 // ──── State ──────────────────────────────────────────────────
@@ -7018,19 +7018,28 @@ document.querySelectorAll('form[data-type]').forEach(f => {
     saveState();
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('open'));
     render();
-    if(offerBills && confirm('Set up recurring bills?'))openPresetPicker();
+    if(offerBills && confirm('Add a starter budget based on your income?')){
+      const income=Math.max(0,getCurrentMonthIncomeEstimate().total);
+      if(income>0){
+        PRESET_BILLS.forEach(p=>state.bills.push({id:nextId('bills'),name:p.name,amount:Math.round(income*p.pct/100),category:p.category,recurring:'monthly',paid:false,createdAt:isoDate(todayStart())}));
+        currentTab='expenses';localStorage.setItem(TAB_KEY,currentTab);saveState();render();
+      }else openPresetPicker();
+    }
   });
 });
 
 let presetSel = new Set();
 function openPresetPicker() {
  presetSel.clear();
+ const income=Math.max(0,getCurrentMonthIncomeEstimate().total);
  document.getElementById('preset-apply-btn').disabled=true;
  const existing=new Set(state.bills.map(b=>b.name.toLowerCase().replace(/[^a-z0-9]/g,'')));
  document.getElementById('preset-list').innerHTML=PRESET_BILLS.map((p,i)=>{
   const exists=existing.has(p.name.toLowerCase().replace(/[^a-z0-9]/g,''));
-  return `<div class="starter-bill"><label class="starter-bill-choice"><input type="checkbox" data-preset="${i}" ${exists?'disabled':''}><span>${escHTML(p.name)}</span>${exists?'<small>Added</small>':''}</label><div class="frow" id="preset-fields-${i}" hidden><div class="fcol"><label class="flbl" for="preset-amount-${i}">Monthly amount</label><input class="input" id="preset-amount-${i}" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="preset-due-${i}">Next due date</label><input class="input" id="preset-due-${i}" type="date" required></div></div></div>`;
+  if(!exists)presetSel.add(i);
+  return `<div class="starter-bill"><label class="starter-bill-choice"><input type="checkbox" data-preset="${i}" ${exists?'disabled':'checked'}><span>${escHTML(p.name)}</span>${exists?'<small>Added</small>':`<small>${income>0?fmtMoney(Math.round(income*p.pct/100))+' · ':''}${p.pct}%</small>`}</label><div class="frow" id="preset-fields-${i}" ${exists?'hidden':''}><div class="fcol"><label class="flbl" for="preset-amount-${i}">Monthly amount</label><input class="input" id="preset-amount-${i}" type="number" min="0.01" step="0.01" value="${income>0?Math.round(income*p.pct/100):''}" required>${p.category==='debt'?'<small class="r-meta">Use your statement minimum.</small>':''}</div><div class="fcol"><label class="flbl" for="preset-due-${i}">Next due date</label><input class="input" id="preset-due-${i}" type="date"></div></div></div>`;
  }).join('');
+ document.getElementById('preset-apply-btn').disabled=presetSel.size===0;
  document.getElementById('preset-list').querySelectorAll('[data-preset]').forEach(input=>input.addEventListener('change',()=>{
   const i=Number(input.dataset.preset);if(input.checked)presetSel.add(i);else presetSel.delete(i);
   document.getElementById('preset-fields-'+i).hidden=!input.checked;
@@ -7044,7 +7053,7 @@ document.getElementById('preset-apply-btn').addEventListener('click', () => {
  for(const idx of presetSel){
   const preset=PRESET_BILLS[idx],amount=document.getElementById('preset-amount-'+idx),due=document.getElementById('preset-due-'+idx);
   if(!amount.reportValidity() || !due.reportValidity())return;
-  entries.push({name:preset.name,amount:roundCash(Number(amount.value)),category:preset.category,recurring:'monthly',dueDate:due.value,anchorDay:parseISODate(due.value).getDate(),paid:false,createdAt:isoDate(todayStart())});
+  entries.push({name:preset.name,amount:roundCash(Number(amount.value)),category:preset.category,recurring:'monthly',dueDate:due.value,anchorDay:parseISODate(due.value)?.getDate(),paid:false,createdAt:isoDate(todayStart())});
  }
  entries.forEach(entry=>state.bills.push({id:nextId('bills'),...entry}));
  presetSel.clear();saveState();document.getElementById('modal-presets').classList.remove('open');render();
