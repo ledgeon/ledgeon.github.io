@@ -3807,7 +3807,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-required-row .r-amt{color:var(--accent);font-weight:600}.budget-required-row{background:var(--accent-soft)}
 
 .bill-progress-section{border-top:1px solid var(--border-light);margin-top:28px;padding-top:20px}
-.bill-progress-values{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 12px;font-size:12px;color:var(--ink-3)}
+.bill-progress-values{display:flex;justify-content:flex-start;gap:12px;align-items:baseline;margin:16px 0 12px;font-size:12px;color:var(--ink-3)}
 .bill-progress-values strong{font-size:25px;font-weight:600;color:var(--accent);letter-spacing:-.5px}.bill-progress-values div span{margin-left:7px}
 .bill-progress-track{height:7px;background:var(--border-light);border-radius:5px;position:relative}.bill-progress-track i{display:block;height:100%;background:var(--accent);border-radius:5px}.bill-progress-track b{position:absolute;top:-4px;height:15px;width:2px;background:var(--ink);transform:translateX(-1px)}
 .bill-progress-caption{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:var(--ink-3)}.bill-progress-caption strong{font-weight:500;color:var(--ink)}.bill-progress-caption button{font-size:11px}
@@ -3817,6 +3817,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .sf-ring{width:106px;height:106px;margin-right:12px;transform:translateY(-4px)}
 .bill-progress-values .sf-action{font-size:13px}.bill-progress-caption>span>.sf-action{margin-left:8px}
 @media(max-width:359px){.sf-ring{width:96px;height:96px;margin-right:6px}}
+.bill-name-date{display:flex;align-items:baseline;gap:8px;min-width:0}.bill-name-date>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bill-name-date small{font-size:10px;color:var(--ink-3);font-weight:400;white-space:nowrap;flex-shrink:0}
 </style>
 </head>
 
@@ -5983,7 +5984,7 @@ function billPaidForMonth(bill, month) {
  // Recurring bills advance their due date when paid; use the paid occurrence,
  // not the payment timestamp, so early payments count for the correct month.
  if((state.payments||[]).some(payment=>payment.billId===bill.id &&
-   String(payment.dueDate||payment.date||'').slice(0,7)===month))return true;
+   String(payment.budgetMonth||payment.dueDate||payment.date||'').slice(0,7)===month))return true;
  return !!bill.paid && (!bill.dueDate || String(bill.dueDate).slice(0,7)===month);
 }
 
@@ -6008,6 +6009,8 @@ function getPaycheckPlan() {
  }
  count=Math.max(1,count);
  const monthly=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,month)).reduce((sum,b)=>sum+monthlyEq(moneyValue(b.amount),b.recurring),0));
+ const monthlyTotal=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once').reduce((sum,b)=>sum+monthlyEq(moneyValue(b.amount),b.recurring),0));
+ const paidTotal=roundCash(monthlyTotal-monthly);
  const suggested=roundCash(monthly/count);
  // Migrate the held cash once into a single editable bill-savings balance.
  if(cp.billSavingsVersion!==3){
@@ -6022,7 +6025,7 @@ function getPaycheckPlan() {
  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
  const reserve=recorded?recordedTotal:Math.min(requested,Math.max(0,roundCash(available-essentials-extra)));
  const savedTotal=moneyValue(cp.reserves.__pool);
- return {check,cadence,next,month,paydays:count,target:roundCash(monthly*Math.min(count,elapsed)/count),monthly,suggested,available,reserve,essentials,extra,
+ return {check,cadence,next,month,paydays:count,target:roundCash(monthlyTotal*Math.min(count,elapsed)/count),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
   left:roundCash(available-reserve-essentials-extra),recorded,savedTotal,rows:[],
   canUndo:!!recorded && savedTotal>=reserve,unfunded:roundCash(Math.max(0,suggested-reserve))};
 }
@@ -6138,13 +6141,12 @@ function renderBudget() {
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
  <div class="sf-fund-heading"><strong>Bill savings</strong></div>
- <div class="bill-progress-values"><div><strong>${fmtMoney(p.target)}</strong><span>by this paycheck</span></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
- <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthly)}" aria-valuenow="${Math.min(p.savedTotal,Math.max(1,p.monthly))}"><i style="width:${p.monthly?Math.min(100,p.savedTotal/p.monthly*100):100}%"></i><b style="left:${p.monthly?Math.min(100,p.target/p.monthly*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"></b></div>
- <div class="bill-progress-caption"><span><strong>${fmtMoney(p.savedTotal)}</strong> saved <button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthly)} total</span></div>
+ <div class="bill-progress-values"><div><strong>${fmtMoney(p.target)}</strong></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
+ <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><i style="width:${p.monthlyTotal?Math.min(100,(p.savedTotal+p.paidTotal)/p.monthlyTotal*100):100}%"></i><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"></b></div>
+ <div class="bill-progress-caption"><span><strong>${fmtMoney(p.savedTotal)}</strong> saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal)} paid`:''} <button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
- ${unpaidBills.map(b=>`<div class="bill-compact-row"><span>${escHTML(b.name)}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
+ ${unpaidBills.map(b=>`<div class="bill-compact-row"><span class="bill-name-date"><span>${escHTML(b.name)}</span>${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-budget-month="${p.month}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
  </section>
- ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} short of this check’s bill target.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
 
  ${Object.entries(state.cashPlan.spendingByPaycheck||{}).some(([id])=>id!==p.check.id)?`<details class="sf-activity"><summary>Previous paychecks</summary>${Object.entries(state.cashPlan.spendingByPaycheck).filter(([id])=>id!==p.check.id).sort((a,b)=>String(b[1].paycheckDate).localeCompare(String(a[1].paycheckDate))).map(([,record])=>`<details class="sf-past-check"><summary>${shortDate(record.paycheckDate)} · ${escHTML(record.source)}</summary>${record.entries.map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(record.labels?.[entry.category]||SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>`).join('')}</details>`:''}
@@ -6579,9 +6581,11 @@ document.addEventListener('click', e => {
   if (act === 'pay-bill' || act === 'roll-bill') {
     const b = state.bills.find(b=>b.id===btn.dataset.id);
     if (!b) return;
+    const budgetMonth=btn.dataset.budgetMonth;
+    if(budgetMonth && billPaidForMonth(b,budgetMonth))return;
     const due = parseISODate(b.dueDate);
     const recurring = b.recurring && b.recurring !== 'once';
-    if (recurring && !due) { openModal('expenses',b.id); return; }
+    if (recurring && !due && !budgetMonth) { openModal('expenses',b.id); return; }
     if (act === 'roll-bill') {
       if (!confirm('Move this bill to its next upcoming due date? Older dates will be skipped, not recorded as paid. Use Mark paid if you want a payment record.')) return;
       b.anchorDay = b.anchorDay || due.getDate();
@@ -6590,13 +6594,15 @@ document.addEventListener('click', e => {
       moveBillFund(b,isoDate(next));
       b.dueDate = isoDate(next); b.paid=false;
     } else {
-      const next = recurring ? nextBillDate(due,b.recurring,b.anchorDay || due.getDate()) : null;
+      const paymentDue=due||parseISODate(budgetMonth+'-01');
+      const next = recurring ? (budgetMonth && b.dueDate?.slice(0,7)>budgetMonth ? due : nextBillDate(paymentDue,b.recurring,b.anchorDay || paymentDue.getDate())) : null;
       getPaycheckPlan();
       const fundKey='__pool';
       const fundUsed=Math.min(moneyValue(state.cashPlan?.reserves?.[fundKey]),moneyValue(b.amount));
       if(fundUsed>0)state.cashPlan.reserves[fundKey]=roundCash(moneyValue(state.cashPlan.reserves[fundKey])-fundUsed);
-      state.payments.push({fundKey,fundUsed,id:nextId('payments'),billId:b.id,name:b.name,amount:moneyValue(b.amount),category:b.category,date:isoDate(todayStart()),dueDate:b.dueDate,recordedAt:Date.now(),previous:{dueDate:b.dueDate,paid:!!b.paid,anchorDay:b.anchorDay},afterDue:next?isoDate(next):b.dueDate});
-      if (next) { b.anchorDay=b.anchorDay || due.getDate(); b.dueDate=isoDate(next); b.paid=false; }
+      state.payments=state.payments||[];
+      state.payments.push({budgetMonth,fundKey,fundUsed,id:nextId('payments'),billId:b.id,name:b.name,amount:moneyValue(b.amount),category:b.category,date:isoDate(todayStart()),dueDate:b.dueDate,recordedAt:Date.now(),previous:{dueDate:b.dueDate,paid:!!b.paid,anchorDay:b.anchorDay},afterDue:next?isoDate(next):b.dueDate});
+      if (next) { b.anchorDay=b.anchorDay || paymentDue.getDate(); b.dueDate=isoDate(next); b.paid=false; }
       else b.paid=true;
     }
     document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));
