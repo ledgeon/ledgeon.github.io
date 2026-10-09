@@ -4528,6 +4528,23 @@ function getRollingMonthlyIncome(sourceName = null) {
   return total / 4 * 52 / 12;
 }
 
+function getCurrentMonthIncomeEstimate() {
+ const today=todayStart(),start=new Date(today.getFullYear(),today.getMonth(),1),end=new Date(today.getFullYear(),today.getMonth()+1,1);
+ const history=getPayPeriodHistory(8),count=28/history.periodDays;
+ const recent=history.list.slice(-count);
+ const first=recent.findIndex(p=>p.income>0);
+ const usable=first<0?[]:recent.slice(first);
+ const averages=fourWeekMovingAverages(history.list,history.periodDays);
+ const latestAverage=averages[averages.length-1];
+ const perCheck=Number.isFinite(latestAverage)?latestAverage:usable.length?usable.reduce((sum,p)=>sum+p.income,0)/usable.length:0;
+ const received=roundCash(state.income.reduce((sum,item)=>sum+recordedIncomeOccurrences(item,start,end).reduce((n,o)=>n+o.amount,0),0));
+ const last=history.list[history.list.length-1];
+ let next=last?new Date(last.start):new Date(today),remaining=0;
+ next.setDate(next.getDate()+history.periodDays);
+ while(next<end){if(next>=start && next>today)remaining++;next.setDate(next.getDate()+history.periodDays);}
+ return {received,remaining,perCheck,total:roundCash(received+remaining*perCheck)};
+}
+
 function getIncomeStats() {
   const now = new Date(); const curY = now.getFullYear(); const curM = now.getMonth();
   let rawInc = []; let rawBills = [];
@@ -4544,7 +4561,7 @@ function getIncomeStats() {
   
   let validInc = rawInc.length > 1 ? rawInc.filter(inc => inc >= Math.max(...rawInc) * 0.5) : rawInc;
   if (validInc.length === 0) { const cur = getMonthlyStats(curY, curM); if (cur.income > 0) validInc.push(cur.income); }
-  const avgMonthly = getRollingMonthlyIncome() ?? 0;
+  const avgMonthly = getCurrentMonthIncomeEstimate().total;
   const projAnnual = avgMonthly * 12;
 
   let validBills = rawBills;
@@ -5041,6 +5058,20 @@ function buildScrollBarChart(list, emptyMsg, options) {
 }
 
 // ──── Render: income ───────────────────────────────────────
+function getSourceMonthlyAverage(sourceName) {
+ const cutoff=new Date(todayStart().getFullYear(),todayStart().getMonth(),1);
+ const months={};
+ for(const entry of state.income){
+  if((entry.source || 'Unknown')!==sourceName)continue;
+  const date=parseISODate(paycheckDate(entry));
+  if(!date || date>=cutoff)continue;
+  const key=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0');
+  months[key]=(months[key]||0)+moneyValue(entry.amount);
+ }
+ const totals=Object.values(months);
+ return totals.length?totals.reduce((sum,total)=>sum+total,0)/totals.length:null;
+}
+
 function renderSourceDetail(sourceName) {
   const entries = state.income
     .filter(i => (i.source || 'Unknown') === sourceName)
@@ -5063,7 +5094,7 @@ function renderSourceDetail(sourceName) {
   const totalHours = entries.reduce((sum, i) => sum + (Number(i.hours) || 0), 0);
   const entriesWithHours = entries.filter(i => (Number(i.hours) || 0) > 0);
 
-  const avgMonthlyTakeHome = getRollingMonthlyIncome(sourceName);
+  const avgMonthlyTakeHome = getSourceMonthlyAverage(sourceName);
   const avgPaycheck = entries.length ? total / entries.length : 0;
   const avgHourly = totalHours > 0 ? total / totalHours : 0;
   const avgHoursPerCheck = entriesWithHours.length ? totalHours / entriesWithHours.length : 0;
@@ -5092,7 +5123,7 @@ function renderSourceDetail(sourceName) {
       <div class="source-summary-value">${fmtMoney(avgPaycheck, {round:true})}</div>
     </div>
     <div class="source-summary-item">
-      <div class="source-summary-label" title="Monthly estimate from this source’s income in the chart’s latest four-week window (weekly average × 52 ÷ 12)">Monthly est.</div>
+      <div class="source-summary-label" title="Average of recorded monthly totals for this source, excluding the current month">Avg monthly</div>
       <div class="source-summary-value">${avgMonthlyTakeHome === null ? '—' : fmtMoney(avgMonthlyTakeHome, {round:true})}</div>
     </div>
     <div class="source-summary-item">
@@ -5261,7 +5292,7 @@ function renderIncome() {
       
     </div>
     <div class="st">
-      <div class="st-label" title="Latest four-week average converted to a monthly estimate (weekly average × 52 ÷ 12)">Monthly est.</div>
+      <div class="st-label" title="Logged income this month plus remaining paydays at the four-week average">Monthly est.</div>
       <div class="st-value">${fmtMoney(stats.ytdAvgMonthly, {round:true})}</div>
       
     </div>
@@ -5611,7 +5642,7 @@ function renderExpenses() {
     'Expenses',
     fmtMoney(recurringMonthly, {round:true}),
     ytdMonthlyIncome > 0
-      ? `<span class="expense-income-ratio">${expensePctIncome.toFixed(0)}%</span> of ${fmtMoney(ytdMonthlyIncome, {round:true})} avg income`
+      ? `<span class="expense-income-ratio">${expensePctIncome.toFixed(0)}%</span> of ${fmtMoney(ytdMonthlyIncome, {round:true})} estimated income this month`
       : ''
   );
 
@@ -5879,6 +5910,34 @@ function distributeBillSetAside(rows, total) {
  return Object.fromEntries(Object.entries(result).map(([key,cents])=>[key,cents/100]));
 }
 
+// Repair saved splits produced by the old full-bill-first allocator once.
+// Keep the user's cash total and recorded paycheck history intact.
+function repairLegacyBillFunds(cp, cadence, next) {
+ if(cp.billFundingVersion===2)return;
+ const records=Object.values(cp.paycheckPlans||{});
+ const dates=records.map(p=>p.paycheckDate).filter(Boolean).sort();
+ if(!dates.length || !Object.values(cp.reserves||{}).some(v=>moneyValue(v)>0))return;
+ const anchor=parseISODate(dates[dates.length-1]);if(!anchor)return;
+ const nextAtSaving=nextBillDate(anchor,cadence,anchor.getDate());
+ const rows=state.bills.filter(b=>moneyValue(b.amount)>0 && !billFundingPaused(b,next)).map(b=>{
+  const due=parseISODate(b.dueDate);let paychecks=1,d=nextAtSaving,g=0;
+  while(d && due && d<due && g++<600){paychecks++;d=nextBillDate(d,cadence,nextAtSaving.getDate());}
+  const needed=moneyValue(b.amount);
+  return {key:billFundKey(b),bill:b,needed,paychecks,suggested:Math.ceil(needed/paychecks*100)/100};
+ }).sort((a,b)=>(a.bill.dueDate||'9999').localeCompare(b.bill.dueDate||'9999'));
+ if(!rows.length)return;
+ const ids=new Set(rows.map(r=>String(r.bill.id)));
+ const keys=Object.keys(cp.reserves||{}).filter(key=>ids.has(key.slice(0,key.lastIndexOf(':'))));
+ const total=roundCash(keys.reduce((sum,key)=>sum+moneyValue(cp.reserves[key]),0));
+ const allocations=distributeBillSetAside(rows,total);
+ const allocated=roundCash(Object.values(allocations).reduce((sum,v)=>sum+v,0));
+ // Keep any excess cash as saved money, rather than discarding it.
+ if(total>allocated)allocations[rows[0].key]=roundCash(allocations[rows[0].key]+total-allocated);
+ for(const key of keys)delete cp.reserves[key];
+ Object.assign(cp.reserves,allocations);
+ cp.billFundingVersion=2;
+}
+
 function getPaycheckPlan() {
   const today = isoDate(todayStart());
   const checks = state.income.filter(i => paycheckDate(i) && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once') && moneyValue(i.amount)>0)
@@ -5890,6 +5949,7 @@ function getPaycheckPlan() {
   while(inferred && isoDate(inferred)<=today && guard++<600)inferred=nextBillDate(inferred,cadence,anchor.getDate());
   const next=cp.nextPayDate>today && cp.nextPayDate>paycheckDate(check)?parseISODate(cp.nextPayDate):inferred;
   const available=cp.paycheckId===check?.id && cp.paycheckAmount!==undefined?moneyValue(cp.paycheckAmount):moneyValue(check?.amount);
+  repairLegacyBillFunds(cp,cadence,next);
   const recorded=cp.paycheckPlans?.[check?.id] || null;
   const draft=cp.paycheckDrafts?.[check?.id] || null;
   // Use each entered expense once; stale dates are not evidence of unpaid arrears.
@@ -5951,6 +6011,7 @@ function recordPaycheckSetAside() {
   cp.reserves={...(cp.reserves||{})};cp.paycheckPlans={...(cp.paycheckPlans||{})};
   const allocations={};
   for(const r of p.rows){if(r.allocation>0){allocations[r.key]=r.allocation;cp.reserves[r.key]=roundCash(moneyValue(cp.reserves[r.key])+r.allocation);}}
+  cp.billFundingVersion=2;
   cp.paycheckPlans[p.check.id]={allocations,date:isoDate(todayStart()),paycheckDate:paycheckDate(p.check),source:p.check.source||'Income',recordedAt:Date.now()};
   if(cp.paycheckDrafts)delete cp.paycheckDrafts[p.check.id];
   return true;
