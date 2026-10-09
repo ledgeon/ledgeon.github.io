@@ -3824,6 +3824,16 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 
 .starter-bill{border-bottom:1px solid var(--border-light);padding:11px 0}.starter-bill-choice{display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer}.starter-bill-choice input{accent-color:var(--accent)}.starter-bill-choice small{margin-left:auto;color:var(--ink-3);font-size:11px}.starter-bill .frow{margin:12px 0 2px}.starter-bill .frow[hidden]{display:none!important}
 .bill-progress-track{margin-top:28px}.bill-target-label{position:absolute;bottom:19px;left:1px;white-space:nowrap;font-size:10px;line-height:1.2;font-weight:500;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+/* Touch scrollbars stay quiet until their scroll container moves. */
+@media (hover: none) and (pointer: coarse) {
+  html, body, body * { scrollbar-color: transparent transparent !important; }
+  ::-webkit-scrollbar-track { background: transparent !important; }
+  ::-webkit-scrollbar-thumb { background: transparent !important; }
+  .is-scrolling { scrollbar-color: var(--accent) transparent !important; }
+  .is-scrolling::-webkit-scrollbar-thumb { background: var(--accent) !important; border-radius: 4px; }
+}
+
 </style>
 </head>
 
@@ -3873,7 +3883,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <button data-tab="budget">Budget</button>
 </nav>
 
-<div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><select class="select" id="spending-category"><option value="groceries">Groceries</option><option value="gas">Gas</option><option value="savings">Savings</option><option value="other">Other spending</option></select></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Add</button></div><div id="category-spending-entries"></div></div></div></div>
+<div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><input class="input" id="spending-category" maxlength="30" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-budget-mode">Budget</label><select class="select" id="spending-budget-mode"><option value="percent">Percent (%)</option><option value="fixed">Dollars ($)</option></select></div><div class="fcol"><label class="flbl" for="spending-budget-value">Suggested amount</label><input class="input" id="spending-budget-value" type="number" min="0" step="0.01" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Save</button></div><div id="category-spending-entries"></div></div></div></div>
 <div class="modal" id="modal-bill-entry" role="dialog" aria-modal="true" aria-labelledby="bill-entry-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="bill-entry-title">Add to bill savings</div><form id="bill-entry-form"><div class="frow"><div class="fcol"><label class="flbl" for="bill-entry-amount">Amount</label><input class="input" id="bill-entry-amount" type="number" min="0" step="0.01" required></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button class="primary" id="bill-entry-submit" type="submit">Add</button></div></form></div></div>
 <div class="modal" id="modal-budget-categories" role="dialog" aria-modal="true" aria-labelledby="budget-categories-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="budget-categories-title">Spending categories</div><form id="budget-categories-form"><div id="budget-category-fields"></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="submit" class="primary">Save</button></div></form></div></div>
 <div class="modal" id="modal-budget-amounts" role="dialog" aria-modal="true" aria-labelledby="budget-amounts-title">
@@ -6036,10 +6046,8 @@ function getPaycheckPlan() {
  count=Math.max(1,count);
  const monthly=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,month)).reduce((sum,b)=>sum+monthlyEq(moneyValue(b.amount),b.recurring),0));
  const monthlyTotal=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once').reduce((sum,b)=>sum+monthlyEq(moneyValue(b.amount),b.recurring),0));
- const paidTotal=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once').reduce((sum,b)=>{
-  const payments=(state.payments||[]).filter(payment=>payment.billId===b.id && String(payment.budgetMonth||payment.date||'').slice(0,7)===month && (!payment.afterDue || b.dueDate===payment.afterDue));
-  return sum+Math.min(monthlyEq(moneyValue(b.amount),b.recurring),payments.reduce((total,payment)=>total+moneyValue(payment.amount),0));
- },0));
+ // Use the same due-date eligibility as the bill list and paycheck suggestion.
+ const paidTotal=roundCash(Math.max(0,monthlyTotal-monthly));
 
  // Migrate the held cash once into a single editable bill-savings balance.
  if(cp.billSavingsVersion!==3){
@@ -6058,7 +6066,7 @@ function getPaycheckPlan() {
  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
  const reserve=recorded?recordedTotal:Math.min(requested,Math.max(0,roundCash(available-essentials-extra)));
  const savedTotal=moneyValue(cp.reserves.__pool);
- return {check,cadence,next,month,paydays:count,target:roundCash(monthlyTotal*Math.min(count,elapsed)/count),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
+ return {check,cadence,next,month,paydays:count,target:roundCash(paidTotal+Math.min(monthly,suggested*Math.min(count,elapsed))),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
   left:roundCash(available-reserve-essentials-extra),recorded,savedTotal,rows:funding.rows,
   canUndo:!!recorded && savedTotal>=reserve,unfunded:roundCash(Math.max(0,suggested-reserve))};
 }
@@ -6161,10 +6169,10 @@ function removePaycheckSpending(checkId,entryId) {
 }
 
 function refreshCategorySpendingEntries() {
- const plan=getPaycheckPlan(),category=document.getElementById('spending-category').value;
+ const plan=getPaycheckPlan(),category=document.getElementById('modal-spending').dataset.category;
  document.getElementById('category-spending-entries').innerHTML=paycheckSpending(plan).entries.filter(entry=>entry.category===category).slice().reverse().map(entry=>`<div class="sf-activity-row"><div><strong>${fmtMoney(entry.amount)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><button class="sf-action" data-action="remove-spending" data-check="${escHTML(plan.check.id)}" data-entry="${escHTML(entry.id)}">Remove</button></div>`).join('');
 }
-document.getElementById('spending-category').addEventListener('change',refreshCategorySpendingEntries);
+
 
 
 function appendBillContribution(amount,label) {
@@ -6196,7 +6204,7 @@ function syncBillContributions() {
 function billSavingsSegments(plan) {
  const palette=['#5846e8','#8873eb','#6d5bc7','#aca0ee'];
  const parts=syncBillContributions().map(c=>({amount:c.amount,color:palette[c.sequence%palette.length],label:c.label}));
- // Savings end at the marker; paid bills continue the month's progress after it.
+ // Paid bills and held savings share the monthly-total scale with the target.
  if(plan.paidTotal>0)parts.push({amount:plan.paidTotal,color:'#aaa4c2',label:'Bills paid'});
  let remaining=plan.monthlyTotal;
  return parts.map(part=>{const amount=Math.min(remaining,part.amount);remaining-=amount;return {...part,amount};}).filter(part=>part.amount>0);
@@ -6217,13 +6225,13 @@ function renderBudget() {
  return `<section class="budget-worksheet spending-first">
  <div class="sf-lead"><div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.suggested,{round:true})}</strong></div></div></div>
- <div class="sf-heading"><h3>Suggested spending <button class="sf-action" data-action="edit-spending-categories">Edit</button></h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
  <div class="sf-fund-heading"><strong>Bill savings</strong></div>
  <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bills per paycheck</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
- <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><div class="bill-progress-segments">${billSavingsSegments(p).map(segment=>`<i style="width:${p.monthlyTotal?segment.amount/p.monthlyTotal*100:0}%;background:${segment.color}" title="${escHTML(segment.label)} · ${fmtMoney(segment.amount)}"></i>`).join('')}</div><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="Savings target: ${fmtMoney(p.target)}"><span class="bill-target-label" style="transform:translateX(${p.monthlyTotal && p.target/p.monthlyTotal<.15?'0':p.monthlyTotal && p.target/p.monthlyTotal>.85?'-100%':'-50%'})">${fmtMoney(p.target)} target</span></b></div>
+ <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><div class="bill-progress-segments">${billSavingsSegments(p).map(segment=>`<i style="width:${p.monthlyTotal?segment.amount/p.monthlyTotal*100:0}%;background:${segment.color}" title="${escHTML(segment.label)} · ${fmtMoney(segment.amount)}"></i>`).join('')}</div><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="Monthly progress target: ${fmtMoney(p.target)}"><span class="bill-target-label" style="transform:translateX(${p.monthlyTotal && p.target/p.monthlyTotal<.15?'0':p.monthlyTotal && p.target/p.monthlyTotal>.85?'-100%':'-50%'})">${fmtMoney(p.target)} target</span></b></div>
  <div class="bill-progress-caption"><span class="bill-progress-legend"><span class="bill-progress-key"><i style="background:#8873eb"></i><strong>${fmtMoney(p.savedTotal)}</strong> saved</span>${p.paidTotal>0?`<span class="bill-progress-key"><i style="background:#aaa4c2"></i>${fmtMoney(p.paidTotal)} paid</span>`:''}<button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
  ${unpaidBills.map(b=>`<div class="bill-compact-row"><span class="bill-name-date"><span>${escHTML(b.name)}</span>${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
@@ -6599,8 +6607,11 @@ document.addEventListener('click', e => {
   if(act==='open-spending'){
     const plan=getPaycheckPlan();if(!plan.check)return;
     const modal=document.getElementById('modal-spending');modal.dataset.check=plan.check.id;
-    document.getElementById('spending-category').innerHTML=spendingCategorySettings().map(c=>`<option value="${c.key}">${escHTML(c.label)}</option>`).join('');
-    document.getElementById('spending-category').value=btn.dataset.category;
+    modal.dataset.category=btn.dataset.category;
+    const category=spendingCategorySettings().find(c=>c.key===btn.dataset.category);
+    document.getElementById('spending-category').value=category.label;
+    document.getElementById('spending-budget-mode').value=category.mode;
+    document.getElementById('spending-budget-value').value=category.value;
     document.getElementById('spending-amount').value='';document.getElementById('spending-note').value='';
     const date=document.getElementById('spending-date');date.value=isoDate(todayStart());date.max=date.value;
     refreshCategorySpendingEntries();modal.classList.add('open');syncOverlayHistory();document.getElementById('spending-amount').focus();return;
@@ -6608,10 +6619,19 @@ document.addEventListener('click', e => {
   if(act==='save-spending'){
     const modal=document.getElementById('modal-spending');if(!modal.classList.contains('open'))return;
     const amount=document.getElementById('spending-amount'),date=document.getElementById('spending-date');
-    if(!amount.reportValidity() || !date.reportValidity())return;
-    if(addPaycheckSpending(modal.dataset.check,document.getElementById('spending-category').value,amount.value,date.value,document.getElementById('spending-note').value)){
-      modal.classList.remove('open');saveState();render();
-    }return;
+    const name=document.getElementById('spending-category'),value=document.getElementById('spending-budget-value'),mode=document.getElementById('spending-budget-mode').value;
+    name.value=name.value.trim();value.max=mode==='percent'?'100':'';
+    if(!name.reportValidity() || !value.reportValidity())return;
+    if(amount.value!=='' && (!amount.reportValidity() || !date.reportValidity()))return;
+    const key=modal.dataset.category,cp=state.cashPlan;
+    const settings=spendingCategorySettings();
+    const previous=settings.find(c=>c.key===key);
+    const changed=previous.mode!==mode || previous.value!==Number(value.value);
+    cp.categorySettings=Object.fromEntries(settings.map(c=>[c.key,c.key===key?{...c,label:name.value,mode,value:Number(value.value)}:c]));
+    const record=cp.spendingByPaycheck?.[modal.dataset.check];
+    if(record){record.labels={...record.labels,[key]:name.value};if(changed)record.targets=categoryTargets(getPaycheckPlan());}
+    if(amount.value!=='' && !addPaycheckSpending(modal.dataset.check,key,amount.value,date.value,document.getElementById('spending-note').value))return;
+    modal.classList.remove('open');saveState();render();return;
   }
   if(act==='remove-spending'){removePaycheckSpending(btn.dataset.check,btn.dataset.entry);saveState();render();refreshCategorySpendingEntries();return;}
 
@@ -7438,6 +7458,19 @@ if (syncEnabled()) {
   setSyncBadge('syncing', 'syncing');
   syncStartup();
 }
+
+// Capture scroll events from the page, charts, and modal scroll containers.
+const scrollbarIdleTimers=new WeakMap();
+document.addEventListener('scroll',event=>{
+ if(!window.matchMedia('(hover: none) and (pointer: coarse)').matches)return;
+ const target=event.target===document?document.documentElement:event.target;
+ if(!(target instanceof Element))return;
+ target.classList.add('is-scrolling');
+ clearTimeout(scrollbarIdleTimers.get(target));
+ scrollbarIdleTimers.set(target,setTimeout(()=>{
+  target.classList.remove('is-scrolling');scrollbarIdleTimers.delete(target);
+ },700));
+}, {capture:true,passive:true});
 </script>
 </body>
 </html>
