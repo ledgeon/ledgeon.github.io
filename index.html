@@ -3818,6 +3818,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .bill-progress-values .sf-action{font-size:13px}.bill-progress-caption>span>.sf-action{margin-left:8px}
 @media(max-width:359px){.sf-ring{width:96px;height:96px;margin-right:6px}}
 .bill-name-date{display:flex;align-items:baseline;gap:8px;min-width:0}.bill-name-date>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bill-name-date small{font-size:10px;color:var(--ink-3);font-weight:400;white-space:nowrap;flex-shrink:0}
+.bill-amount-label{display:block;margin-top:3px;font-size:11px;color:var(--ink-3);font-weight:400}
 </style>
 </head>
 
@@ -5981,11 +5982,9 @@ function revisePaycheckContribution(value) {
 }
 
 function billPaidForMonth(bill, month) {
- // Recurring bills advance their due date when paid; use the paid occurrence,
- // not the payment timestamp, so early payments count for the correct month.
- if((state.payments||[]).some(payment=>payment.billId===bill.id &&
-   String(payment.budgetMonth||payment.dueDate||payment.date||'').slice(0,7)===month))return true;
- return !!bill.paid && (!bill.dueDate || String(bill.dueDate).slice(0,7)===month);
+ // Expense due dates are authoritative, including manual corrections.
+ const due=parseISODate(bill.dueDate);
+ return !!due && isoDate(due).slice(0,7)>month;
 }
 
 function getPaycheckPlan() {
@@ -6141,7 +6140,7 @@ function renderBudget() {
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
  <div class="sf-fund-heading"><strong>Bill savings</strong></div>
- <div class="bill-progress-values"><div><strong>${fmtMoney(p.target)}</strong></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
+ <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bill breakdown</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
  <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><i style="width:${p.monthlyTotal?Math.min(100,(p.savedTotal+p.paidTotal)/p.monthlyTotal*100):100}%"></i><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"></b></div>
  <div class="bill-progress-caption"><span><strong>${fmtMoney(p.savedTotal)}</strong> saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal)} paid`:''} <button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
@@ -6595,7 +6594,8 @@ document.addEventListener('click', e => {
       b.dueDate = isoDate(next); b.paid=false;
     } else {
       const paymentDue=due||parseISODate(budgetMonth+'-01');
-      const next = recurring ? (budgetMonth && b.dueDate?.slice(0,7)>budgetMonth ? due : nextBillDate(paymentDue,b.recurring,b.anchorDay || paymentDue.getDate())) : null;
+      let next = recurring ? nextBillDate(paymentDue,b.recurring,b.anchorDay || paymentDue.getDate()) : null;
+      if(budgetMonth && next){let guard=0;while(isoDate(next).slice(0,7)<=budgetMonth && guard++<600)next=nextBillDate(next,b.recurring,b.anchorDay || paymentDue.getDate());}
       getPaycheckPlan();
       const fundKey='__pool';
       const fundUsed=Math.min(moneyValue(state.cashPlan?.reserves?.[fundKey]),moneyValue(b.amount));
