@@ -5930,6 +5930,27 @@ function repairLegacyBillFunds(cp, cadence, next) {
  cp.billFundingVersion=2;
 }
 
+function clearCurrentPaycheckRecord(checkId) {
+ const cp=state.cashPlan,record=cp.paycheckPlans?.[checkId];
+ if(!record)return;
+ cp.revisedPaycheckPlans=[...(cp.revisedPaycheckPlans||[]),{...record,checkId,revisedAt:Date.now()}];
+ delete cp.paycheckPlans[checkId];
+ if(cp.paycheckDrafts)delete cp.paycheckDrafts[checkId];
+}
+function revisePaycheckContribution(value) {
+ const before=getPaycheckPlan(),cp=state.cashPlan;
+ if(!before.check)return;
+ if(before.recorded){
+  // Release only cash that is still held; never undo actual bill payments.
+  for(const [key,amount] of Object.entries(before.recorded.allocations))cp.reserves[key]=roundCash(Math.max(0,moneyValue(cp.reserves[key])-moneyValue(amount)));
+  clearCurrentPaycheckRecord(before.check.id);
+ }
+ const plan=getPaycheckPlan();
+ const amount=Math.min(moneyValue(value),Math.max(0,plan.available-plan.essentials-plan.extra));
+ cp.paycheckDrafts={...(cp.paycheckDrafts||{}),[plan.check.id]:distributeBillSetAside(plan.rows,amount)};
+ if(before.recorded)recordPaycheckSetAside();
+}
+
 function getPaycheckPlan() {
   const today = isoDate(todayStart());
   const checks = state.income.filter(i => paycheckDate(i) && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once') && moneyValue(i.amount)>0)
@@ -5942,6 +5963,8 @@ function getPaycheckPlan() {
   const next=cp.nextPayDate>today && cp.nextPayDate>paycheckDate(check)?parseISODate(cp.nextPayDate):inferred;
   const available=cp.paycheckId===check?.id && cp.paycheckAmount!==undefined?moneyValue(cp.paycheckAmount):moneyValue(check?.amount);
   repairLegacyBillFunds(cp,cadence,next);
+  const oldRecord=cp.paycheckPlans?.[check?.id];
+  if(oldRecord && !Object.values(cp.reserves||{}).some(v=>moneyValue(v)>0) && state.bills.some(b=>!billFundingPaused(b,next) && moneyValue(oldRecord.allocations[billFundKey(b)])>0))clearCurrentPaycheckRecord(check.id);
   const recorded=cp.paycheckPlans?.[check?.id] || null;
   const draft=cp.paycheckDrafts?.[check?.id] || null;
   // Use each entered expense once; stale dates are not evidence of unpaid arrears.
@@ -5992,6 +6015,7 @@ function updateSavedBillTotal(value) {
     const cents=i===plan.rows.length-1?remaining:Math.min(remaining,Math.floor(target*weights[i]/totalWeight));
     cp.reserves[row.key]=cents/100;remaining-=cents;
   });
+  if(plan.recorded)clearCurrentPaycheckRecord(plan.check.id);
   // Recalculate the next suggestion from the corrected balance.
   if(cp.paycheckDrafts && plan.check)delete cp.paycheckDrafts[plan.check.id];
 }
@@ -6255,12 +6279,16 @@ function refreshPayPeriodAverage() {
     if (!bounds.width || !bounds.height) return;
     svg.setAttribute('viewBox', `0 0 ${bounds.width} ${bounds.height}`);
     const max = Number(inner.dataset.chartMax);
-    let path = '';
+    let path = '', previous = null;
     inner.querySelectorAll('[data-moving-average]').forEach(col => {
       const track = col.querySelector('.bar-track').getBoundingClientRect();
       const x = track.left - bounds.left + track.width / 2;
       const y = track.bottom - bounds.top - Number(col.dataset.movingAverage) / max * track.height;
-      path += `${path ? ' L' : 'M'}${x.toFixed(2)},${y.toFixed(2)}`;
+      if(previous){
+        const bend=(x-previous.x)*0.18;
+        path += ` C${(previous.x+bend).toFixed(2)},${previous.y.toFixed(2)} ${(x-bend).toFixed(2)},${y.toFixed(2)} ${x.toFixed(2)},${y.toFixed(2)}`;
+      }else path=`M${x.toFixed(2)},${y.toFixed(2)}`;
+      previous={x,y};
     });
     svg.querySelector('path').setAttribute('d', path);
   };
@@ -6482,19 +6510,17 @@ document.addEventListener('click', e => {
     const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
     document.getElementById('budget-undo').hidden=!plan.canUndo;
     saved.value=plan.savedTotal.toFixed(2);saved.disabled=!plan.rows.length;
-    check.value=plan.reserve.toFixed(2);check.max=Math.max(0,plan.available-plan.essentials-plan.extra);check.disabled=!!plan.recorded;
+    check.value=plan.reserve.toFixed(2);check.max=Math.max(0,plan.available-plan.essentials-plan.extra);check.disabled=false;
     document.getElementById('modal-budget-amounts').classList.add('open');syncOverlayHistory();saved.focus();return;
   }
   if(act==='apply-budget-amounts'){
     const saved=document.getElementById('budget-edit-saved'),check=document.getElementById('budget-edit-check');
     if(!saved.reportValidity() || !check.reportValidity())return;
     const before=getPaycheckPlan();
-    if(roundCash(moneyValue(saved.value))!==before.savedTotal)updateSavedBillTotal(saved.value);
-    const plan=getPaycheckPlan();
-    if(!plan.recorded){
-      const allocations=distributeBillSetAside(plan.rows,Math.min(moneyValue(check.value),Math.max(0,plan.available-plan.essentials-plan.extra)));
-      state.cashPlan.paycheckDrafts={...(state.cashPlan.paycheckDrafts||{}),[plan.check.id]:allocations};
-    }
+    const savedChanged=roundCash(moneyValue(saved.value))!==before.savedTotal;
+    const checkChanged=roundCash(moneyValue(check.value))!==before.reserve;
+    if(checkChanged)revisePaycheckContribution(check.value);
+    if(savedChanged)updateSavedBillTotal(saved.value);
     document.getElementById('modal-budget-amounts').classList.remove('open');saveState();render();return;
   }
 
