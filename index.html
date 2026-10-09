@@ -6043,14 +6043,14 @@ function getPaycheckPlan() {
  const savedBefore=Math.max(0,roundCash(moneyValue(cp.reserves.__pool)-recordedTotal));
  const fundingBills=state.bills.filter(b=>!billPaidForMonth(b,month));
  const funding=dueDateFunding(fundingBills,savedBefore,next,cadence);
- const suggested=funding.suggested;
+ const suggested=roundCash(monthly/count);
  const draft=cp.paycheckDrafts?.[check?.id];
  const requested=draft?roundCash(Object.values(draft).reduce((sum,v)=>sum+moneyValue(v),0)):suggested;
  const available=cp.paycheckId===check?.id && cp.paycheckAmount!==undefined?moneyValue(cp.paycheckAmount):moneyValue(check?.amount);
  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
  const reserve=recorded?recordedTotal:Math.min(requested,Math.max(0,roundCash(available-essentials-extra)));
  const savedTotal=moneyValue(cp.reserves.__pool);
- return {check,cadence,next,month,paydays:count,target:roundCash(Math.min(monthlyTotal,paidTotal+savedBefore+suggested)),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
+ return {check,cadence,next,month,paydays:count,target:roundCash(Math.min(monthlyTotal,paidTotal+monthly*Math.min(count,elapsed)/count)),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
   left:roundCash(available-reserve-essentials-extra),recorded,savedTotal,rows:funding.rows,
   canUndo:!!recorded && savedTotal>=reserve,unfunded:roundCash(Math.max(0,suggested-reserve))};
 }
@@ -6157,7 +6157,7 @@ function renderBudget() {
  let offset=0;
  const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.key]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
  const afterBills=roundCash(p.available-p.suggested-tracking.total);
- const unpaidBills=p.rows.filter(r=>r.needed>0).map(r=>r.bill);
+ const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  <div class="sf-lead"><div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.suggested,{round:true})}</strong></div></div></div>
