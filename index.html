@@ -6067,6 +6067,17 @@ function updateSavedBillTotal(value) {
  state.cashPlan.reserves.__pool=roundCash(moneyValue(value));
 }
 
+function addBillSavings(amount) {
+ const p=getPaycheckPlan();amount=roundCash(moneyValue(amount));
+ if(!p.check || amount<=0)return false;
+ const cp=state.cashPlan;
+ cp.reserves.__pool=roundCash(p.savedTotal+amount);
+ const previous=p.recorded?Object.values(p.recorded.allocations||{}).reduce((sum,v)=>sum+moneyValue(v),0):0;
+ cp.paycheckPlans={...(cp.paycheckPlans||{}),[p.check.id]:{...p.recorded,allocations:{__pool:roundCash(previous+amount)},date:isoDate(todayStart()),paycheckDate:paycheckDate(p.check),source:p.check.source||'Income',recordedAt:Date.now()}};
+ if(cp.paycheckDrafts)delete cp.paycheckDrafts[p.check.id];
+ return true;
+}
+
 function recordPaycheckSetAside() {
  const p=getPaycheckPlan();if(!p.check || p.recorded || p.reserve<=0 || p.left<0)return false;
  const cp=state.cashPlan;
@@ -6106,7 +6117,7 @@ document.getElementById('bill-entry-form').addEventListener('submit',event=>{
  const input=document.getElementById('bill-entry-amount');if(!input.reportValidity())return;
  const p=getPaycheckPlan(),amount=moneyValue(input.value);
  if(modal.dataset.mode==='balance')updateSavedBillTotal(amount);
- else {revisePaycheckContribution((p.recorded?p.reserve:0)+amount);recordPaycheckSetAside();}
+ else addBillSavings(amount);
  modal.classList.remove('open');saveState();render();
 });
 document.getElementById('budget-categories-form').addEventListener('submit',event=>{
@@ -6548,9 +6559,8 @@ document.addEventListener('click', e => {
     modal.dataset.mode=balance?'balance':'add';
     document.getElementById('bill-entry-title').textContent=balance?'Adjust bill savings':'Add to bill savings';
     document.getElementById('bill-entry-submit').textContent=balance?'Save':'Add';
-    const capacity=Math.max(0,p.available-p.essentials-p.extra-(p.recorded?p.reserve:0));
-    input.value=(balance?p.savedTotal:Math.min(capacity,Math.max(0,p.suggested-(p.recorded?p.reserve:0)))).toFixed(2);
-    if(balance)input.removeAttribute('max');else input.max=capacity;
+    input.value=(balance?p.savedTotal:p.suggested).toFixed(2);
+    input.removeAttribute('max');
     modal.classList.add('open');syncOverlayHistory();input.focus();return;
   }
   if(act==='save-bill-entry'){
