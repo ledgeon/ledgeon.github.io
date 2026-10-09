@@ -3813,6 +3813,10 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .bill-progress-caption{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:var(--ink-3)}.bill-progress-caption strong{font-weight:500;color:var(--ink)}.bill-progress-caption button{font-size:11px}
 .bill-list-title{display:flex;justify-content:space-between;align-items:center;margin:24px 0 8px;font-size:12px}.bill-list-title strong{font-weight:500;color:var(--accent)}.bill-list-title span{font-variant-numeric:tabular-nums}
 .bill-compact-row{display:flex;gap:14px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:12px}.bill-compact-row:last-child{border-bottom:0}.bill-compact-row>span{flex:1;min-width:0}.bill-compact-row strong{font-weight:500;font-variant-numeric:tabular-nums}.bill-compact-row button{font-size:11px;padding:4px 0}
+
+.sf-ring{width:106px;height:106px;margin-right:12px;transform:translateY(-4px)}
+.bill-progress-values .sf-action{font-size:13px}.bill-progress-caption>span>.sf-action{margin-left:8px}
+@media(max-width:359px){.sf-ring{width:96px;height:96px;margin-right:6px}}
 </style>
 </head>
 
@@ -6084,7 +6088,10 @@ function paycheckSpending(plan=getPaycheckPlan()) {
  const stored=state.cashPlan?.spendingByPaycheck?.[plan.check?.id];
  const suggestions=getPaycheckSpendingSuggestions(plan);
  const targetFor=label=>suggestions.find(item=>item.label===label)?.total||0;
- const targets=stored?.targets||(state.cashPlan?.categorySettings?categoryTargets(plan):{groceries:targetFor('Groceries'),gas:targetFor('Gas'),savings:targetFor(plan.extra>0?'Cushion':'Savings'),other:targetFor('Other spending')});
+ const targets=stored?.targets?{...stored.targets}:(state.cashPlan?.categorySettings?categoryTargets(plan):{groceries:targetFor('Groceries'),gas:targetFor('Gas'),savings:targetFor(plan.extra>0?'Cushion':'Savings'),other:targetFor('Other spending')});
+ // Keep logged spending intact while assigning every remaining cent.
+ const unallocated=roundCash(Math.max(0,plan.available-(plan.suggested??plan.reserve))-Object.values(targets).reduce((sum,v)=>sum+v,0));
+ if(unallocated>0)targets.other=roundCash(targets.other+unallocated);
  const entries=stored?.entries||[];
  const spent={groceries:0,gas:0,savings:0,other:0};
  for(const entry of entries)if(Object.prototype.hasOwnProperty.call(spent,entry.category))spent[entry.category]=roundCash(spent[entry.category]+moneyValue(entry.amount));
@@ -6130,10 +6137,10 @@ function renderBudget() {
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
- <div class="sf-fund-heading"><strong>Bill savings</strong><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
- <div class="bill-progress-values"><div><strong>${fmtMoney(p.savedTotal)}</strong><span>saved</span></div><span>${fmtMoney(p.monthly)}</span></div>
+ <div class="sf-fund-heading"><strong>Bill savings</strong></div>
+ <div class="bill-progress-values"><div><strong>${fmtMoney(p.target)}</strong><span>by this paycheck</span></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
  <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthly)}" aria-valuenow="${Math.min(p.savedTotal,Math.max(1,p.monthly))}"><i style="width:${p.monthly?Math.min(100,p.savedTotal/p.monthly*100):100}%"></i><b style="left:${p.monthly?Math.min(100,p.target/p.monthly*100):100}%" title="By this paycheck: ${fmtMoney(p.target)}"></b></div>
- <div class="bill-progress-caption"><span>By this paycheck <strong>${fmtMoney(p.target)}</strong></span><button class="sf-action" data-action="open-bill-balance">Adjust</button></div>
+ <div class="bill-progress-caption"><span><strong>${fmtMoney(p.savedTotal)}</strong> saved <button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthly)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
  ${unpaidBills.map(b=>`<div class="bill-compact-row"><span>${escHTML(b.name)}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
  </section>
