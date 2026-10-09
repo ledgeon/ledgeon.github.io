@@ -3713,6 +3713,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-top-action{margin:0 20px}.budget-top-action .worksheet-save{margin:0;min-height:28px;justify-content:flex-start;gap:12px}.budget-worksheet .budget-top-action .budget-save-button{padding:4px 0;font-size:11px}
 .budget-worksheet .paycheck-footer{display:block;margin-top:14px;border-top:1px solid var(--border-light);padding-top:4px}.budget-worksheet .paycheck-footer .plan-settings{display:block;border:0;margin:0;padding:0}.paycheck-footer .plan-settings>summary{text-align:left;padding:10px 0}.paycheck-footer .plan-settings[open]>.simple-fields{margin-top:0}
 @media(max-width:359px){.budget-headline-stats{gap:8px}.budget-headline-stats strong,.budget-inline-value,.budget-inline-value input{font-size:14px}}
+.income-overview .chart-layout{height:128px!important}
 /* Budget follows the same hero / chart / list structure as Expenses. */
 .budget-refined .budget-balance-row{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:8px 20px 0;padding:12px 0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);font-size:11.25px;color:var(--ink-3)}
 .budget-balance-row strong{color:var(--accent);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -3767,6 +3768,15 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .spending-first .sf-fund-simple{background:none;border-radius:0;padding:0;margin-top:22px;border-top:1px solid var(--border-light)}.sf-fund-simple .sf-fund-heading{padding-top:14px;margin-bottom:8px}.sf-fund-simple .sf-fund-heading>strong{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)}.sf-fund-simple .sf-fund-row{padding:6px 0;margin:0;font-size:12px}.sf-fund-simple .sf-save-line{margin-top:4px}.sf-fund-simple .sf-save{background:none;padding:5px 0}
 .sf-activity{margin-top:16px;border-top:1px solid var(--border-light)}.sf-activity summary{font-size:11px;color:var(--ink-3);padding:12px 0;cursor:pointer}.sf-activity summary>span{float:right}.sf-activity-row{display:flex;align-items:center;gap:12px;padding:9px 0;font-size:11px;border-top:1px solid var(--border-light)}.sf-activity-row>div{flex:1;min-width:0}.sf-activity-row strong{font-weight:500}.sf-activity-row small{display:block;color:var(--ink-3);margin-top:3px;overflow-wrap:anywhere}.sf-activity-row>span{white-space:nowrap;font-variant-numeric:tabular-nums}.sf-past-check{margin-left:8px}
 .sf-bill-heading>strong{font-size:12px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* Compact paycheck arithmetic and separate cumulative bill funding. */
+.sf-fund-simple .sf-gap{border-top:1px solid var(--border-light);margin-top:5px;padding-top:10px}
+.sf-gap strong{color:var(--accent);font-weight:600}
+.sf-contribution{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 0}
+.sf-contribution>div{display:flex;align-items:center;gap:10px;font-size:12px}
+.sf-contribution strong{color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums}
+.sf-contribution .sf-action{white-space:nowrap}
+.spending-first .sf-bill-details{margin-top:12px}
 </style>
 </head>
 
@@ -6002,20 +6012,24 @@ function renderBudget() {
  let offset=0;
  const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.label]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
  const afterBills=roundCash(p.available-p.reserve-tracking.total);
- const categories=['Groceries','Gas',p.extra>0?'Cushion':'Savings','Other spending'];
+ const billsNeeded=roundCash(p.rows.filter(r=>!r.fundingPaused).reduce((sum,r)=>sum+moneyValue(r.bill.amount),0));
+ const billsGap=roundCash(p.rows.reduce((sum,r)=>sum+r.needed,0));
+ const billsFunded=roundCash(billsNeeded-billsGap);
  const billRows=p.rows.map(r=>`<div class="sf-bill-row"><span>${escHTML(r.bill.name)}</span><strong>${r.fundingPaused && !r.allocation?'Paid':!r.allocation && r.saved>=moneyValue(r.bill.amount)?'Covered':fmtMoney(r.allocation)}</strong></div>`).join('');
  return `<section class="budget-worksheet spending-first">
  <div class="sf-lead"><div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-sub">Paycheck · ${fmtMoney(p.available)}</div><div class="sf-sub sf-spending-total">${fmtMoney(tracking.total)} spent &amp; saved / ${fmtMoney(roundCash(p.available-p.reserve))} available</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.reserve,{round:true})}</strong></div></div></div>
  <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${Object.entries(SPENDING_CATEGORIES).map(([key,label])=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[label]}"></i><span>${label}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[label]}"></span></span></button>`}).join('')}</div>
- <div class="sf-fund-band sf-fund-simple"><div class="sf-fund-heading"><strong>Bills</strong><button class="sf-action" data-action="edit-budget-amounts">Edit</button></div>
- <div class="sf-fund-row sf-muted"><span>Already saved</span><strong>${fmtMoney(p.savedTotal)}</strong></div>
- <div class="sf-fund-row"><span>From this check</span><strong>${fmtMoney(p.reserve)}</strong></div>
- ${!p.recorded?`<button class="sf-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside</button>`:''}</div>
- ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} still needed for bills.</p>`:''}
+ <div class="sf-fund-band sf-fund-simple"><div class="sf-fund-heading"><strong>Upcoming bills</strong><button class="sf-action" data-action="edit-budget-amounts">Edit set-aside</button></div>
+ <div class="sf-fund-row"><span>Total unpaid</span><strong>${fmtMoney(billsNeeded)}</strong></div>
+ <div class="sf-fund-row sf-muted"><span>Already funded</span><strong>${fmtMoney(billsFunded)}</strong></div>
+ <div class="sf-fund-row sf-gap"><span>Still to fund</span><strong>${fmtMoney(billsGap)}</strong></div>
+ <div class="sf-contribution"><div><span>${p.recorded?'Set aside from this check':'Set aside this check'}</span><strong>${fmtMoney(p.reserve)}</strong></div>${!p.recorded?`<button class="sf-action" data-action="record-set-aside" ${p.reserve<=0 || p.left<0?'disabled':''}>Set aside</button>`:''}</div>
+ </div>
+ ${p.unfunded>0?`<p class="sf-alert">${fmtMoney(p.unfunded)} short of this check’s bill target.</p>`:''}
  ${p.left<0?`<p class="sf-alert">Planned amounts exceed this paycheck by ${fmtMoney(-p.left)}.</p>`:''}
- <section class="sf-bill-details"><div class="sf-bill-heading"><span>Bill breakdown</span><strong>${fmtMoney(p.rows.reduce((sum,row)=>sum+row.allocation,0))}</strong></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
+ <section class="sf-bill-details"><div class="sf-bill-heading"><span>From this paycheck</span><strong>${fmtMoney(p.rows.reduce((sum,row)=>sum+row.allocation,0))}</strong></div>${billRows||'<button class="sf-action" data-action="open-modal" data-type="expenses">+ Add expense</button>'}${p.rows.some(r=>!r.due || r.due<todayStart())?'<p class="sf-alert">Review bill dates in Expenses.</p>':''}</section>
  ${Object.entries(state.cashPlan.spendingByPaycheck||{}).some(([id])=>id!==p.check.id)?`<details class="sf-activity"><summary>Previous paychecks</summary>${Object.entries(state.cashPlan.spendingByPaycheck).filter(([id])=>id!==p.check.id).sort((a,b)=>String(b[1].paycheckDate).localeCompare(String(a[1].paycheckDate))).map(([,record])=>`<details class="sf-past-check"><summary>${shortDate(record.paycheckDate)} · ${escHTML(record.source)}</summary>${record.entries.map(entry=>`<div class="sf-activity-row"><div><strong>${escHTML(SPENDING_CATEGORIES[entry.category]||entry.category)}</strong><small>${shortDate(entry.date)}${entry.note?' · '+escHTML(entry.note):''}</small></div><span>${fmtMoney(entry.amount)}</span></div>`).join('')||'<p class="sf-track-meta">No entries</p>'}</details>`).join('')}</details>`:''}
  </section>`;
 }
