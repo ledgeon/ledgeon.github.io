@@ -3834,6 +3834,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   .is-scrolling::-webkit-scrollbar-thumb { background: var(--accent) !important; border-radius: 4px; }
 }
 
+.monthly-expense-line{position:absolute;left:0;width:calc(100% + 3px);border-top:1px dashed var(--ink-3);opacity:.65;pointer-events:none;z-index:2}
+.monthly-expense-key{display:block;font-size:10px;color:var(--ink-3);margin-top:4px}
+.monthly-expense-key:before{content:"";display:inline-block;width:14px;border-top:1px dashed currentColor;vertical-align:middle;margin-right:5px;opacity:.65}
 </style>
 </head>
 
@@ -5416,13 +5419,14 @@ function renderIncome() {
     }
   }
 
+  const monthlyExpenseTotal=roundCash(state.bills.filter(b=>b.recurring && b.recurring!=='once').reduce((sum,b)=>sum+monthlyEq(moneyValue(b.amount),b.recurring),0));
   const trendWithData = trendList.filter(h => h.income > 0);
   let trendChartHTML;
 
   if (trendWithData.length === 0) {
     trendChartHTML = `<div class="chart-empty">No income recorded for this view</div>`;
   } else {
-    const chartMax = Math.max(...trendWithData.map(h => h.income), 1);
+    const chartMax = Math.max(...trendWithData.map(h => h.income), incomeChartMode === 'monthly' ? monthlyExpenseTotal*1.08 : 0, 1);
     const cols = trendList.map(h => {
       const hasIncome = h.income > 0;
       const heightPct = hasIncome ? Math.min(100, Math.max(3, (h.income / chartMax) * 100)) : 0;
@@ -5430,7 +5434,7 @@ function renderIncome() {
         ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%"></div>`
         : '';
       return `<div class="chart-col${incomeChartMode === 'payperiod' ? ' payperiod-col' : ''}" data-amount="${h.income}" ${Number.isFinite(h.movingAverage) ? `data-moving-average="${h.movingAverage}"` : ''} data-label="${escHTML(h.tipLabel)}">
-        <div class="bar-track">${barInner}</div>
+        <div class="bar-track" style="position:relative">${barInner}${incomeChartMode==='monthly' && monthlyExpenseTotal>0?`<i class="monthly-expense-line" style="bottom:${monthlyExpenseTotal/chartMax*100}%" aria-hidden="true"></i>`:''}</div>
         <div class="label">${h.label}</div>
       </div>`;
     }).join('');
@@ -5457,7 +5461,7 @@ function renderIncome() {
   const trendHeader = `<div class="sh trend-head">
     <div>
       <h3>Trend</h3>
-      <span class="x">${trendMeta}</span>${incomeChartMode === 'payperiod' ? `<span class="average-key">EMA ${Number.isFinite(latestAverage) ? fmtMoney(latestAverage) : '—'}</span>` : ''}
+      <span class="x">${trendMeta}</span>${incomeChartMode === 'payperiod' ? `<span class="average-key">EMA ${Number.isFinite(latestAverage) ? fmtMoney(latestAverage) : '—'}</span>` : monthlyExpenseTotal>0?`<span class="monthly-expense-key">Expenses ${fmtMoney(monthlyExpenseTotal)}</span>`:''}
     </div>
     <div class="chart-mode-links" role="group" aria-label="Income chart interval">
       <button data-action="income-chart-mode" data-mode="monthly" class="${incomeChartMode === 'monthly' ? 'active' : ''}">Monthly</button>
@@ -6112,11 +6116,24 @@ function getPaycheckSpendingSuggestions(plan) {
 }
 
 const SPENDING_CATEGORIES={groceries:'Groceries',gas:'Gas',savings:'Savings',other:'Other spending'};
+function defaultSpendingTargets(plan) {
+ const pay=moneyValue(plan.available),available=Math.max(0,roundCash(pay-(plan.suggested??plan.reserve)));
+ const weeks=plan.cadence==='biweekly'?2:plan.cadence==='monthly'?52/12:1;
+ // Editable starter limits, not universal household cost estimates.
+ let groceries=roundCash(Math.min(pay*.12,100*weeks));
+ let gas=roundCash(Math.min(pay*.05,50*weeks));
+ if(groceries+gas>available){const ratio=available/(groceries+gas);groceries=roundCash(groceries*ratio);gas=roundCash(available-groceries);}
+ const rest=roundCash(available-groceries-gas);
+ const savingsFloor=Math.min(rest,roundCash(pay*.2));
+ const other=roundCash(Math.min(pay*.3,Math.max(0,rest-savingsFloor)));
+ return {groceries,gas,savings:roundCash(rest-other),other};
+}
 function spendingCategorySettings() {
- const percentages={groceries:35,gas:15,savings:20,other:30};
+ const defaults=defaultSpendingTargets(getPaycheckPlan());
  return Object.entries(SPENDING_CATEGORIES).map(([key,label])=>{
   const saved=state.cashPlan?.categorySettings?.[key];
-  return {key,label:saved?.label||label,mode:saved?.mode==='fixed'?'fixed':'percent',value:saved?moneyValue(saved.value):percentages[key]};
+  const auto=!saved || saved.auto===true;
+  return {key,label:saved?.label||label,auto,mode:auto?'fixed':saved.mode==='fixed'?'fixed':'percent',value:auto?defaults[key]:moneyValue(saved.value)};
  });
 }
 function categoryTargets(plan, settings=spendingCategorySettings()) {
@@ -6145,10 +6162,10 @@ function paycheckSpending(plan=getPaycheckPlan()) {
  const stored=state.cashPlan?.spendingByPaycheck?.[plan.check?.id];
  const suggestions=getPaycheckSpendingSuggestions(plan);
  const targetFor=label=>suggestions.find(item=>item.label===label)?.total||0;
- const targets=stored?.targets?{...stored.targets}:(state.cashPlan?.categorySettings?categoryTargets(plan):{groceries:targetFor('Groceries'),gas:targetFor('Gas'),savings:targetFor(plan.extra>0?'Cushion':'Savings'),other:targetFor('Other spending')});
+ const targets=stored?.targets?{...stored.targets}:categoryTargets(plan);
  // Keep logged spending intact while assigning every remaining cent.
  const unallocated=roundCash(Math.max(0,plan.available-(plan.suggested??plan.reserve))-Object.values(targets).reduce((sum,v)=>sum+v,0));
- if(unallocated>0)targets.other=roundCash(targets.other+unallocated);
+ if(unallocated>0){const remainderKey=spendingCategorySettings().find(c=>c.key==='savings').auto?'savings':'other';targets[remainderKey]=roundCash(targets[remainderKey]+unallocated);}
  const entries=stored?.entries||[];
  const spent={groceries:0,gas:0,savings:0,other:0};
  for(const entry of entries)if(Object.prototype.hasOwnProperty.call(spent,entry.category))spent[entry.category]=roundCash(spent[entry.category]+moneyValue(entry.amount));
@@ -6225,7 +6242,7 @@ function renderBudget() {
  return `<section class="budget-worksheet spending-first">
  <div class="sf-lead"><div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div>
  <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.suggested,{round:true})}</strong></div></div></div>
- <div class="sf-heading"><h3>Suggested spending</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ <div class="sf-heading"><h3>Spending budget</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  <section class="bill-progress-section">
@@ -6627,7 +6644,7 @@ document.addEventListener('click', e => {
     const settings=spendingCategorySettings();
     const previous=settings.find(c=>c.key===key);
     const changed=previous.mode!==mode || previous.value!==Number(value.value);
-    cp.categorySettings=Object.fromEntries(settings.map(c=>[c.key,c.key===key?{...c,label:name.value,mode,value:Number(value.value)}:c]));
+    cp.categorySettings=Object.fromEntries(settings.map(c=>[c.key,c.key===key?{...c,label:name.value,auto:changed?false:c.auto,mode,value:Number(value.value)}:c]));
     const record=cp.spendingByPaycheck?.[modal.dataset.check];
     if(record){record.labels={...record.labels,[key]:name.value};if(changed)record.targets=categoryTargets(getPaycheckPlan());}
     if(amount.value!=='' && !addPaycheckSpending(modal.dataset.check,key,amount.value,date.value,document.getElementById('spending-note').value))return;
