@@ -6041,7 +6041,8 @@ function getPaycheckPlan() {
  const recorded=cp.paycheckPlans?.[check?.id]||null;
  const recordedTotal=recorded?roundCash(Object.values(recorded.allocations||{}).reduce((sum,v)=>sum+moneyValue(v),0)):0;
  const savedBefore=Math.max(0,roundCash(moneyValue(cp.reserves.__pool)-recordedTotal));
- const funding=dueDateFunding(state.bills,savedBefore,next,cadence);
+ const fundingBills=state.bills.filter(b=>!billPaidForMonth(b,month));
+ const funding=dueDateFunding(fundingBills,savedBefore,next,cadence);
  const suggested=funding.suggested;
  const draft=cp.paycheckDrafts?.[check?.id];
  const requested=draft?roundCash(Object.values(draft).reduce((sum,v)=>sum+moneyValue(v),0)):suggested;
