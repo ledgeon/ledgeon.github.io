@@ -6057,7 +6057,7 @@ function getPaycheckPlan() {
  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
  const reserve=recorded?recordedTotal:Math.min(requested,Math.max(0,roundCash(available-essentials-extra)));
  const savedTotal=moneyValue(cp.reserves.__pool);
- return {check,cadence,next,month,paydays:count,target:roundCash(Math.min(monthlyTotal,paidTotal+monthly*Math.min(count,elapsed)/count)),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
+ return {check,cadence,next,month,paydays:count,target:roundCash(monthlyTotal*Math.min(count,elapsed)/count),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
   left:roundCash(available-reserve-essentials-extra),recorded,savedTotal,rows:funding.rows,
   canUndo:!!recorded && savedTotal>=reserve,unfunded:roundCash(Math.max(0,suggested-reserve))};
 }
