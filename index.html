@@ -3923,55 +3923,73 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
  .pc-cols .bs{margin-top:0!important}
 }
 </style>
-<style id="ledgeon-polish">
-:root{--page:#f4f2ee;--card:#ffffff;--tile:#f7f6f3;--shadow:0 1px 2px rgba(27,26,23,.04),0 4px 16px rgba(27,26,23,.04)}
-[data-theme="dark"]{--page:#0d0e13;--card:#15171e;--tile:#1c1f28;--shadow:none}
-[data-theme="here-you-go"]{--page:#ffeaf1;--card:#fff8fa;--tile:#ffeff5;--shadow:0 1px 2px rgba(58,34,48,.05),0 4px 16px rgba(58,34,48,.05)}
-html,body{background:var(--page)!important}
-body{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
-.mhdr{background:transparent!important;padding:22px 24px 10px!important}
-.spending-first{padding:0!important}
-.card,.pc-head,.pc-col,.bs{background:var(--card)!important;border:1px solid var(--border-light)!important;border-radius:18px!important;box-shadow:var(--shadow);margin:0 14px 12px!important;box-sizing:border-box}
-.card{padding:4px 18px 14px!important}
-.card>*{margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important}
-.card>.row,.card>.source-row{padding-top:12px!important;padding-bottom:12px!important}
-.card>.row:last-child{border-bottom:0!important}
-.card>.sh{padding-top:14px!important;padding-bottom:8px!important}
-.card.card>.detail-top{padding-top:14px!important}
-.exp-pie{margin-top:0!important;padding-top:16px!important;padding-bottom:4px!important}
-.pc-head{padding:16px 18px 18px!important}
-.income-overview>.pc-head,main#content>.pc-head,.budget-worksheet>.pc-head{margin:0 14px 12px!important}
-.pc-tab .pc-lead,.pc-head>.pc-lead:first-child{margin-top:2px}
-.pc-switch{border:0!important;background:var(--tile);border-radius:12px;margin:0 0 4px!important;padding:2px}
-.pc-switch button{border-radius:10px}.pc-switch button:not(:disabled):hover{background:var(--card);color:var(--ink)}
-.pc-bar{height:14px!important;border-radius:7px!important;margin-top:18px!important;gap:3px!important;background:transparent!important}
-.pc-bar i{border-radius:4px}
-.kpis{margin-top:18px!important;border-top:0!important;gap:8px;grid-auto-columns:minmax(0,1fr)}
-.kpi,.kpi+.kpi{background:var(--tile);border:0!important;border-radius:12px;padding:10px 12px!important}
-.kpi strong{font-size:16px!important}
-.pc-col{padding:2px 18px 18px!important}
-.pc-col .sf-heading,.bs .sf-heading{margin:14px 0 12px!important}
-.sf-spending-grid{gap:10px!important}
-.sc{background:var(--tile)!important;border:0!important;border-radius:14px;padding:12px 12px 12px!important;gap:8px!important}
-.sc:hover{background:var(--bg-hover)!important}
-.sc .sf-track-meter{background:var(--card)!important}
-.bs{padding:2px 18px 10px!important;margin-top:0!important}
-.bs-list{border-top:0!important;margin-top:12px!important}
-.bs-row:last-child{border-bottom:0!important}
-.sf-alert{margin:12px 0 0!important}
-@media (max-width:999px){
- .top-pages.bottom-pages{left:50%!important;transform:translateX(-50%)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 28px))!important;padding:5px!important;display:flex!important;gap:4px!important;border-radius:999px!important;background:var(--card)!important;border:1px solid var(--border-light)!important;box-shadow:0 8px 28px rgba(27,26,23,.12)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-}
-.top-pages.bottom-pages button{flex:1;text-align:center;border-radius:999px!important;padding:9px 14px!important;font-size:12.5px!important;font-weight:600!important;color:var(--ink-3)!important;transition:background .15s,color .15s}
-.top-pages.bottom-pages button.active{background:var(--accent-soft)!important;color:var(--accent)!important}
-.top-pages.bottom-pages button::after,.top-pages.bottom-pages button.active::after{display:none!important}
+<style id="ledgeon-paper">
+:root:not([data-theme]){--bg:#fbfaf8}
+html,body{background:var(--bg)!important}
+html body .mhdr{padding:30px 24px 6px!important;align-items:baseline}
+html body .mtitle{font-size:28px!important;font-weight:700!important;letter-spacing:-.6px!important;color:var(--ink)!important}
+.sh,.sf-heading{padding-left:0;padding-right:0}
+html body .sh h3,html body .sf-heading h3,html body .trend-head h3{font-size:12px!important;font-weight:500!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink-3)!important}
+html body .sh .add,html body .sf-action,html body .bs-acts .sf-action{background:none!important;padding:0!important;font-size:13px!important;font-weight:600!important;color:var(--accent)!important;border:0!important}
+html body .r-name{font-size:15px!important;font-weight:500!important}
+html body .r-meta{font-size:12px!important;color:var(--ink-4)!important;margin-top:2px}
+html body .r-amt{font-size:15px!important;font-weight:600!important}
+.p5-hero{margin:18px 24px 6px}
+.p5-l{font-size:12px;color:var(--ink-3)}
+.p5-big{font-size:44px;font-weight:700;letter-spacing:-1.6px;color:var(--accent);margin-top:2px;font-variant-numeric:tabular-nums;line-height:1.1}
+.p5-stats{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:14px}
+.p5-stats div{display:flex;flex-direction:column;gap:3px}.p5-stats span{font-size:11px;color:var(--ink-4)}.p5-stats strong{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.x5{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"donut side" "list list";gap:22px 22px;align-items:center;margin:18px 24px 4px}
+.x5 .expense-composition{display:contents}
+.x5 .expense-donut-wrap{grid-area:donut;margin:0!important;padding:0!important}
+.x5 .expense-donut{width:132px!important;height:132px!important}
+.x5 .expense-donut-label{display:none}
+.x5-side{grid-area:side;display:flex;flex-direction:column;gap:2px}
+.x5-v{font-size:30px;font-weight:700;letter-spacing:-1px;color:var(--accent);font-variant-numeric:tabular-nums}
+.x5-s{font-size:12px;color:var(--ink-4)}
+.x5 .expense-cat-list{grid-area:list;display:grid!important;grid-template-columns:1fr 1fr;gap:8px 18px;margin:0!important;padding:0!important}
+.x5 .expense-cat-row{border:0!important;padding:0!important;min-height:0!important}
+.x5 .expense-cat-pct,.x5 .expense-cat-leftover{display:none!important}
+.x5 .expense-cat-dot{border-radius:2px!important;width:8px!important;height:8px!important}
+.x5 .expense-cat-name{font-size:12.5px!important;color:var(--ink-2)!important;font-weight:400!important}
+.x5 .expense-cat-amt{font-size:12.5px!important;font-weight:600!important}
+.source-row{position:relative}
+.source-row .cat-dot{position:absolute;left:8px;top:12px;bottom:12px;width:3px;height:auto;border-radius:2px;margin:0}
+main#content>.source-row:has(.cat-dot){padding-left:22px!important}
+.pc-head{margin:6px 24px 0!important}
+.pc-switch{border:0!important;margin-top:16px!important;font-size:13px!important}
+.pc-switch button{font-size:20px!important}
+.b5-hero{text-align:center;margin-top:14px}
+.b5-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.pc-bar{height:10px!important;border-radius:0!important;gap:3px!important;background:transparent!important;margin-top:22px!important;overflow:visible!important}
+.pc-bar i{border-radius:3px}
+.b5-cap{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-4);margin-top:7px}
+.spending-first{padding:0 24px 24px!important}
+.sf-spending-grid{display:flex!important;flex-direction:column!important;gap:0!important}
+.sc{display:flex!important;flex-direction:column;gap:8px!important;width:100%;text-align:left;background:transparent!important;border:0!important;border-radius:0!important;padding:14px 0 10px!important;color:var(--ink);cursor:pointer;font-family:inherit}
+.sc-row{display:flex;align-items:baseline;gap:8px}
+.sc-row i{width:8px;height:8px;border-radius:2px;align-self:center;flex-shrink:0}
+.sc-name{flex:1;font-size:15px;font-weight:500}
+.sc-row strong{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.sc-row strong.sf-over{color:var(--negative)}
+.sc-row small{font-size:12px;color:var(--ink-4)}
+.sc-plus{color:var(--accent);font-size:18px;font-weight:500;margin-left:6px;line-height:1}
+.sc .sf-track-meter{height:3px!important;background:var(--border-light)!important;border-radius:2px;margin:0!important}
+.sc .sf-track-meter>span{height:3px!important;border-radius:2px}
+.bs{margin-top:22px!important}
+.bs-row{font-size:14px!important}
+.top-pages.bottom-pages{border-top:0!important;background:color-mix(in srgb,var(--bg) 94%,transparent)!important}
+.top-pages.bottom-pages button{flex:1;background:transparent!important;box-shadow:none!important;border-radius:0!important;text-align:center;font-size:13px!important;font-weight:600!important;color:var(--ink-4)!important;position:relative;padding:6px 0 12px!important}
+.top-pages.bottom-pages button.active{color:var(--ink)!important}
+.top-pages.bottom-pages button::after{display:none!important}
+.top-pages.bottom-pages button.active::before{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:2px;background:var(--accent)}
 @media (min-width:1000px){
- .top-pages.bottom-pages{display:flex!important;gap:4px!important;padding:4px!important;border-radius:999px!important;background:var(--card)!important;border:1px solid var(--border-light)!important;top:18px!important}
- .top-pages.bottom-pages button{flex:0 0 auto;padding:7px 16px!important}
- #pay-rail{background:var(--card)!important}
- body>main#content{padding-top:6px}
- .pc-cols{gap:12px!important;margin:0 14px!important}
- .pc-cols>.pc-col,.pc-cols>.bs{margin:0!important}
+ .top-pages.bottom-pages{top:34px!important;gap:24px!important;background:transparent!important}
+ .top-pages.bottom-pages button{flex:0 0 auto}
+ .p5-big{font-size:52px}
+ .b5-hero{text-align:left}
+ .pc-cols{gap:56px!important}
+ .spending-first{padding:0 24px 24px!important}
 }
 </style>
 </head>
@@ -5664,10 +5682,8 @@ function renderIncome() {
     }).join('');
   }
 
-  const incHead=`<div class="pc-head pc-tab">
-   <div class="pc-lead"><div><div class="pc-label">${nowD.toLocaleDateString('en-US',{month:'long'})} income</div><div class="pc-amt">${fmtMoney(curMonthStats.income)}</div></div><div class="pc-rem"><div class="sf-hero">${fmtMoney(stats.ytdIncome,{round:true})}</div><div class="sf-eyebrow">Year to date</div></div></div>
-   <div class="kpis"><div class="kpi"><span>Monthly est.</span><strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></div><div class="kpi"><span>Latest paystub</span><strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></div>${stats.ytdHours>0?`<div class="kpi"><span>Hourly · ${Math.round(stats.ytdHours).toLocaleString()} hrs</span><strong>$${stats.ytdHourly.toFixed(2)}</strong></div>`:''}</div>
-  </div>`;
+  const incHead=`<div class="p5-hero"><div class="p5-l">Year to date</div><div class="p5-big">${fmtMoney(stats.ytdIncome,{round:true})}</div>
+   <div class="p5-stats"><div><span>This month</span><strong>${fmtMoney(curMonthStats.income,{round:true})}</strong></div><div><span>Monthly est.</span><strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></div>${stats.ytdHours>0?`<div><span>Hourly</span><strong>$${stats.ytdHourly.toFixed(2)}</strong></div>`:`<div><span>Latest</span><strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></div>`}</div></div>`;
   return `<section class="income-overview">${incHead}
     ${trendHeader}
     ${trendChartHTML}
@@ -5862,8 +5878,7 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${expHead}
-    <div class="exp-pie">${pieHTML}</div>
+  return `<div class="x5">${pieHTML}<div class="x5-side"><div class="p5-l">${avail<0?'Over income':'Left after bills'}</div><div class="x5-v"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="x5-s">${ytdMonthlyIncome>0?`Bills are ${expensePctIncome.toFixed(0)}% of income`:'Add income to compare'}</div></div></div>
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
@@ -6165,15 +6180,6 @@ function eligibleChecks() {
  const today=isoDate(todayStart());
  return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
 }
-function cardify(main) {
- const root = main.querySelector(':scope > section.income-overview') || main;
- if (root.querySelector(':scope > .budget-worksheet')) return;
- let card = null;
- [...root.children].forEach(k => {
-  if (k.matches('.sh, .exp-pie, .detail-top')) { card = document.createElement('div'); card.className = 'card'; root.insertBefore(card, k); }
-  if (card && !k.matches('.modal, .pc-head')) card.appendChild(k);
- });
-}
 function renderRail() {
  const el=document.getElementById('pay-rail'); if(!el) return;
  const stats=getIncomeStats(), checks=eligibleChecks(), cur=getPaycheckPlan().check;
@@ -6397,12 +6403,12 @@ function renderBudget() {
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
- <div class="pc-switch pc-check"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>
- <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${end?` · ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
- <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div>
+ <div class="pc-switch pc-check"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${fmtMoney(p.available,{round:true})}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>
+ <div class="b5-hero"><div class="p5-big"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="b5-sub">${afterBills<0?'over budget':'left to spend'}${end?` until ${escHTML(shortDate(isoDate(end)))}`:''}</div></div>
+ <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div><div class="b5-cap"><span>Bills ${fmtMoney(p.suggested,{round:true})}</span><span>Spending ${fmtMoney(Math.max(0,p.available-p.suggested),{round:true})}</span></div>
  </div>`;})()}
- <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending budget</h3></div>
- <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sc" data-action="open-spending" data-category="${key}" aria-label="Log ${escHTML(label)}"><span class="sc-top"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sc-plus" aria-hidden="true">+</span></span><span class="sc-val"><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}</strong><small>${remaining<0?'over':key==='savings'?'to go':'left'} of ${fmtMoney(tracking.targets[key],{round:true})}</small></span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
+ <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending</h3></div>
+ <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sc" data-action="open-spending" data-category="${key}" aria-label="Log ${escHTML(label)}"><span class="sc-row"><i style="background:${colors[key]}"></i><span class="sc-name">${escHTML(label)}</span><strong class="${remaining<0?'sf-over':''}">${remaining<0?'−':''}${fmtMoney(Math.abs(remaining),{round:true})}</strong><small>/ ${fmtMoney(tracking.targets[key],{round:true})}</small><span class="sc-plus" aria-hidden="true">+</span></span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  </div><section class="bill-progress-section bs">
  <div class="sf-heading"><h3>Bill savings</h3><span class="bs-acts"><button class="sf-action" data-action="open-bill-entry">+ Add</button><button class="sf-action" data-action="open-bill-balance">Adjust</button></span></div>
@@ -6593,7 +6599,7 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
-  cardify(main);
+  { const mt=document.getElementById('mtitle'); if(mt) mt.textContent={income:'Income',expenses:'Expenses',budget:'Budget'}[currentTab]||'Ledgeon'; }
   document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   renderRail();
   refreshPayPeriodAverage();
