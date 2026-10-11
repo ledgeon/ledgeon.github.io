@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="icon.png">
-<script>try{var t=localStorage.getItem('ledgeon-theme');document.documentElement.setAttribute('data-theme',t&&t!=='light'?t:'mono');}catch{document.documentElement.setAttribute('data-theme','mono');}
+<script>try{var t=localStorage.getItem('ledgeon-theme');if(t&&t!=='light')document.documentElement.setAttribute('data-theme',t==='mono'?'dark':t);}catch{}
 
 
 
@@ -3993,51 +3993,86 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
  .spending-first{padding:0 24px 24px!important}
 }
 </style>
-<style id="ledgeon-mono">
-[data-theme="mono"]{--bg:#0f1012;--bg-subtle:#15161a;--bg-hover:#1b1d22;--border:#2a2c33;--border-light:#1d1f24;--ink:#ecebe6;--ink-2:#b9bac0;--ink-3:#8b8e97;--ink-4:#5a5d66;--accent:#a5acff;--accent-soft:#1d1f3a;--accent-strong:#8b93f8;--positive:#7ee2a8;--positive-soft:#0f2a1c;--negative:#f0a69f;--negative-soft:#3a1714;--warning:#f0c27a;--warning-soft:#33260f;color-scheme:dark}
-[data-theme="mono"] .budget-worksheet{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
-[data-theme="mono"]{--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
-[data-theme="mono"] .mtitle{font-family:var(--mono)!important;font-size:12px!important;font-weight:400!important;letter-spacing:0!important;color:var(--ink-3)!important}
-[data-theme="mono"] .p5-big,[data-theme="mono"] .x5-v,[data-theme="mono"] .p5-stats strong,[data-theme="mono"] .r-amt,[data-theme="mono"] .expense-cat-amt,[data-theme="mono"] .expense-donut-hole strong,[data-theme="mono"] .sc-row strong,[data-theme="mono"] .sc-row small,[data-theme="mono"] .bs-line strong,[data-theme="mono"] .bs-row strong,[data-theme="mono"] .pc-switch,[data-theme="mono"] .b5-cap,[data-theme="mono"] .bar-labels,[data-theme="mono"] .chart-y,[data-theme="mono"] .pr-item strong,[data-theme="mono"] .pr-ytd{font-family:var(--mono)!important;font-weight:600;letter-spacing:-.5px}
-[data-theme="mono"] .p5-big{font-size:40px;letter-spacing:-1.5px}
-[data-theme="mono"] .x5-v{font-size:28px}
-[data-theme="mono"] .r-amt,[data-theme="mono"] .sc-row strong{font-size:14px!important;font-weight:500!important}
-[data-theme="mono"] .p5-stats{gap:0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);margin-top:18px}
-[data-theme="mono"] .p5-stats div{flex:1;padding:12px 0}
-[data-theme="mono"] .p5-stats div+div{padding-left:12px;border-left:1px solid var(--border-light)}
-[data-theme="mono"] .p5-stats strong{font-size:15px;font-weight:500}
-[data-theme="mono"] .sh h3,[data-theme="mono"] .sf-heading h3,[data-theme="mono"] .trend-head h3,[data-theme="mono"] .p5-l{font-family:var(--mono)!important;font-size:11px!important;text-transform:lowercase!important;color:var(--ink-3)!important}
-[data-theme="mono"] .sh .add,[data-theme="mono"] .sf-action{font-family:var(--mono)!important;font-size:11px!important;font-weight:400!important;text-transform:lowercase}
-[data-theme="mono"] .pc-switch{border-top:1px solid var(--border-light)!important;border-bottom:1px solid var(--border-light)!important;text-transform:lowercase;font-size:12px!important;color:var(--ink-3)}
-[data-theme="mono"] .pc-switch strong{font-weight:400}
-[data-theme="mono"] .b5-hero{text-align:left}
-[data-theme="mono"] .pc-bar{height:8px!important;gap:2px!important}
-[data-theme="mono"] .pc-bar i,[data-theme="mono"] .sc-row i,[data-theme="mono"] .expense-cat-dot,[data-theme="mono"] .cat-dot{border-radius:0!important}
-[data-theme="mono"] .pc-bar i{border-radius:0}
-[data-theme="mono"] .b5-cap{text-transform:lowercase;font-weight:400!important}
-[data-theme="mono"] .sc .sf-track-meter,[data-theme="mono"] .sc .sf-track-meter>span{height:2px!important;border-radius:0!important}
-[data-theme="mono"] .sc{padding:12px 0 8px!important}
-[data-theme="mono"] .sc-plus{font-family:var(--mono)}
-[data-theme="mono"] .bs-paid{font-family:var(--mono);font-weight:400;background:transparent!important;border:1px solid var(--border);border-radius:0}
-[data-theme="mono"] .bs-track,[data-theme="mono"] .bs-fill{border-radius:0!important;height:4px!important}
-[data-theme="mono"] .bs-track b{width:1px!important;background:var(--ink)!important}
-[data-theme="mono"] .expense-donut-track{stroke:var(--border-light)!important}
-[data-theme="mono"] .expense-donut-hole{background:var(--bg)!important}
-[data-theme="mono"] .x5 .expense-cat-list{grid-template-columns:1fr!important;gap:0!important;border-top:1px solid var(--border-light)}
-[data-theme="mono"] .x5 .expense-cat-row{padding:7px 0!important;border-bottom:1px solid var(--border-light)!important}
-[data-theme="mono"] .x5 .expense-cat-pct{display:inline!important;font-family:var(--mono);font-size:11px;color:var(--ink-4)}
-[data-theme="mono"] .row{border-color:var(--border-light)!important}
-[data-theme="mono"] .top-pages.bottom-pages{border-top:1px solid var(--border-light)!important;background:var(--bg)!important}
-[data-theme="mono"] .top-pages.bottom-pages button{font-family:var(--mono)!important;font-weight:400!important;font-size:12px!important;color:var(--ink-4)!important;text-transform:lowercase}
-[data-theme="mono"] .top-pages.bottom-pages button.active{color:var(--accent)!important}
-[data-theme="mono"] .top-pages.bottom-pages button.active span,[data-theme="mono"] .top-pages.bottom-pages button.active{letter-spacing:0}
-[data-theme="mono"] .top-pages.bottom-pages button.active::after{content:"]"!important;display:inline!important;position:static!important;background:none!important;width:auto!important;height:auto!important}
-[data-theme="mono"] .top-pages.bottom-pages button.active::before{content:"["!important;display:inline!important;position:static!important;background:none!important;width:auto!important;height:auto!important;margin:0!important;border-radius:0!important}
-[data-theme="mono"] .modal-c{background:var(--bg-subtle)!important;border:1px solid var(--border)}
-[data-theme="mono"] .input,[data-theme="mono"] .select{background:var(--bg)!important;color:var(--ink)!important;border-color:var(--border)!important}
-[data-theme="mono"] #pay-rail{background:var(--bg-subtle)!important}
+
+
+
+<style id="p6">
+:root:not([data-theme]){--bg:#fbfaf8;--bg-subtle:#f4f2ee;--bg-hover:#f0ede7;--border:#e7e3dc;--border-light:#ebe8e2;--ink:#1b1a17;--ink-2:#56524b;--ink-3:#79746a;--ink-4:#a89f92;--accent:#4f46e5;--accent-soft:#eef2ff}
+:root{--track:#ece8e1;--c1:var(--accent);--c2:#e58e46;--c3:#36b77a;--c4:#469be5;--c5:#e54e46;--c6:#8873eb;--c7:#c9a227;--c8:#8b8e97;--c9:#d06aa8;--ema:#d58b88}
+[data-theme="dark"]{--track:#21242e;--c2:#f8bc8b;--c3:#8bf8bc;--c4:#8bc5f8;--c5:#f8908b;--c6:#b6a8f5;--c7:#e6cf86;--c9:#f0a6d2;--ema:#f0a69f}
+[data-theme="here-you-go"]{--track:#fbe0ed;--c2:#e08a3c;--c3:#0d9f77;--c5:#e2445c;--c6:#9b6fd6;--ema:#e2445c}
+html,body{background:var(--bg)!important}
+.p6{padding:0 24px 28px;color:var(--ink);font-family:'Inter',-apple-system,sans-serif;font-variant-numeric:tabular-nums}
+.p6 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.p6-l{font-size:12px;color:var(--ink-3)}.p6-top{margin-top:26px}
+.p6-big{font-size:44px;font-weight:700;letter-spacing:-1.6px;color:var(--accent);margin-top:2px;line-height:1.12}
+.p6 .neg{color:var(--negative)!important}.p6 .pos{color:var(--positive)}.p6 .warn{color:var(--warning)}
+.p6-stats{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap}
+.p6-stats div{display:flex;flex-direction:column;gap:3px}
+.p6-stats span{font-size:11px;color:var(--ink-4)}.p6-stats strong{font-size:16px;font-weight:600}
+.p6-sec{display:flex;justify-content:space-between;align-items:baseline;margin-top:30px;font-size:12px;color:var(--ink-3)}
+.p6 .p6-add{font-size:13px;font-weight:600;color:var(--accent)}
+.p6-acts{display:flex;gap:16px}
+.p6-key{display:inline-flex;align-items:center;gap:6px;color:var(--ink-4)}.p6-key i{width:12px;height:2px;border-radius:1px;background:var(--ema)}
+.p6-chart{height:120px;display:flex;align-items:flex-end;gap:5px;margin-top:14px;position:relative;border-bottom:1px solid var(--border-light)}
+.p6-chart i{flex:1;min-height:2px;border-radius:3px 3px 0 0;background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.p6-chart i.cur{background:var(--accent)}
+.p6-chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.p6-chart polyline{fill:none;stroke:var(--ema);stroke-width:1.75;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.p6-chart b{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--ema);box-shadow:0 0 0 2px var(--bg)}
+.p6-xl{position:relative;height:16px;margin-top:6px;font-size:10px;color:var(--ink-4)}
+.p6-xl span{position:absolute;transform:translateX(-50%)}.p6-xl span:first-child{transform:none}
+.p6 .p6-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 0;border-bottom:1px solid var(--border-light)}
+.p6 .p6-row.p6-static{padding:12px 0}
+.p6-rm{flex:1;min-width:0}
+.p6-n{font-size:15px;font-weight:500}.p6-m{font-size:12px;color:var(--ink-4);margin-top:2px}
+.p6-a{font-size:15px;font-weight:600;white-space:nowrap}
+.p6-stripe{width:3px;align-self:stretch;border-radius:2px;flex-shrink:0;display:block}
+.p6-empty{font-size:13px;color:var(--ink-3);padding:14px 0}
+.p6-xtop{display:flex;align-items:center;gap:22px;margin-top:26px}
+.p6-donut{flex-shrink:0;width:132px;height:132px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.p6-donut>div{width:96px;height:96px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.p6-donut strong{font-size:20px;font-weight:700;letter-spacing:-.5px}.p6-donut span{font-size:10.5px;color:var(--ink-4)}
+.p6-mid{font-size:30px;font-weight:700;letter-spacing:-1px;color:var(--accent)}
+.p6-xtop .p6-m{margin-top:2px}
+.p6-cats{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;margin-top:22px}
+.p6-cats>div{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.p6-cats i{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.p6-cats span{flex:1;color:var(--ink-2)}.p6-cats strong{font-weight:600}
+.p6-switch{display:flex;align-items:center;justify-content:space-between;margin-top:22px;font-size:13px;color:var(--ink-2)}
+.p6-switch b{color:var(--ink);font-weight:600}
+.p6 .p6-switch button{font-size:20px;color:var(--ink-4);padding:0 6px;line-height:1}
+.p6 .p6-switch button:disabled{color:var(--border);cursor:default}
+.p6-center{text-align:center;margin-top:18px}
+.p6-bar{display:flex;height:10px;gap:3px;margin-top:22px}.p6-bar i{display:block;height:100%;border-radius:3px}
+.p6-cap{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-4);margin-top:7px}
+.p6 .p6-sp{display:flex;flex-direction:column;gap:7px;width:100%;text-align:left;padding:12px 0;border-bottom:1px solid var(--border-light)}
+.p6-sprow{display:flex;align-items:baseline;gap:8px}
+.p6-sprow i{width:8px;height:8px;border-radius:2px;align-self:center;flex-shrink:0}
+.p6-spn{flex:1;font-size:15px;font-weight:500}
+.p6-sprow strong{font-size:15px;font-weight:600}.p6-sprow em{font-style:normal;font-size:12px;color:var(--ink-4)}
+.p6-plus{color:var(--accent);font-size:17px;font-weight:500;margin-left:6px;line-height:1}
+.p6-sp u{display:block;height:3px;background:var(--track);border-radius:2px}.p6-sp u b{display:block;height:3px;border-radius:2px}
+.p6-bs{display:flex;align-items:baseline;gap:6px;margin-top:8px}
+.p6-bs strong{font-size:22px;font-weight:700}.p6-bs span{font-size:12px;color:var(--ink-4)}
+.p6-bs em{font-style:normal;margin-left:auto;font-size:12px;font-weight:600}
+.p6-track{position:relative;height:6px;background:var(--track);border-radius:3px;margin-top:10px}
+.p6-track i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.p6-track b{position:absolute;top:-4px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--ink-2)}
+.p6-bills{margin-top:8px}
+.p6 .p6-paid{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:4px 10px;border-radius:6px}
+
 </style>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="no-rail">
+#pay-rail{display:none!important}
+@media (min-width:1000px){
+ html body{padding-left:0!important;max-width:720px!important;margin:0 auto!important;padding-bottom:calc(64px + env(safe-area-inset-bottom))!important}
+ body>.mhdr,body>main#content{max-width:none}
+ html body .top-pages.bottom-pages{position:fixed!important;top:auto!important;bottom:0!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(720px,100vw)!important;padding:9px 20px calc(8px + env(safe-area-inset-bottom))!important;gap:0!important;background:color-mix(in srgb,var(--bg) 94%,transparent)!important}
+ html body .top-pages.bottom-pages button{flex:1!important}
+ .mhdr-menu{right:max(12px,calc((100vw - 720px) / 2 + 12px))!important}
+}
+</style>
 </head>
 
 
@@ -4075,7 +4110,6 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
   <button class="danger menu-action" data-action="reset"><span>Reset everything</span></button>
 </div>
 
-<aside id="pay-rail" aria-label="Paychecks"></aside>
 <main id="content"></main>
 <div class="bar-tooltip" id="bar-tooltip"></div>
 
@@ -4462,7 +4496,8 @@ function getTheme() {
 }
 function applyTheme(name) {
   if (!['light', 'dark', 'here-you-go'].includes(name)) name = 'light';
-  document.documentElement.setAttribute('data-theme', name === 'light' ? 'mono' : name);
+  if (name === 'light') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', name);
   try { localStorage.setItem(THEME_KEY, name); } catch {}
   updateThemeMenuMarkers();
 }
@@ -6644,7 +6679,7 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
-  { const mt=document.getElementById('mtitle'); if(mt) mt.textContent='ledgeon / '+currentTab; }
+  { const mt=document.getElementById('mtitle'); if(mt) mt.textContent={income:'Income',expenses:'Expenses',budget:'Budget'}[currentTab]||'Ledgeon'; }
   document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   renderRail();
   refreshPayPeriodAverage();
@@ -7713,6 +7748,96 @@ document.addEventListener('scroll',event=>{
   target.classList.remove('is-scrolling');scrollbarIdleTimers.delete(target);
  },700));
 }, {capture:true,passive:true});
+</script>
+<script>
+(function(){
+const M0=n=>(n<0?'−':'')+'$'+Math.round(Math.abs(Number(n)||0)).toLocaleString('en-US');
+const PAL=['var(--c1)','var(--c2)','var(--c3)','var(--c4)','var(--c5)','var(--c6)','var(--c7)','var(--c8)','var(--c9)'];
+const sec=(label,right)=>`<div class="p6-sec"><span>${label}</span>${right||''}</div>`;
+const addBtn=(type,label)=>`<button class="p6-add" data-action="open-modal" data-type="${type}">${label||'+ Add'}</button>`;
+const _ri=renderIncome,_rb=renderBudget;
+
+renderIncome=function(){
+ if(sourceDetailView) return _ri();
+ const now=new Date(),stats=getIncomeStats(),cur=getMonthlyStats(now.getFullYear(),now.getMonth());
+ const latest=state.income.map(i=>({d:paycheckDate(i),a:moneyValue(i.amount)})).filter(x=>x.d&&x.a>0).sort((a,b)=>b.d.localeCompare(a.d))[0];
+ const third=stats.ytdHours>0?['Hourly','$'+stats.ytdHourly.toFixed(2)]:['Latest',M0(latest?latest.a:0)];
+ let chart='';
+ try{
+  const hist=getPayPeriodHistory(40),list=hist.list.slice(-14);
+  if(list.length&&list.some(x=>x.income>0)){
+   const emaAll=paycheckEMA(hist.list,hist.periodDays),ema=emaAll.slice(-list.length),avg=emaAll[emaAll.length-1]||0;
+   const max=Math.max(...ema.map(v=>v||0),...list.map(x=>x.income),1)*1.12;
+   const n=list.length,px=i=>((i+.5)/n*100).toFixed(2),py=v=>(100-(v||0)/max*100).toFixed(2);
+   const pts=ema.map((v,i)=>px(i)+','+py(v)).join(' ');
+   const months=[];list.forEach((x,i)=>{const m=x.start.toLocaleDateString('en-US',{month:'short'});if(!months.length||months[months.length-1].m!==m)months.push({m,i});});
+   chart=`${sec('Pay periods',`<span class="p6-key"><i></i>Avg ${M0(avg)}</span>`)}
+   <div class="p6-chart">${list.map((x,i)=>`<i class="${i===n-1?'cur':''}" style="height:${(x.income/max*100).toFixed(1)}%" title="${escHTML(shortDate(isoDate(x.start)))} · ${fmtMoney(x.income)}"></i>`).join('')}${avg>0?`<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${pts}"></polyline></svg><b style="left:${px(n-1)}%;top:${py(ema[n-1])}%"></b>`:''}</div>
+   <div class="p6-xl">${months.map(o=>`<span style="left:${px(o.i)}%">${o.m}</span>`).join('')}</div>`;
+  }
+ }catch(e){}
+ const g={};
+ state.income.forEach(i=>{const k=i.source||'Unknown',d=paycheckDate(i),a=moneyValue(i.amount);if(!a)return;(g[k]=g[k]||{n:0,t:0,last:''});g[k].n++;g[k].t+=a;if(d>g[k].last)g[k].last=d;});
+ const src=Object.entries(g).sort((a,b)=>b[1].last.localeCompare(a[1].last));
+ return `<div class="p6">
+ <div class="p6-l p6-top">Year to date</div>
+ <div class="p6-big">${M0(stats.ytdIncome)}</div>
+ <div class="p6-stats"><div><span>This month</span><strong>${M0(cur.income)}</strong></div><div><span>Monthly est.</span><strong>${M0(stats.ytdAvgMonthly)}</strong></div><div><span>${third[0]}</span><strong>${third[1]}</strong></div></div>
+ ${chart}
+ ${sec('Sources',addBtn('income'))}
+ ${src.length?src.map(([k,v])=>`<button class="p6-row" data-action="view-source" data-source="${escHTML(k)}"><div class="p6-rm"><div class="p6-n">${escHTML(k)}</div><div class="p6-m">${v.n} payment${v.n===1?'':'s'} · ${M0(v.t/v.n)} avg</div></div><span class="p6-a">${M0(v.t)}</span></button>`).join(''):`<div class="p6-empty">No income yet · <span class="lnk" data-action="open-modal" data-type="income">add your first source</span></div>`}
+ </div>`;
+};
+
+renderExpenses=function(){
+ const rec=state.bills.filter(b=>b.recurring&&b.recurring!=='once');
+ const total=rec.reduce((s,b)=>s+monthlyEq(b.amount,b.recurring),0);
+ const by={};rec.forEach(b=>{const c=b.category||'other';by[c]=(by[c]||0)+monthlyEq(b.amount,b.recurring);});
+ const cats=Object.entries(by).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,v],i)=>({c,v,label:cap(CATEGORIES[c]?.label||c),color:PAL[i%PAL.length]}));
+ const col={};cats.forEach(x=>col[x.c]=x.color);
+ const inc=getIncomeStats().ytdAvgMonthly||0,base=Math.max(inc,total,1),left=inc-total;
+ let o=0;const stops=cats.map(x=>{const s=o;o+=x.v/base*100;return `${x.color} ${s.toFixed(3)}% ${o.toFixed(3)}%`;});stops.push(`var(--track) ${o.toFixed(3)}% 100%`);
+ const amtOf=b=>(b.recurring&&b.recurring!=='once')?monthlyEq(b.amount,b.recurring):moneyValue(b.amount);
+ const bills=state.bills.slice().sort((a,b)=>amtOf(b)-amtOf(a));
+ return `<div class="p6">
+ <div class="p6-xtop">
+  <div class="p6-donut" style="background:conic-gradient(${stops.join(',')})"><div><strong>${M0(total)}</strong><span>per month</span></div></div>
+  <div><div class="p6-l">${left<0?'Over income':'Left after bills'}</div><div class="p6-mid${left<0?' neg':''}">${inc>0?M0(Math.abs(left)):'—'}</div><div class="p6-m">${inc>0?`Bills are ${Math.round(total/inc*100)}% of income`:'Add income to compare'}</div></div>
+ </div>
+ ${cats.length?`<div class="p6-cats">${cats.map(x=>`<div><i style="background:${x.color}"></i><span>${escHTML(x.label)}</span><strong>${M0(x.v)}</strong></div>`).join('')}</div>`:''}
+ ${sec('Bills',addBtn('expenses'))}
+ ${bills.length?bills.map(b=>{const c=b.category||'other';const meta=[cap(CATEGORIES[c]?.label||c),b.dueDate?shortDate(b.dueDate):cap(b.recurring||'once')].join(' · ');return `<button class="p6-row" data-action="edit" data-type="expenses" data-id="${b.id}"><i class="p6-stripe" style="background:${col[c]||'var(--ink-4)'}"></i><div class="p6-rm"><div class="p6-n">${escHTML(b.name)}</div><div class="p6-m">${escHTML(meta)}</div></div><span class="p6-a">${M0(amtOf(b))}</span></button>`;}).join(''):`<div class="p6-empty">No bills yet · <span class="lnk" data-action="open-modal" data-type="expenses">add your first bill</span></div>`}
+ </div>`;
+};
+
+renderBudget=function(){
+ const p=getPaycheckPlan();
+ if(!p.check) return _rb();
+ const tracking=paycheckSpending(p),categories=spendingCategorySettings();
+ const colors={bills:'var(--c1)',groceries:'var(--c2)',gas:'var(--c5)',savings:'var(--c3)',other:'var(--c4)'};
+ const split=[{key:'bills',total:p.suggested},...categories.map(({key})=>({key,total:tracking.targets[key]}))];
+ const basis=Math.max(p.available,split.reduce((s,i)=>s+i.total,0),1);
+ const afterBills=roundCash(p.available-p.suggested-tracking.total);
+ const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check));
+ const unpaid=state.bills.filter(b=>b.recurring&&b.recurring!=='once'&&!billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+ const tot=Math.max(1,p.monthlyTotal),have=p.savedTotal+p.paidTotal,behind=roundCash(p.target-have);
+ return `<div class="p6">
+ <div class="p6-switch"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><b>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</b> · ${M0(p.available)}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>
+ <div class="p6-center"><div class="p6-big${afterBills<0?' neg':''}">${M0(Math.abs(afterBills))}</div><div class="p6-l">${afterBills<0?'over budget':'left to spend'}${p.next?` until ${escHTML(shortDate(isoDate(p.next)))}`:''}</div></div>
+ <div class="p6-bar">${split.map(i=>`<i style="width:${Math.max(0,i.total/basis*100)}%;background:${colors[i.key]}"></i>`).join('')}</div>
+ <div class="p6-cap"><span>Bills ${M0(p.suggested)}</span><span>Spending ${M0(Math.max(0,p.available-p.suggested))}</span></div>
+ ${sec('Spending')}
+ ${categories.map(({key,label})=>{const t=tracking.targets[key],s=tracking.spent[key],r=roundCash(t-s);return `<button class="p6-sp" data-action="open-spending" data-category="${key}"><span class="p6-sprow"><i style="background:${colors[key]}"></i><span class="p6-spn">${escHTML(label)}</span><strong class="${r<0?'neg':''}">${M0(r)}</strong><em>/ ${M0(t)}</em><span class="p6-plus">+</span></span><u><b style="width:${t>0?Math.min(100,s/t*100):s>0?100:0}%;background:${colors[key]}"></b></u></button>`;}).join('')}
+ ${sec('Bill savings',`<span class="p6-acts"><button class="p6-add" data-action="open-bill-entry">+ Add</button><button class="p6-add" data-action="open-bill-balance">Adjust</button></span>`)}
+ <div class="p6-bs"><strong>${M0(p.savedTotal)}</strong><span>saved of ${M0(p.monthlyTotal)}</span><em class="${behind>0.5?'warn':'pos'}">${behind>0.5?`${M0(behind)} behind`:'On track'}</em></div>
+ <div class="p6-track"><i style="width:${Math.min(100,have/tot*100)}%"></i><b style="left:${Math.min(100,p.target/tot*100)}%"></b></div>
+ <div class="p6-cap"><span>${M0(p.suggested)} per paycheck</span><span>Target ${M0(p.target)}</span></div>
+ <div class="p6-bills">${unpaid.map(b=>`<div class="p6-row p6-static"><div class="p6-rm"><div class="p6-n">${escHTML(b.name)}</div><div class="p6-m">${b.dueDate?escHTML(shortDate(b.dueDate)):'No date'}</div></div><span class="p6-a">${M0(monthlyEq(moneyValue(b.amount),b.recurring))}</span><button class="p6-paid" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="p6-empty">All bills paid this month</div>'}</div>
+ </div>`;
+};
+render();
+})();
+
 </script>
 </body>
 </html>
