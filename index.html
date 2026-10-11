@@ -3856,6 +3856,10 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .pc-amt{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);margin-top:5px;font-variant-numeric:tabular-nums}
 .pc-rem{text-align:right}.pc-rem .sf-hero{font-size:24px;letter-spacing:-.6px;margin:0}
 .pc-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--border-light);margin-top:16px}.pc-bar i{display:block;height:100%}
+.pc-static{justify-content:center;padding:10px 4px}
+.pc-meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-3);padding:2px 0 4px}.pc-meta strong{color:var(--ink-2);font-weight:600}
+.cat-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle;position:relative;top:-1px}
+.income-overview>.pc-head,main#content>.pc-head{margin-left:20px;margin-right:20px}
 .pc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-2);margin:8px 0 6px}.pc-legend span{display:inline-flex;align-items:center;gap:5px}.pc-legend i{width:6px;height:6px;border-radius:3px;display:inline-block}
 @media (min-width:1000px){
  body{max-width:none!important;margin:0!important;padding-left:340px!important;padding-bottom:40px!important}
@@ -3874,7 +3878,9 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
  .pr-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pr-n>span{font-size:13.5px;font-weight:500}.pr-n em{font-style:normal;color:var(--ink-3);font-weight:400}.pr-n small{font-size:11.25px;color:var(--ink-3)}
  .pr-item strong{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
  .pr-empty{font-size:13px;color:var(--ink-4);padding:12px}
- .pc-switch{display:none}
+ .pc-switch.pc-check{display:none}
+ .pc-switch{margin-top:16px}
+ .pc-meta{font-size:11.5px;gap:6px 22px}
  .pc-lead{margin-top:22px}.pc-amt{font-size:44px;letter-spacing:-1.4px}
  .pc-rem .sf-hero{font-size:36px;letter-spacing:-1.3px}
  .pc-bar{height:14px;border-radius:7px;margin-top:22px}
@@ -5573,8 +5579,20 @@ function renderIncome() {
     }).join('');
   }
 
-  return `<section class="income-overview">${ytdBlock}
-    ${statTrioHTML}
+  const vm=new Date(nowD.getFullYear(),nowD.getMonth()+incomeMonthOff,1), vmEnd=new Date(vm.getFullYear(),vm.getMonth()+1,1);
+  const bySrc={}; let payCount=0;
+  for(const it of state.income){ for(const o of recordedIncomeOccurrences(it,vm,vmEnd)){ const k=it.source||'Income'; bySrc[k]=(bySrc[k]||0)+(o.amount||0); payCount++; } }
+  const srcItems=Object.entries(bySrc).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([label,total],i)=>({label,total,color:PC_PAL[i%PC_PAL.length]}));
+  const vmTotal=srcItems.reduce((s,i)=>s+i.total,0);
+  const firstDate=state.income.map(i=>parseISODate(paycheckDate(i))).filter(Boolean).sort((a,b)=>a-b)[0];
+  const canOlder=firstDate && (firstDate.getFullYear()*12+firstDate.getMonth()) < (vm.getFullYear()*12+vm.getMonth());
+  const incHead=`<div class="pc-head">
+   <div class="pc-switch"><button data-action="inc-older" aria-label="Previous month"${canOlder?'':' disabled'}>‹</button><span><strong>${vm.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</strong>${incomeMonthOff===0?' · This month':''}</span><button data-action="inc-newer" aria-label="Next month"${incomeMonthOff>=0?' disabled':''}>›</button></div>
+   <div class="pc-lead"><div><div class="pc-label">${payCount?`${payCount} payment${payCount===1?'':'s'} · ${srcItems.length} source${srcItems.length===1?'':'s'}`:'No income logged'}</div><div class="pc-amt">${fmtMoney(vmTotal)}</div></div><div class="pc-rem"><div class="sf-hero">${fmtMoney(stats.ytdIncome,{round:true})}</div><div class="sf-eyebrow">Year to date</div></div></div>
+   ${srcItems.length?pcBar(srcItems,vmTotal):'<div class="pc-bar"></div>'}
+   <div class="pc-meta"><span>Monthly est. <strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></span><span>Latest paystub <strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></span>${stats.ytdHours>0?`<span><strong>${Math.round(stats.ytdHours).toLocaleString()}</strong> hrs · <strong>$${stats.ytdHourly.toFixed(2)}</strong> /hr</span>`:''}</div>
+  </div>`;
+  return `<section class="income-overview">${incHead}
     ${trendHeader}
     ${trendChartHTML}
     ${sh('Sources', {
@@ -5748,6 +5766,18 @@ function renderExpenses() {
     return (a.name || '').localeCompare(b.name || '');
   });
 
+  const catColor={}; catData.forEach((c,i)=>catColor[c.cat]=PC_PAL[i%PC_PAL.length]);
+  const avail=ytdMonthlyIncome-recurringMonthly;
+  const expItems=catData.map(c=>({label:cap(c.label),total:c.total,color:catColor[c.cat]}));
+  if(avail>0) expItems.push({label:'Available',total:avail,color:'var(--border)'});
+  const todayIso=isoDate(todayStart());
+  const nextDue=recurringBills.filter(b=>b.dueDate && b.dueDate>=todayIso).sort((a,b)=>a.dueDate.localeCompare(b.dueDate))[0];
+  const expHead=`<div class="pc-head">
+   <div class="pc-switch pc-static"><span>${nextDue?`<strong>Next due</strong> · ${escHTML(nextDue.name)}, ${escHTML(shortDate(nextDue.dueDate))} · ${fmtMoney(moneyValue(nextDue.amount))}`:'<strong>Nothing due</strong> · add due dates to bills'}</span></div>
+   <div class="pc-lead"><div><div class="pc-label">${recurringBills.length} recurring bill${recurringBills.length===1?'':'s'} · per month</div><div class="pc-amt">${fmtMoney(recurringMonthly)}</div></div><div class="pc-rem"><div class="sf-hero"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="sf-eyebrow">${ytdMonthlyIncome>0?(avail<0?'Over income':'Left after bills'):'Add income to compare'}</div></div></div>
+   ${expItems.length?pcBar(expItems,ytdMonthlyIncome):'<div class="pc-bar"></div>'}
+   ${ytdMonthlyIncome>0?`<div class="pc-meta"><span><strong>${expensePctIncome.toFixed(0)}%</strong> of ${fmtMoney(ytdMonthlyIncome,{round:true})} estimated monthly income</span></div>`:''}
+  </div>`;
   let rowsHTML = '';
   if (bills.length === 0) {
     rowsHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="expenses">Add your first expense</span></div>`;
@@ -5764,7 +5794,7 @@ function renderExpenses() {
 
       return `<div class="row clickable source-row" data-action="edit" data-type="expenses" data-id="${b.id}">
         <div>
-          <div class="r-name">${escHTML(b.name)}</div>
+          <div class="r-name"><i class="cat-dot" style="background:${catColor[b.category||'other']||'var(--ink-4)'}"></i>${escHTML(b.name)}</div>
           <div class="r-meta">${meta}</div>
         </div>
         <div class="source-right">
@@ -5775,9 +5805,7 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${hero}
-    ${sh('Breakdown', { meta: ytdMonthlyIncome > 0 ? '% of income' : '' })}
-    ${pieHTML}
+  return `${expHead}
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
@@ -6073,6 +6101,9 @@ function dueDateFunding(bills, saved, next, cadence) {
 }
 
 let selectedCheckId = null;
+let incomeMonthOff = 0;
+const PC_PAL=['#4f46e5','#e58e46','#36b77a','#469be5','#e54e46','#8873eb','#d4a574','#a89f92'];
+function pcBar(items, basis){ basis=Math.max(basis,items.reduce((s,i)=>s+i.total,0),1); return `<div class="pc-bar">${items.map(i=>`<i style="width:${Math.max(0,i.total/basis*100)}%;background:${i.color}"></i>`).join('')}</div><div class="pc-legend">${items.map(i=>`<span><i style="background:${i.color}"></i>${escHTML(i.label)} ${fmtMoney(i.total,{round:true})}</span>`).join('')}</div>`; }
 function eligibleChecks() {
  const today=isoDate(todayStart());
  return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
@@ -6300,7 +6331,7 @@ function renderBudget() {
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
- <div class="pc-switch"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
+ <div class="pc-switch pc-check"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
  <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${hrs>0?` · ${hrs} hrs`:''}${end?` · covers ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
  <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div>
  <div class="pc-legend">${split.map(item=>`<span><i style="background:${colors[item.key]}"></i>${escHTML(item.label)} ${fmtMoney(item.total,{round:true})}</span>`).join('')}</div>
@@ -6815,6 +6846,7 @@ document.addEventListener('click', e => {
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
   if (act === 'select-check') { const el=eligibleChecks(); selectedCheckId = el[0] && String(el[0].id)===btn.dataset.id ? null : btn.dataset.id; currentTab='budget'; budgetLogView=false; sourceDetailView=null; expenseDetailView=null; try{localStorage.setItem(TAB_KEY,currentTab);}catch{} render(); return; }
+  if (act === 'inc-older' || act === 'inc-newer') { incomeMonthOff = Math.min(0, incomeMonthOff + (act==='inc-older'?-1:1)); render(); return; }
   if (act === 'check-older' || act === 'check-newer') { const el=eligibleChecks(); let i=el.indexOf(getPaycheckPlan().check)+(act==='check-older'?1:-1); if(i>=0&&i<el.length){ selectedCheckId = i===0?null:el[i].id; render(); } return; }
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
   else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
