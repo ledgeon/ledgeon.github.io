@@ -3923,6 +3923,57 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
  .pc-cols .bs{margin-top:0!important}
 }
 </style>
+<style id="ledgeon-polish">
+:root{--page:#f4f2ee;--card:#ffffff;--tile:#f7f6f3;--shadow:0 1px 2px rgba(27,26,23,.04),0 4px 16px rgba(27,26,23,.04)}
+[data-theme="dark"]{--page:#0d0e13;--card:#15171e;--tile:#1c1f28;--shadow:none}
+[data-theme="here-you-go"]{--page:#ffeaf1;--card:#fff8fa;--tile:#ffeff5;--shadow:0 1px 2px rgba(58,34,48,.05),0 4px 16px rgba(58,34,48,.05)}
+html,body{background:var(--page)!important}
+body{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+.mhdr{background:transparent!important;padding:22px 24px 10px!important}
+.spending-first{padding:0!important}
+.card,.pc-head,.pc-col,.bs{background:var(--card)!important;border:1px solid var(--border-light)!important;border-radius:18px!important;box-shadow:var(--shadow);margin:0 14px 12px!important;box-sizing:border-box}
+.card{padding:4px 18px 14px!important}
+.card>*{margin-left:0!important;margin-right:0!important;padding-left:0!important;padding-right:0!important}
+.card>.row,.card>.source-row{padding-top:12px!important;padding-bottom:12px!important}
+.card>.row:last-child{border-bottom:0!important}
+.card>.sh{padding-top:14px!important;padding-bottom:8px!important}
+.card.card>.detail-top{padding-top:14px!important}
+.exp-pie{margin-top:0!important;padding-top:16px!important;padding-bottom:4px!important}
+.pc-head{padding:16px 18px 18px!important}
+.income-overview>.pc-head,main#content>.pc-head,.budget-worksheet>.pc-head{margin:0 14px 12px!important}
+.pc-tab .pc-lead,.pc-head>.pc-lead:first-child{margin-top:2px}
+.pc-switch{border:0!important;background:var(--tile);border-radius:12px;margin:0 0 4px!important;padding:2px}
+.pc-switch button{border-radius:10px}.pc-switch button:not(:disabled):hover{background:var(--card);color:var(--ink)}
+.pc-bar{height:14px!important;border-radius:7px!important;margin-top:18px!important;gap:3px!important;background:transparent!important}
+.pc-bar i{border-radius:4px}
+.kpis{margin-top:18px!important;border-top:0!important;gap:8px;grid-auto-columns:minmax(0,1fr)}
+.kpi,.kpi+.kpi{background:var(--tile);border:0!important;border-radius:12px;padding:10px 12px!important}
+.kpi strong{font-size:16px!important}
+.pc-col{padding:2px 18px 18px!important}
+.pc-col .sf-heading,.bs .sf-heading{margin:14px 0 12px!important}
+.sf-spending-grid{gap:10px!important}
+.sc{background:var(--tile)!important;border:0!important;border-radius:14px;padding:12px 12px 12px!important;gap:8px!important}
+.sc:hover{background:var(--bg-hover)!important}
+.sc .sf-track-meter{background:var(--card)!important}
+.bs{padding:2px 18px 10px!important;margin-top:0!important}
+.bs-list{border-top:0!important;margin-top:12px!important}
+.bs-row:last-child{border-bottom:0!important}
+.sf-alert{margin:12px 0 0!important}
+@media (max-width:999px){
+ .top-pages.bottom-pages{left:50%!important;transform:translateX(-50%)!important;bottom:calc(12px + env(safe-area-inset-bottom))!important;width:min(420px,calc(100vw - 28px))!important;padding:5px!important;display:flex!important;gap:4px!important;border-radius:999px!important;background:var(--card)!important;border:1px solid var(--border-light)!important;box-shadow:0 8px 28px rgba(27,26,23,.12)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
+.top-pages.bottom-pages button{flex:1;text-align:center;border-radius:999px!important;padding:9px 14px!important;font-size:12.5px!important;font-weight:600!important;color:var(--ink-3)!important;transition:background .15s,color .15s}
+.top-pages.bottom-pages button.active{background:var(--accent-soft)!important;color:var(--accent)!important}
+.top-pages.bottom-pages button::after,.top-pages.bottom-pages button.active::after{display:none!important}
+@media (min-width:1000px){
+ .top-pages.bottom-pages{display:flex!important;gap:4px!important;padding:4px!important;border-radius:999px!important;background:var(--card)!important;border:1px solid var(--border-light)!important;top:18px!important}
+ .top-pages.bottom-pages button{flex:0 0 auto;padding:7px 16px!important}
+ #pay-rail{background:var(--card)!important}
+ body>main#content{padding-top:6px}
+ .pc-cols{gap:12px!important;margin:0 14px!important}
+ .pc-cols>.pc-col,.pc-cols>.bs{margin:0!important}
+}
+</style>
 </head>
 
 
@@ -6114,6 +6165,15 @@ function eligibleChecks() {
  const today=isoDate(todayStart());
  return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
 }
+function cardify(main) {
+ const root = main.querySelector(':scope > section.income-overview') || main;
+ if (root.querySelector(':scope > .budget-worksheet')) return;
+ let card = null;
+ [...root.children].forEach(k => {
+  if (k.matches('.sh, .exp-pie, .detail-top')) { card = document.createElement('div'); card.className = 'card'; root.insertBefore(card, k); }
+  if (card && !k.matches('.modal, .pc-head')) card.appendChild(k);
+ });
+}
 function renderRail() {
  const el=document.getElementById('pay-rail'); if(!el) return;
  const stats=getIncomeStats(), checks=eligibleChecks(), cur=getPaycheckPlan().check;
@@ -6533,6 +6593,8 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
+  cardify(main);
+  document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   renderRail();
   refreshPayPeriodAverage();
   window.scrollTo({ top: 0, behavior: 'instant' });
