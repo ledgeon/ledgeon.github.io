@@ -3836,13 +3836,52 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 
 .monthly-scroll-inner{position:relative}
 .monthly-expense-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden}
-.monthly-expense-overlay line{stroke:var(--moving-average,#d58b88);stroke-width:1;stroke-dasharray:4 5;opacity:.8;vector-effect:non-scaling-stroke}
+.monthly-expense-overlay line{stroke:var(--moving-average);stroke-width:1;stroke-dasharray:4 5;opacity:.8;vector-effect:non-scaling-stroke}
 .ytd-metrics{display:inline-flex!important;flex-wrap:wrap;align-items:baseline;gap:6px 18px!important}
 .ytd-metric{white-space:nowrap;color:var(--ink-3);font-size:12px}
 .ytd-metric strong{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
 .ytd-rate strong{color:var(--accent)}
 .monthly-expense-key{display:block;font-size:10px;color:var(--ink-3);margin-top:4px}
-.monthly-expense-key:before{content:"";display:inline-block;width:14px;border-top:1px dashed var(--moving-average,#d58b88);vertical-align:middle;margin-right:5px;opacity:.65}
+.monthly-expense-key:before{content:"";display:inline-block;width:14px;border-top:1px dashed var(--moving-average);vertical-align:middle;margin-right:5px;opacity:.65}
+</style>
+<style id="paycheck-layout">
+#pay-rail{display:none}
+.pc-head{margin:4px 0 2px}
+.pc-switch{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);font-size:12.5px;color:var(--ink-3);margin-top:10px}
+.pc-switch strong{color:var(--ink);font-weight:600}
+.pc-switch button{font-size:18px;color:var(--ink-3);padding:8px 10px;line-height:1}
+.pc-switch button:disabled{color:var(--border);cursor:default}
+.pc-lead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:18px}
+.pc-label{font-size:11.5px;color:var(--ink-3);font-weight:500}
+.pc-amt{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);margin-top:5px;font-variant-numeric:tabular-nums}
+.pc-rem{text-align:right}.pc-rem .sf-hero{font-size:24px;letter-spacing:-.6px;margin:0}
+.pc-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--border-light);margin-top:16px}.pc-bar i{display:block;height:100%}
+.pc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-2);margin:8px 0 6px}.pc-legend span{display:inline-flex;align-items:center;gap:5px}.pc-legend i{width:6px;height:6px;border-radius:3px;display:inline-block}
+@media (min-width:1000px){
+ body{max-width:none!important;margin:0!important;padding-left:340px!important;padding-bottom:40px!important}
+ body>.mhdr,body>main#content{max-width:860px;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}
+ .mhdr-menu{right:calc(max(0px,(100vw - 340px - 860px) / 2) + 12px)!important}
+ .top-pages.bottom-pages{position:absolute!important;top:22px!important;bottom:auto!important;left:auto!important;right:calc(max(0px,(100vw - 340px - 860px) / 2) + 64px)!important;transform:none!important;width:auto!important;background:transparent!important;border-top:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;z-index:61}
+ .top-pages.bottom-pages button{font-size:13px!important}
+ #pay-rail{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:340px;background:var(--bg-subtle);border-right:1px solid var(--border-light);overflow-y:auto;z-index:50;box-sizing:border-box;padding:30px 0 24px}
+ .pr-top{padding:0 28px}.pr-l{font-size:11.5px;color:var(--ink-3);font-weight:500}
+ .pr-ytd{font-size:30px;font-weight:800;letter-spacing:-.9px;color:var(--accent);margin-top:4px;font-variant-numeric:tabular-nums}
+ .pr-s{font-size:11.5px;color:var(--ink-3);margin-top:4px}
+ #pay-rail .sh{padding:26px 28px 6px!important}
+ .pr-list{display:flex;flex-direction:column;padding:0 16px}
+ .pr-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:6px;text-align:left;color:var(--ink);width:100%}
+ .pr-item:hover{background:var(--bg-hover)}.pr-item.on{background:var(--accent-soft)}
+ .pr-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pr-n>span{font-size:13.5px;font-weight:500}.pr-n em{font-style:normal;color:var(--ink-3);font-weight:400}.pr-n small{font-size:11.25px;color:var(--ink-3)}
+ .pr-item strong{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+ .pr-empty{font-size:13px;color:var(--ink-4);padding:12px}
+ .pc-switch{display:none}
+ .pc-lead{margin-top:22px}.pc-amt{font-size:44px;letter-spacing:-1.4px}
+ .pc-rem .sf-hero{font-size:36px;letter-spacing:-1.3px}
+ .pc-bar{height:14px;border-radius:7px;margin-top:22px}
+ .pc-legend{font-size:11.5px;gap:6px 22px;margin-top:10px}
+ .pc-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:start}
+ .pc-cols .bill-progress-section{margin-top:22px}
+}
 </style>
 </head>
 
@@ -3881,6 +3920,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
   <button class="danger menu-action" data-action="reset"><span>Reset everything</span></button>
 </div>
 
+<aside id="pay-rail" aria-label="Paychecks"></aside>
 <main id="content"></main>
 <div class="bar-tooltip" id="bar-tooltip"></div>
 
@@ -6032,15 +6072,30 @@ function dueDateFunding(bills, saved, next, cadence) {
  return {rows,suggested:roundCash(rows.reduce((sum,r)=>sum+r.suggested,0))};
 }
 
+let selectedCheckId = null;
+function eligibleChecks() {
+ const today=isoDate(todayStart());
+ return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
+}
+function renderRail() {
+ const el=document.getElementById('pay-rail'); if(!el) return;
+ const stats=getIncomeStats(), checks=eligibleChecks(), cur=getPaycheckPlan().check;
+ el.innerHTML=`<div class="pr-top"><div class="pr-l">Year to date</div><div class="pr-ytd">${fmtMoney(stats.ytdIncome,{round:true})}</div>${stats.ytdHours>0?`<div class="pr-s">${Math.round(stats.ytdHours).toLocaleString()} hrs · $${stats.ytdHourly.toFixed(2)} /hr</div>`:''}</div>
+ ${sh('Paychecks',{add:{action:'open-modal',type:'income',label:'+ Add'}})}
+ <div class="pr-list">${checks.length?checks.map(i=>{const amt=moneyValue(i.amount),hrs=Number(i.hours)||0;const meta=hrs>0?`${hrs} hrs · $${(amt/hrs).toFixed(2)} /hr`:(i.frequency&&i.frequency!=='once'?cap(i.frequency):'One-time');return `<button class="pr-item${cur&&String(i.id)===String(cur.id)?' on':''}" data-action="select-check" data-id="${escHTML(String(i.id))}"><span class="pr-n"><span>${escHTML(shortDate(paycheckDate(i)))} <em>· ${escHTML(i.source||'Income')}</em></span><small>${escHTML(meta)}</small></span><strong>${fmtMoney(amt)}</strong></button>`;}).join(''):'<div class="pr-empty">No paychecks yet</div>'}</div>`;
+}
 function getPaycheckPlan() {
  const today=isoDate(todayStart()),cp=state.cashPlan||(state.cashPlan={});
- const check=state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)))[0];
+ const eligible=eligibleChecks();
+ const check=(selectedCheckId!=null && eligible.find(i=>String(i.id)===String(selectedCheckId)))||eligible[0];
+ const isLatest=check===eligible[0];
  const date=parseISODate(paycheckDate(check))||todayStart(),month=isoDate(date).slice(0,7);
  const schedule=getIncomePaySchedule();
  const cadence=schedule.cadence;
  const anchor=schedule.anchor||date;
  let next=nextBillDate(anchor,cadence,anchor.getDate()),guard=0;
- while(next && (next<=date || isoDate(next)<=today) && guard++<600)next=nextBillDate(next,cadence,anchor.getDate());
+ while(next && (next<=date || (isLatest && isoDate(next)<=today)) && guard++<600)next=nextBillDate(next,cadence,anchor.getDate());
+ if(!isLatest){const newer=eligible[eligible.indexOf(check)-1];const nd=newer&&parseISODate(paycheckDate(newer));if(nd&&nd>date)next=nd;}
  // Count calendar paydays, including ones already received, in the paycheck's month.
  let count=0,elapsed=0;
  if(cadence==='monthly'){count=1;elapsed=1;}
@@ -6244,21 +6299,23 @@ function renderBudget() {
  const afterBills=roundCash(p.available-p.suggested-tracking.total);
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
- <div class="sf-lead"><div><div class="sf-hero">${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div>
- <div class="sf-ring"><svg viewBox="0 0 108 108" role="img" aria-label="${escHTML(split.map(item=>item.label+' '+fmtMoney(item.total)).join(', '))}"><circle cx="54" cy="54" r="42" fill="none" stroke="var(--border-light)" stroke-width="14"></circle><g transform="rotate(-90 54 54)">${segments}</g></svg><div class="sf-ring-label"><span>For bills</span><strong>${fmtMoney(p.suggested,{round:true})}</strong></div></div></div>
- <div class="sf-heading"><h3>Spending budget</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
+ <div class="pc-switch"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
+ <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${hrs>0?` · ${hrs} hrs`:''}${end?` · covers ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
+ <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div>
+ <div class="pc-legend">${split.map(item=>`<span><i style="background:${colors[item.key]}"></i>${escHTML(item.label)} ${fmtMoney(item.total,{round:true})}</span>`).join('')}</div>
+ </div>`;})()}
+ <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending budget</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
- <section class="bill-progress-section">
+ </div><section class="bill-progress-section">
  <div class="sf-fund-heading"><strong>Bill savings</strong></div>
  <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bills per paycheck</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
  <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><div class="bill-progress-segments">${billSavingsSegments(p).map(segment=>`<i style="width:${p.monthlyTotal?segment.amount/p.monthlyTotal*100:0}%;background:${segment.color}" title="${escHTML(segment.label)} · ${fmtMoney(segment.amount)}"></i>`).join('')}</div><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="Monthly progress target: ${fmtMoney(p.target)}"><span class="bill-target-label" style="transform:translateX(${p.monthlyTotal && p.target/p.monthlyTotal<.15?'0':p.monthlyTotal && p.target/p.monthlyTotal>.85?'-100%':'-50%'})">${fmtMoney(p.target)} target</span></b></div>
  <div class="bill-progress-caption"><span class="bill-progress-legend"><span class="bill-progress-key"><i style="background:#8873eb"></i><strong>${fmtMoney(p.savedTotal)}</strong> saved</span>${p.paidTotal>0?`<span class="bill-progress-key"><i style="background:#aaa4c2"></i>${fmtMoney(p.paidTotal)} paid</span>`:''}<button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
  <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
  ${unpaidBills.map(b=>`<div class="bill-compact-row"><span class="bill-name-date"><span>${escHTML(b.name)}</span>${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
- </section>
-
-
+ </section></div>
  <p class="budget-due-note">Update due dates in Expenses to change which bills appear here.</p>
  </section>`;
 }
@@ -6442,6 +6499,7 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
+  renderRail();
   refreshPayPeriodAverage();
   window.scrollTo({ top: 0, behavior: 'instant' });
   syncOverlayHistory();
@@ -6756,6 +6814,8 @@ document.addEventListener('click', e => {
   if (act === 'toggle-menu') { if (_menu) _menu.hidden = !_menu.hidden; return; }
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
+  if (act === 'select-check') { const el=eligibleChecks(); selectedCheckId = el[0] && String(el[0].id)===btn.dataset.id ? null : btn.dataset.id; currentTab='budget'; budgetLogView=false; sourceDetailView=null; expenseDetailView=null; try{localStorage.setItem(TAB_KEY,currentTab);}catch{} render(); return; }
+  if (act === 'check-older' || act === 'check-newer') { const el=eligibleChecks(); let i=el.indexOf(getPaycheckPlan().check)+(act==='check-older'?1:-1); if(i>=0&&i<el.length){ selectedCheckId = i===0?null:el[i].id; render(); } return; }
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
   else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
   else if (act === 'close-source-detail') { sourceDetailView = null; render(); }
