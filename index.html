@@ -3857,6 +3857,23 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .pc-rem{text-align:right}.pc-rem .sf-hero{font-size:24px;letter-spacing:-.6px;margin:0}
 .pc-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--border-light);margin-top:16px}.pc-bar i{display:block;height:100%}
 .cat-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle;position:relative;top:-1px;flex-shrink:0}
+.income-overview>.pc-head,main#content>.pc-head{margin:0 20px}
+.pc-tab .pc-lead{margin-top:16px}
+.kpis{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);margin-top:20px;border-top:1px solid var(--border-light)}
+.kpi{display:flex;flex-direction:column;gap:5px;padding:12px 0 2px}
+.kpi+.kpi{padding-left:14px;border-left:1px solid var(--border-light)}
+.kpi span{font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi strong{font-size:17px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.exp-pie{margin-top:22px}
+.sc{display:flex!important;flex-direction:column;gap:7px;text-align:left;width:100%;background:transparent;border:0;border-top:1px solid var(--border-light);padding:12px 0 14px!important;color:var(--ink);cursor:pointer;font-family:inherit}
+.sc-top{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--ink-2)}
+.sc-top i{width:6px;height:6px;border-radius:3px;flex-shrink:0}
+.sc-plus{margin-left:auto;color:var(--accent);font-size:15px;line-height:1}
+.sc-val{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.sc .sc-val strong{display:inline;margin:0;font-size:20px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sc .sc-val strong.sf-over{color:var(--negative)}
+.sc .sc-val small{display:inline;margin:0;font-size:11px;font-weight:400;color:var(--ink-3)}
+.bs-fill{display:flex;width:100%;height:100%;border-radius:3px;overflow:hidden}
 .bs{margin-top:30px!important;padding:0!important;border:0!important;background:none!important}
 .bs .sf-heading{display:flex;justify-content:space-between;align-items:center}
 .bs-acts{display:flex;gap:14px}.bs-acts .sf-action{padding:0}
@@ -3864,7 +3881,7 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .bs-line strong{font-size:22px;font-weight:700;letter-spacing:-.4px;color:var(--ink)}
 .bs-line span{font-size:11px;color:var(--ink-3)}
 .bs-line em{font-style:normal;margin-left:auto;font-size:11px;color:var(--ink-3)}
-.bs-track{position:relative;display:flex;gap:2px;height:6px;border-radius:3px;background:var(--border-light);margin-top:10px}
+.bs-track{position:relative;display:flex;height:6px;border-radius:3px;background:var(--border-light);margin-top:10px}
 .bs-track i{display:block;height:100%}.bs-track i:first-child{border-radius:3px 0 0 3px}
 .bs-track b{position:absolute;top:-4px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--ink-2)}
 .bs-cap{white-space:nowrap;display:flex;justify-content:space-between;gap:12px;font-size:10.5px;color:var(--ink-3);margin-top:8px}
@@ -3896,7 +3913,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
  .pr-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pr-n>span{font-size:13.5px;font-weight:500}.pr-n em{font-style:normal;color:var(--ink-3);font-weight:400}.pr-n small{font-size:11.25px;color:var(--ink-3)}
  .pr-item strong{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
  .pr-empty{font-size:13px;color:var(--ink-4);padding:12px}
- .pc-switch{display:none}
+ .pc-switch.pc-check{display:none}
+ .kpi strong{font-size:19px}
  .pc-lead{margin-top:22px}.pc-amt{font-size:44px;letter-spacing:-1.4px}
  .pc-rem .sf-hero{font-size:36px;letter-spacing:-1.3px}
  .pc-bar{height:14px;border-radius:7px;margin-top:22px}
@@ -5595,8 +5613,11 @@ function renderIncome() {
     }).join('');
   }
 
-  return `<section class="income-overview">${ytdBlock}
-    ${statTrioHTML}
+  const incHead=`<div class="pc-head pc-tab">
+   <div class="pc-lead"><div><div class="pc-label">${nowD.toLocaleDateString('en-US',{month:'long'})} income</div><div class="pc-amt">${fmtMoney(curMonthStats.income)}</div></div><div class="pc-rem"><div class="sf-hero">${fmtMoney(stats.ytdIncome,{round:true})}</div><div class="sf-eyebrow">Year to date</div></div></div>
+   <div class="kpis"><div class="kpi"><span>Monthly est.</span><strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></div><div class="kpi"><span>Latest paystub</span><strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></div>${stats.ytdHours>0?`<div class="kpi"><span>Hourly · ${Math.round(stats.ytdHours).toLocaleString()} hrs</span><strong>$${stats.ytdHourly.toFixed(2)}</strong></div>`:''}</div>
+  </div>`;
+  return `<section class="income-overview">${incHead}
     ${trendHeader}
     ${trendChartHTML}
     ${sh('Sources', {
@@ -5752,6 +5773,8 @@ function renderExpenses() {
   );
 
   const pieHTML = buildExpensePieChart(recurringMonthly, catData, ytdMonthlyIncome);
+  const avail = ytdMonthlyIncome - recurringMonthly;
+  const expHead = `<div class="pc-head pc-tab"><div class="pc-lead"><div><div class="pc-label">Monthly bills${ytdMonthlyIncome>0?` · ${expensePctIncome.toFixed(0)}% of income`:''}</div><div class="pc-amt">${fmtMoney(recurringMonthly)}</div></div><div class="pc-rem"><div class="sf-hero"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="sf-eyebrow">${ytdMonthlyIncome>0?(avail<0?'Over income':'Left after bills'):'Add income to compare'}</div></div></div></div>`;
 
   const bills = state.bills.slice().sort((a, b) => {
     const ar = a.recurring && a.recurring !== 'once' ? 0 : 1;
@@ -5788,9 +5811,8 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${hero}
-    ${sh('Breakdown', { meta: ytdMonthlyIncome > 0 ? '% of income' : '' })}
-    ${pieHTML}
+  return `${expHead}
+    <div class="exp-pie">${pieHTML}</div>
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
@@ -6315,20 +6337,19 @@ function renderBudget() {
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
- <div class="pc-switch"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
+ <div class="pc-switch pc-check"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>
  <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${end?` · ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
  <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div>
- <div class="pc-legend">${split.map(item=>`<span><i style="background:${colors[item.key]}"></i>${escHTML(item.label)} ${fmtMoney(item.total,{round:true})}</span>`).join('')}</div>
  </div>`;})()}
  <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending budget</h3></div>
- <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
+ <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sc" data-action="open-spending" data-category="${key}" aria-label="Log ${escHTML(label)}"><span class="sc-top"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sc-plus" aria-hidden="true">+</span></span><span class="sc-val"><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}</strong><small>${remaining<0?'over':key==='savings'?'to go':'left'} of ${fmtMoney(tracking.targets[key],{round:true})}</small></span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
  </div><section class="bill-progress-section bs">
  <div class="sf-heading"><h3>Bill savings</h3><span class="bs-acts"><button class="sf-action" data-action="open-bill-entry">+ Add</button><button class="sf-action" data-action="open-bill-balance">Adjust</button></span></div>
  ${(()=>{const cc=catColorMap(),tot=Math.max(1,p.monthlyTotal),have=p.savedTotal+p.paidTotal,behind=roundCash(p.target-have);return `<div class="bs-line"><strong>${fmtMoney(p.savedTotal,{round:true})}</strong><span>saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal,{round:true})} paid`:''}</span><em>of ${fmtMoney(p.monthlyTotal,{round:true})}</em></div>
- <div class="bs-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${Math.min(have,tot)}">${billSavingsSegments(p).map(s=>`<i style="width:${s.amount/tot*100}%;background:${s.color}" title="${escHTML(s.label)} · ${fmtMoney(s.amount)}"></i>`).join('')}<b style="left:${Math.min(100,p.target/tot*100)}%"></b></div>
+ <div class="bs-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${Math.min(have,tot)}"><span class="bs-fill">${billSavingsSegments(p).map(s=>`<i style="width:${s.amount/tot*100}%;background:${s.color}" title="${escHTML(s.label)} · ${fmtMoney(s.amount)}"></i>`).join('')}</span><b style="left:${Math.min(100,p.target/tot*100)}%"></b></div>
  <div class="bs-cap"><span>${behind>0.5?`<span class="bs-warn">${fmtMoney(behind,{round:true})} behind</span>`:`On target`}</span><span>${fmtMoney(p.suggested,{round:true})} / paycheck</span></div>
- <div class="bs-list">${unpaidBills.map(b=>`<div class="bs-row"><i class="cat-dot" style="background:${cc[b.category||'other']||'var(--ink-4)'}"></i><span class="bs-n">${escHTML(b.name)}${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring),{round:true})}</strong><button class="bs-paid" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="bs-done">All bills paid this month</div>'}</div>`;})()}
+ <div class="bs-list">${unpaidBills.map(b=>`<div class="bs-row"><span class="bs-n">${escHTML(b.name)}${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring),{round:true})}</strong><button class="bs-paid" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="bs-done">All bills paid this month</div>'}</div>`;})()}
  </section></div>
  </section>`;
 }
