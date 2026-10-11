@@ -3856,10 +3856,28 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .pc-amt{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);margin-top:5px;font-variant-numeric:tabular-nums}
 .pc-rem{text-align:right}.pc-rem .sf-hero{font-size:24px;letter-spacing:-.6px;margin:0}
 .pc-bar{display:flex;gap:2px;height:12px;border-radius:6px;overflow:hidden;background:var(--border-light);margin-top:16px}.pc-bar i{display:block;height:100%}
-.pc-static{justify-content:center;padding:10px 4px}
-.pc-meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-3);padding:2px 0 4px}.pc-meta strong{color:var(--ink-2);font-weight:600}
-.cat-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle;position:relative;top:-1px}
-.income-overview>.pc-head,main#content>.pc-head{margin-left:20px;margin-right:20px}
+.cat-dot{display:inline-block;width:6px;height:6px;border-radius:3px;margin-right:8px;vertical-align:middle;position:relative;top:-1px;flex-shrink:0}
+.bs{margin-top:30px!important;padding:0!important;border:0!important;background:none!important}
+.bs .sf-heading{display:flex;justify-content:space-between;align-items:center}
+.bs-acts{display:flex;gap:14px}.bs-acts .sf-action{padding:0}
+.bs-line{display:flex;align-items:baseline;gap:6px;margin-top:6px;font-variant-numeric:tabular-nums}
+.bs-line strong{font-size:22px;font-weight:700;letter-spacing:-.4px;color:var(--ink)}
+.bs-line span{font-size:11px;color:var(--ink-3)}
+.bs-line em{font-style:normal;margin-left:auto;font-size:11px;color:var(--ink-3)}
+.bs-track{position:relative;display:flex;gap:2px;height:6px;border-radius:3px;background:var(--border-light);margin-top:10px}
+.bs-track i{display:block;height:100%}.bs-track i:first-child{border-radius:3px 0 0 3px}
+.bs-track b{position:absolute;top:-4px;width:2px;height:14px;margin-left:-1px;border-radius:1px;background:var(--ink-2)}
+.bs-cap{white-space:nowrap;display:flex;justify-content:space-between;gap:12px;font-size:10.5px;color:var(--ink-3);margin-top:8px}
+.bs-warn{color:var(--warning);font-weight:600}
+.bs-list{margin-top:14px;border-top:1px solid var(--border-light)}
+.bs-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light);font-size:12.5px}
+.bs-row .cat-dot{margin-right:0}
+.bs-n{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-n small{font-size:10.5px;color:var(--ink-4)}
+.bs-row strong{font-weight:600;font-variant-numeric:tabular-nums}
+.bs-paid{font-size:10.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:3px 8px;border-radius:4px}
+.bs-paid:hover{background:var(--accent);color:#fff}
+.bs-done{font-size:12px;color:var(--ink-3);padding:12px 0}
 .pc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-2);margin:8px 0 6px}.pc-legend span{display:inline-flex;align-items:center;gap:5px}.pc-legend i{width:6px;height:6px;border-radius:3px;display:inline-block}
 @media (min-width:1000px){
  body{max-width:none!important;margin:0!important;padding-left:340px!important;padding-bottom:40px!important}
@@ -3878,15 +3896,13 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
  .pr-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pr-n>span{font-size:13.5px;font-weight:500}.pr-n em{font-style:normal;color:var(--ink-3);font-weight:400}.pr-n small{font-size:11.25px;color:var(--ink-3)}
  .pr-item strong{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
  .pr-empty{font-size:13px;color:var(--ink-4);padding:12px}
- .pc-switch.pc-check{display:none}
- .pc-switch{margin-top:16px}
- .pc-meta{font-size:11.5px;gap:6px 22px}
+ .pc-switch{display:none}
  .pc-lead{margin-top:22px}.pc-amt{font-size:44px;letter-spacing:-1.4px}
  .pc-rem .sf-hero{font-size:36px;letter-spacing:-1.3px}
  .pc-bar{height:14px;border-radius:7px;margin-top:22px}
  .pc-legend{font-size:11.5px;gap:6px 22px;margin-top:10px}
  .pc-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:start}
- .pc-cols .bill-progress-section{margin-top:22px}
+ .pc-cols .bs{margin-top:0!important}
 }
 </style>
 </head>
@@ -5579,20 +5595,8 @@ function renderIncome() {
     }).join('');
   }
 
-  const vm=new Date(nowD.getFullYear(),nowD.getMonth()+incomeMonthOff,1), vmEnd=new Date(vm.getFullYear(),vm.getMonth()+1,1);
-  const bySrc={}; let payCount=0;
-  for(const it of state.income){ for(const o of recordedIncomeOccurrences(it,vm,vmEnd)){ const k=it.source||'Income'; bySrc[k]=(bySrc[k]||0)+(o.amount||0); payCount++; } }
-  const srcItems=Object.entries(bySrc).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([label,total],i)=>({label,total,color:PC_PAL[i%PC_PAL.length]}));
-  const vmTotal=srcItems.reduce((s,i)=>s+i.total,0);
-  const firstDate=state.income.map(i=>parseISODate(paycheckDate(i))).filter(Boolean).sort((a,b)=>a-b)[0];
-  const canOlder=firstDate && (firstDate.getFullYear()*12+firstDate.getMonth()) < (vm.getFullYear()*12+vm.getMonth());
-  const incHead=`<div class="pc-head">
-   <div class="pc-switch"><button data-action="inc-older" aria-label="Previous month"${canOlder?'':' disabled'}>‹</button><span><strong>${vm.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</strong>${incomeMonthOff===0?' · This month':''}</span><button data-action="inc-newer" aria-label="Next month"${incomeMonthOff>=0?' disabled':''}>›</button></div>
-   <div class="pc-lead"><div><div class="pc-label">${payCount?`${payCount} payment${payCount===1?'':'s'} · ${srcItems.length} source${srcItems.length===1?'':'s'}`:'No income logged'}</div><div class="pc-amt">${fmtMoney(vmTotal)}</div></div><div class="pc-rem"><div class="sf-hero">${fmtMoney(stats.ytdIncome,{round:true})}</div><div class="sf-eyebrow">Year to date</div></div></div>
-   ${srcItems.length?pcBar(srcItems,vmTotal):'<div class="pc-bar"></div>'}
-   <div class="pc-meta"><span>Monthly est. <strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></span><span>Latest paystub <strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></span>${stats.ytdHours>0?`<span><strong>${Math.round(stats.ytdHours).toLocaleString()}</strong> hrs · <strong>$${stats.ytdHourly.toFixed(2)}</strong> /hr</span>`:''}</div>
-  </div>`;
-  return `<section class="income-overview">${incHead}
+  return `<section class="income-overview">${ytdBlock}
+    ${statTrioHTML}
     ${trendHeader}
     ${trendChartHTML}
     ${sh('Sources', {
@@ -5609,17 +5613,7 @@ function buildExpensePieChart(total, catData, incomeBasis, options = {}) {
 
   // Keep the same visual language as the Income bars: one theme accent,
   // varied only by intensity instead of a separate rainbow palette.
-  const palette = [
-    'var(--accent)',
-    'color-mix(in srgb, var(--accent) 84%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 70%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 58%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 48%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 40%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 34%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 28%, var(--bg))',
-    'color-mix(in srgb, var(--accent) 22%, var(--bg))'
-  ];
+  const palette = PC_PAL;
 
   const slices = catData
     .filter(c => c.total > 0)
@@ -5766,19 +5760,8 @@ function renderExpenses() {
     return (a.name || '').localeCompare(b.name || '');
   });
 
-  const catColor={}; catData.forEach((c,i)=>catColor[c.cat]=PC_PAL[i%PC_PAL.length]);
-  const avail=ytdMonthlyIncome-recurringMonthly;
-  const expItems=catData.map(c=>({label:cap(c.label),total:c.total,color:catColor[c.cat]}));
-  if(avail>0) expItems.push({label:'Available',total:avail,color:'var(--border)'});
-  const todayIso=isoDate(todayStart());
-  const nextDue=recurringBills.filter(b=>b.dueDate && b.dueDate>=todayIso).sort((a,b)=>a.dueDate.localeCompare(b.dueDate))[0];
-  const expHead=`<div class="pc-head">
-   <div class="pc-switch pc-static"><span>${nextDue?`<strong>Next due</strong> · ${escHTML(nextDue.name)}, ${escHTML(shortDate(nextDue.dueDate))} · ${fmtMoney(moneyValue(nextDue.amount))}`:'<strong>Nothing due</strong> · add due dates to bills'}</span></div>
-   <div class="pc-lead"><div><div class="pc-label">${recurringBills.length} recurring bill${recurringBills.length===1?'':'s'} · per month</div><div class="pc-amt">${fmtMoney(recurringMonthly)}</div></div><div class="pc-rem"><div class="sf-hero"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="sf-eyebrow">${ytdMonthlyIncome>0?(avail<0?'Over income':'Left after bills'):'Add income to compare'}</div></div></div>
-   ${expItems.length?pcBar(expItems,ytdMonthlyIncome):'<div class="pc-bar"></div>'}
-   ${ytdMonthlyIncome>0?`<div class="pc-meta"><span><strong>${expensePctIncome.toFixed(0)}%</strong> of ${fmtMoney(ytdMonthlyIncome,{round:true})} estimated monthly income</span></div>`:''}
-  </div>`;
   let rowsHTML = '';
+  const catColors = catColorMap();
   if (bills.length === 0) {
     rowsHTML = `<div class="empty"><span class="lnk" data-action="open-modal" data-type="expenses">Add your first expense</span></div>`;
   } else {
@@ -5794,7 +5777,7 @@ function renderExpenses() {
 
       return `<div class="row clickable source-row" data-action="edit" data-type="expenses" data-id="${b.id}">
         <div>
-          <div class="r-name"><i class="cat-dot" style="background:${catColor[b.category||'other']||'var(--ink-4)'}"></i>${escHTML(b.name)}</div>
+          <div class="r-name"><i class="cat-dot" style="background:${catColors[b.category||'other']||'var(--ink-4)'}"></i>${escHTML(b.name)}</div>
           <div class="r-meta">${meta}</div>
         </div>
         <div class="source-right">
@@ -5805,7 +5788,9 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `${expHead}
+  return `${hero}
+    ${sh('Breakdown', { meta: ytdMonthlyIncome > 0 ? '% of income' : '' })}
+    ${pieHTML}
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
@@ -6101,9 +6086,8 @@ function dueDateFunding(bills, saved, next, cadence) {
 }
 
 let selectedCheckId = null;
-let incomeMonthOff = 0;
-const PC_PAL=['#4f46e5','#e58e46','#36b77a','#469be5','#e54e46','#8873eb','#d4a574','#a89f92'];
-function pcBar(items, basis){ basis=Math.max(basis,items.reduce((s,i)=>s+i.total,0),1); return `<div class="pc-bar">${items.map(i=>`<i style="width:${Math.max(0,i.total/basis*100)}%;background:${i.color}"></i>`).join('')}</div><div class="pc-legend">${items.map(i=>`<span><i style="background:${i.color}"></i>${escHTML(i.label)} ${fmtMoney(i.total,{round:true})}</span>`).join('')}</div>`; }
+const PC_PAL=['var(--accent)','#e58e46','#36b77a','#469be5','#e54e46','#8873eb','#d4a574','#c9a227','#6b7280'];
+function catColorMap(){ const m={}; state.bills.filter(b=>b.recurring && b.recurring!=='once').forEach(b=>{const c=b.category||'other';m[c]=(m[c]||0)+monthlyEq(b.amount,b.recurring);}); const out={}; Object.entries(m).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).forEach(([c],i)=>out[c]=PC_PAL[i%PC_PAL.length]); return out; }
 function eligibleChecks() {
  const today=isoDate(todayStart());
  return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
@@ -6331,23 +6315,21 @@ function renderBudget() {
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
- <div class="pc-switch pc-check"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
- <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${hrs>0?` · ${hrs} hrs`:''}${end?` · covers ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
+ <div class="pc-switch"><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${pos+1} of ${el.length}</span><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>›</button></div>
+ <div class="pc-lead"><div><div class="pc-label">${escHTML(p.check.source||'Income')}${end?` · ${escHTML(shortDate(paycheckDate(p.check)))} – ${escHTML(shortDate(isoDate(end)))}`:''}</div><div class="pc-amt">${fmtMoney(p.available)}</div></div><div class="pc-rem"><div class="sf-hero"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills))}</div><div class="sf-eyebrow">${afterBills<0?'Over budget':'Remaining to spend'}</div></div></div>
  <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div>
  <div class="pc-legend">${split.map(item=>`<span><i style="background:${colors[item.key]}"></i>${escHTML(item.label)} ${fmtMoney(item.total,{round:true})}</span>`).join('')}</div>
  </div>`;})()}
- <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending budget</h3><span>${shortDate(paycheckDate(p.check))}–${shortDate(isoDate(p.next))}</span></div>
+ <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending budget</h3></div>
  <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sf-track-cell" data-action="open-spending" data-category="${key}"><span class="sf-category"><i style="background:${colors[key]}"></i><span>${escHTML(label)}</span><span class="sf-track-plus" aria-hidden="true">+</span></span><strong class="${remaining<0?'sf-over':''}">${fmtMoney(Math.abs(remaining),{round:true})}<small>${remaining<0?'over':'left'}</small></strong><span class="sf-track-meta">${fmtMoney(tracking.spent[key],{round:true})} ${key==='savings' && label==='Savings'?'saved':'spent'} / ${fmtMoney(tracking.targets[key],{round:true})}</span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
  ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
- </div><section class="bill-progress-section">
- <div class="sf-fund-heading"><strong>Bill savings</strong></div>
- <div class="bill-progress-values"><div><strong>${fmtMoney(p.suggested)}</strong><small class="bill-amount-label">Bills per paycheck</small></div><button class="sf-action" data-action="open-bill-entry">+ Add</button></div>
- <div class="bill-progress-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${Math.max(1,p.monthlyTotal)}" aria-valuenow="${Math.min(p.savedTotal+p.paidTotal,Math.max(1,p.monthlyTotal))}"><div class="bill-progress-segments">${billSavingsSegments(p).map(segment=>`<i style="width:${p.monthlyTotal?segment.amount/p.monthlyTotal*100:0}%;background:${segment.color}" title="${escHTML(segment.label)} · ${fmtMoney(segment.amount)}"></i>`).join('')}</div><b style="left:${p.monthlyTotal?Math.min(100,p.target/p.monthlyTotal*100):100}%" title="Monthly progress target: ${fmtMoney(p.target)}"><span class="bill-target-label" style="transform:translateX(${p.monthlyTotal && p.target/p.monthlyTotal<.15?'0':p.monthlyTotal && p.target/p.monthlyTotal>.85?'-100%':'-50%'})">${fmtMoney(p.target)} target</span></b></div>
- <div class="bill-progress-caption"><span class="bill-progress-legend"><span class="bill-progress-key"><i style="background:#8873eb"></i><strong>${fmtMoney(p.savedTotal)}</strong> saved</span>${p.paidTotal>0?`<span class="bill-progress-key"><i style="background:#aaa4c2"></i>${fmtMoney(p.paidTotal)} paid</span>`:''}<button class="sf-action" data-action="open-bill-balance">Adjust</button></span><span>${fmtMoney(p.monthlyTotal)} total</span></div>
- <div class="bill-list-title"><strong>Bill breakdown</strong><span>${fmtMoney(p.suggested)} / paycheck</span></div>
- ${unpaidBills.map(b=>`<div class="bill-compact-row"><span class="bill-name-date"><span>${escHTML(b.name)}</span>${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring))}</strong><button class="sf-action" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="sf-track-meta">All bills paid</div>'}
+ </div><section class="bill-progress-section bs">
+ <div class="sf-heading"><h3>Bill savings</h3><span class="bs-acts"><button class="sf-action" data-action="open-bill-entry">+ Add</button><button class="sf-action" data-action="open-bill-balance">Adjust</button></span></div>
+ ${(()=>{const cc=catColorMap(),tot=Math.max(1,p.monthlyTotal),have=p.savedTotal+p.paidTotal,behind=roundCash(p.target-have);return `<div class="bs-line"><strong>${fmtMoney(p.savedTotal,{round:true})}</strong><span>saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal,{round:true})} paid`:''}</span><em>of ${fmtMoney(p.monthlyTotal,{round:true})}</em></div>
+ <div class="bs-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${Math.min(have,tot)}">${billSavingsSegments(p).map(s=>`<i style="width:${s.amount/tot*100}%;background:${s.color}" title="${escHTML(s.label)} · ${fmtMoney(s.amount)}"></i>`).join('')}<b style="left:${Math.min(100,p.target/tot*100)}%"></b></div>
+ <div class="bs-cap"><span>${behind>0.5?`<span class="bs-warn">${fmtMoney(behind,{round:true})} behind</span>`:`On target`}</span><span>${fmtMoney(p.suggested,{round:true})} / paycheck</span></div>
+ <div class="bs-list">${unpaidBills.map(b=>`<div class="bs-row"><i class="cat-dot" style="background:${cc[b.category||'other']||'var(--ink-4)'}"></i><span class="bs-n">${escHTML(b.name)}${b.dueDate?`<small>${escHTML(shortDate(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring),{round:true})}</strong><button class="bs-paid" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="bs-done">All bills paid this month</div>'}</div>`;})()}
  </section></div>
- <p class="budget-due-note">Update due dates in Expenses to change which bills appear here.</p>
  </section>`;
 }
 
@@ -6846,7 +6828,6 @@ document.addEventListener('click', e => {
   if (_menu && (act === 'import' || act === 'export' || act === 'reset')) _menu.hidden = true;
 
   if (act === 'select-check') { const el=eligibleChecks(); selectedCheckId = el[0] && String(el[0].id)===btn.dataset.id ? null : btn.dataset.id; currentTab='budget'; budgetLogView=false; sourceDetailView=null; expenseDetailView=null; try{localStorage.setItem(TAB_KEY,currentTab);}catch{} render(); return; }
-  if (act === 'inc-older' || act === 'inc-newer') { incomeMonthOff = Math.min(0, incomeMonthOff + (act==='inc-older'?-1:1)); render(); return; }
   if (act === 'check-older' || act === 'check-newer') { const el=eligibleChecks(); let i=el.indexOf(getPaycheckPlan().check)+(act==='check-older'?1:-1); if(i>=0&&i<el.length){ selectedCheckId = i===0?null:el[i].id; render(); } return; }
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
   else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
