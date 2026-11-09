@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="icon.png">
-<script>try{var t=localStorage.getItem('ledgeon-theme');document.documentElement.setAttribute('data-theme',t&&t!=='light'?t:'mono');}catch{document.documentElement.setAttribute('data-theme','mono');}
+<script>try{var t=localStorage.getItem('ledgeon-theme');document.documentElement.setAttribute('data-theme',t==='here-you-go'?t:'mono');if(t==='dark')document.documentElement.setAttribute('data-shade','dark');}catch{document.documentElement.setAttribute('data-theme','mono');}
 
 
 
@@ -3845,7 +3845,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .monthly-expense-key:before{content:"";display:inline-block;width:14px;border-top:1px dashed var(--moving-average);vertical-align:middle;margin-right:5px;opacity:.65}
 </style>
 <style id="paycheck-layout">
-#pay-rail{display:none}
 .pc-head{margin:4px 0 2px}
 .pc-switch{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);font-size:12.5px;color:var(--ink-3);margin-top:10px}
 .pc-switch strong{color:var(--ink);font-weight:600}
@@ -3896,32 +3895,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .bs-paid:hover{background:var(--accent);color:#fff}
 .bs-done{font-size:12px;color:var(--ink-3);padding:12px 0}
 .pc-legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--ink-2);margin:8px 0 6px}.pc-legend span{display:inline-flex;align-items:center;gap:5px}.pc-legend i{width:6px;height:6px;border-radius:3px;display:inline-block}
-@media (min-width:1000px){
- body{max-width:none!important;margin:0!important;padding-left:340px!important;padding-bottom:40px!important}
- body>.mhdr,body>main#content{max-width:860px;margin-left:auto!important;margin-right:auto!important;box-sizing:border-box}
- .mhdr-menu{right:calc(max(0px,(100vw - 340px - 860px) / 2) + 12px)!important}
- .top-pages.bottom-pages{position:absolute!important;top:22px!important;bottom:auto!important;left:auto!important;right:calc(max(0px,(100vw - 340px - 860px) / 2) + 64px)!important;transform:none!important;width:auto!important;background:transparent!important;border-top:0!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0!important;z-index:61}
- .top-pages.bottom-pages button{font-size:13px!important}
- #pay-rail{display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;width:340px;background:var(--bg-subtle);border-right:1px solid var(--border-light);overflow-y:auto;z-index:50;box-sizing:border-box;padding:30px 0 24px}
- .pr-top{padding:0 28px}.pr-l{font-size:11.5px;color:var(--ink-3);font-weight:500}
- .pr-ytd{font-size:30px;font-weight:800;letter-spacing:-.9px;color:var(--accent);margin-top:4px;font-variant-numeric:tabular-nums}
- .pr-s{font-size:11.5px;color:var(--ink-3);margin-top:4px}
- #pay-rail .sh{padding:26px 28px 6px!important}
- .pr-list{display:flex;flex-direction:column;padding:0 16px}
- .pr-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:6px;text-align:left;color:var(--ink);width:100%}
- .pr-item:hover{background:var(--bg-hover)}.pr-item.on{background:var(--accent-soft)}
- .pr-n{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.pr-n>span{font-size:13.5px;font-weight:500}.pr-n em{font-style:normal;color:var(--ink-3);font-weight:400}.pr-n small{font-size:11.25px;color:var(--ink-3)}
- .pr-item strong{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
- .pr-empty{font-size:13px;color:var(--ink-4);padding:12px}
- .pc-switch.pc-check{display:none}
- .kpi strong{font-size:19px}
- .pc-lead{margin-top:22px}.pc-amt{font-size:44px;letter-spacing:-1.4px}
- .pc-rem .sf-hero{font-size:36px;letter-spacing:-1.3px}
- .pc-bar{height:14px;border-radius:7px;margin-top:22px}
- .pc-legend{font-size:11.5px;gap:6px 22px;margin-top:10px}
- .pc-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:start}
- .pc-cols .bs{margin-top:0!important}
-}
 </style>
 <style id="ledgeon-paper">
 :root:not([data-theme]){--bg:#fbfaf8}
@@ -3949,7 +3922,10 @@ html body .r-amt{font-size:15px!important;font-weight:600!important}
 .x5-s{font-size:12px;color:var(--ink-4)}
 .x5 .expense-cat-list{grid-area:list;display:grid!important;grid-template-columns:1fr 1fr;gap:8px 18px;margin:0!important;padding:0!important}
 .x5 .expense-cat-row{border:0!important;padding:0!important;min-height:0!important}
-.x5 .expense-cat-pct,.x5 .expense-cat-leftover{display:none!important}
+.x5 .expense-donut-svg svg{width:100%!important;height:100%!important}
+.x5 .expense-donut-hole{inset:28px!important}
+.x5 .expense-cat-leftover{display:none!important}
+.x5 .expense-cat-pct{display:inline!important;font-size:11.5px!important;color:var(--ink-3)!important;min-width:0!important}
 .x5 .expense-cat-dot{border-radius:2px!important;width:8px!important;height:8px!important}
 .x5 .expense-cat-name{font-size:12.5px!important;color:var(--ink-2)!important;font-weight:400!important}
 .x5 .expense-cat-amt{font-size:12.5px!important;font-weight:600!important}
@@ -3984,21 +3960,15 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 .top-pages.bottom-pages button.active{color:var(--ink)!important}
 .top-pages.bottom-pages button::after{display:none!important}
 .top-pages.bottom-pages button.active::before{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:2px;background:var(--accent)}
-@media (min-width:1000px){
- .top-pages.bottom-pages{top:34px!important;gap:24px!important;background:transparent!important}
- .top-pages.bottom-pages button{flex:0 0 auto}
- .p5-big{font-size:52px}
- .b5-hero{text-align:left}
- .pc-cols{gap:56px!important}
- .spending-first{padding:0 24px 24px!important}
-}
 </style>
 <style id="ledgeon-mono">
-[data-theme="mono"]{--bg:#0f1012;--bg-subtle:#15161a;--bg-hover:#1b1d22;--border:#2a2c33;--border-light:#1d1f24;--ink:#ecebe6;--ink-2:#b9bac0;--ink-3:#8b8e97;--ink-4:#5a5d66;--accent:#a5acff;--accent-soft:#1d1f3a;--accent-strong:#8b93f8;--positive:#7ee2a8;--positive-soft:#0f2a1c;--negative:#f0a69f;--negative-soft:#3a1714;--warning:#f0c27a;--warning-soft:#33260f;color-scheme:dark}
-[data-theme="mono"] .budget-worksheet{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
+[data-theme="mono"]{--bg:#ffffff;--bg-subtle:#faf9f7;--bg-hover:#f3f1ec;--border:#e7e2da;--border-light:#f1eee7;--ink:#1b1a17;--ink-2:#56524b;--ink-3:#79746a;--ink-4:#a89f92;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-strong:#4338ca;--positive:#15803d;--positive-soft:#dcfce7;--negative:#b91c1c;--negative-soft:#fef2f2;--warning:#b45309;--warning-soft:#fef3c7;color-scheme:light}
+[data-theme="mono"] .budget-worksheet{--budget-groceries:#c2702a;--budget-gas:#d9534a;--budget-savings:#15803d;--budget-other:#2f7fc4}
+[data-theme="mono"][data-shade="dark"]{--bg:#0f1012;--bg-subtle:#15161a;--bg-hover:#1b1d22;--border:#2a2c33;--border-light:#1d1f24;--ink:#ecebe6;--ink-2:#b9bac0;--ink-3:#8b8e97;--ink-4:#5a5d66;--accent:#a5acff;--accent-soft:#1d1f3a;--accent-strong:#8b93f8;--positive:#7ee2a8;--positive-soft:#0f2a1c;--negative:#f0a69f;--negative-soft:#3a1714;--warning:#f0c27a;--warning-soft:#33260f;color-scheme:dark}
+[data-theme="mono"][data-shade="dark"] .budget-worksheet{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
 [data-theme="mono"]{--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
 [data-theme="mono"] .mtitle{font-family:var(--mono)!important;font-size:12px!important;font-weight:400!important;letter-spacing:0!important;color:var(--ink-3)!important}
-[data-theme="mono"] .p5-big,[data-theme="mono"] .x5-v,[data-theme="mono"] .p5-stats strong,[data-theme="mono"] .r-amt,[data-theme="mono"] .expense-cat-amt,[data-theme="mono"] .expense-donut-hole strong,[data-theme="mono"] .sc-row strong,[data-theme="mono"] .sc-row small,[data-theme="mono"] .bs-line strong,[data-theme="mono"] .bs-row strong,[data-theme="mono"] .pc-switch,[data-theme="mono"] .b5-cap,[data-theme="mono"] .bar-labels,[data-theme="mono"] .chart-y,[data-theme="mono"] .pr-item strong,[data-theme="mono"] .pr-ytd{font-family:var(--mono)!important;font-weight:600;letter-spacing:-.5px}
+[data-theme="mono"] .p5-big,[data-theme="mono"] .x5-v,[data-theme="mono"] .p5-stats strong,[data-theme="mono"] .r-amt,[data-theme="mono"] .expense-cat-amt,[data-theme="mono"] .expense-donut-hole strong,[data-theme="mono"] .sc-row strong,[data-theme="mono"] .sc-row small,[data-theme="mono"] .bs-line strong,[data-theme="mono"] .bs-row strong,[data-theme="mono"] .pc-switch,[data-theme="mono"] .b5-cap,[data-theme="mono"] .bar-labels,[data-theme="mono"] .chart-y{font-family:var(--mono)!important;font-weight:600;letter-spacing:-.5px}
 [data-theme="mono"] .p5-big{font-size:40px;letter-spacing:-1.5px}
 [data-theme="mono"] .x5-v{font-size:28px}
 [data-theme="mono"] .r-amt,[data-theme="mono"] .sc-row strong{font-size:14px!important;font-weight:500!important}
@@ -4025,7 +3995,7 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 [data-theme="mono"] .expense-donut-hole{background:var(--bg)!important}
 [data-theme="mono"] .x5 .expense-cat-list{grid-template-columns:1fr!important;gap:0!important;border-top:1px solid var(--border-light)}
 [data-theme="mono"] .x5 .expense-cat-row{padding:7px 0!important;border-bottom:1px solid var(--border-light)!important}
-[data-theme="mono"] .x5 .expense-cat-pct{display:inline!important;font-family:var(--mono);font-size:11px;color:var(--ink-4)}
+[data-theme="mono"] .x5 .expense-cat-pct{font-family:var(--mono)}
 [data-theme="mono"] .row{border-color:var(--border-light)!important}
 [data-theme="mono"] .top-pages.bottom-pages{border-top:1px solid var(--border-light)!important;background:var(--bg)!important}
 [data-theme="mono"] .top-pages.bottom-pages button{font-family:var(--mono)!important;font-weight:400!important;font-size:12px!important;color:var(--ink-4)!important;text-transform:lowercase}
@@ -4035,7 +4005,6 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 [data-theme="mono"] .top-pages.bottom-pages button.active::before{content:"["!important;display:inline!important;position:static!important;background:none!important;width:auto!important;height:auto!important;margin:0!important;border-radius:0!important}
 [data-theme="mono"] .modal-c{background:var(--bg-subtle)!important;border:1px solid var(--border)}
 [data-theme="mono"] .input,[data-theme="mono"] .select{background:var(--bg)!important;color:var(--ink)!important;border-color:var(--border)!important}
-[data-theme="mono"] #pay-rail{background:var(--bg-subtle)!important}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
@@ -4075,7 +4044,6 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
   <button class="danger menu-action" data-action="reset"><span>Reset everything</span></button>
 </div>
 
-<aside id="pay-rail" aria-label="Paychecks"></aside>
 <main id="content"></main>
 <div class="bar-tooltip" id="bar-tooltip"></div>
 
@@ -4462,7 +4430,8 @@ function getTheme() {
 }
 function applyTheme(name) {
   if (!['light', 'dark', 'here-you-go'].includes(name)) name = 'light';
-  document.documentElement.setAttribute('data-theme', name === 'light' ? 'mono' : name);
+  document.documentElement.setAttribute('data-theme', name === 'here-you-go' ? name : 'mono');
+  if (name === 'dark') document.documentElement.setAttribute('data-shade', 'dark'); else document.documentElement.removeAttribute('data-shade');
   try { localStorage.setItem(THEME_KEY, name); } catch {}
   updateThemeMenuMarkers();
 }
@@ -4660,10 +4629,10 @@ function incomeOccurrences(item, rangeStart, rangeEnd) {
     return out;
   }
   if (freq === 'weekly' || freq === 'biweekly') {
-    const stepMs = (freq === 'weekly' ? 7 : 14) * 86400000;
-    let d = new Date(anchor.getTime() + Math.max(0, Math.floor((rangeStart - anchor) / stepMs)) * stepMs);
-    while (d < rangeStart) d = new Date(d.getTime() + stepMs);
-    for (; d < rangeEnd; d = new Date(d.getTime() + stepMs)) {
+    const stepDays = freq === 'weekly' ? 7 : 14;
+    let d = addCalendarDays(anchor, Math.max(0, Math.floor((rangeStart - anchor) / (stepDays * 86400000))) * stepDays);
+    while (d < rangeStart) d = addCalendarDays(d, stepDays);
+    for (; d < rangeEnd; d = addCalendarDays(d, stepDays)) {
       if (d >= anchor) out.push({ date: d, amount: amt });
     }
     return out;
@@ -4728,10 +4697,11 @@ function recordedIncomeOccurrences(item, start, end) {
 
 // Rolling pay-period buckets, anchored to the most recent actual paycheck date (not "today") so
 // bucket boundaries — and their date labels — line up with real income entries.
+// Step by calendar days: a fixed 24h step drifts an hour across daylight-saving changes.
+function addCalendarDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 function getPayPeriodHistory(periods = 12) {
   const periodType = detectPayPeriodType();
   const periodDays = periodType === 'biweekly' ? 14 : 7;
-  const dayMs = 86400000;
   const todayD = todayStart();
 
   const schedule = getIncomePaySchedule();
@@ -4739,15 +4709,15 @@ function getPayPeriodHistory(periods = 12) {
 
   // Step forward from the anchor in exact periodDays increments to find the bucket that contains "today"
   let curStart = new Date(anchor);
-  while (curStart.getTime() + periodDays * dayMs <= todayD.getTime()) {
-    curStart = new Date(curStart.getTime() + periodDays * dayMs);
+  while (addCalendarDays(curStart, periodDays) <= todayD) {
+    curStart = addCalendarDays(curStart, periodDays);
   }
-  const end0 = new Date(curStart.getTime() + periodDays * dayMs);
+  const end0 = addCalendarDays(curStart, periodDays);
 
   const out = [];
   for (let i = periods - 1; i >= 0; i--) {
-    const end = new Date(end0.getTime() - i * periodDays * dayMs);
-    const start = new Date(end.getTime() - periodDays * dayMs);
+    const end = addCalendarDays(end0, -i * periodDays);
+    const start = addCalendarDays(end, -periodDays);
     let income = 0;
     for (const item of state.income) {
       for (const occ of recordedIncomeOccurrences(item, start, end)) income += occ.amount;
@@ -5461,7 +5431,6 @@ function renderIncome() {
         // If the detected paycheck cadence is biweekly, derive weekly buckets directly
         // so this metric remains a true weekly average.
         const out = [];
-        const dayMs = 86400000;
         const todayD = todayStart();
         let anchor = null;
         for (const i of state.income) {
@@ -5472,13 +5441,13 @@ function renderIncome() {
         }
         if (!anchor) anchor = todayD;
         let curStart = new Date(anchor);
-        while (curStart.getTime() + 7 * dayMs <= todayD.getTime()) {
-          curStart = new Date(curStart.getTime() + 7 * dayMs);
+        while (addCalendarDays(curStart, 7) <= todayD) {
+          curStart = addCalendarDays(curStart, 7);
         }
-        const end0 = new Date(curStart.getTime() + 7 * dayMs);
+        const end0 = addCalendarDays(curStart, 7);
         for (let i = 103; i >= 0; i--) {
-          const end = new Date(end0.getTime() - i * 7 * dayMs);
-          const start = new Date(end.getTime() - 7 * dayMs);
+          const end = addCalendarDays(end0, -i * 7);
+          const start = addCalendarDays(end, -7);
           let income = 0;
           for (const item of state.income) {
             for (const occ of recordedIncomeOccurrences(item, start, end)) income += occ.amount;
@@ -6225,13 +6194,6 @@ function eligibleChecks() {
  const today=isoDate(todayStart());
  return state.income.filter(i=>paycheckDate(i) && moneyValue(i.amount)>0 && (paycheckDate(i)<=today || !i.frequency || i.frequency==='once')).sort((a,b)=>paycheckDate(b).localeCompare(paycheckDate(a)));
 }
-function renderRail() {
- const el=document.getElementById('pay-rail'); if(!el) return;
- const stats=getIncomeStats(), checks=eligibleChecks(), cur=getPaycheckPlan().check;
- el.innerHTML=`<div class="pr-top"><div class="pr-l">Year to date</div><div class="pr-ytd">${fmtMoney(stats.ytdIncome,{round:true})}</div>${stats.ytdHours>0?`<div class="pr-s">${Math.round(stats.ytdHours).toLocaleString()} hrs · $${stats.ytdHourly.toFixed(2)} /hr</div>`:''}</div>
- ${sh('Paychecks',{add:{action:'open-modal',type:'income',label:'+ Add'}})}
- <div class="pr-list">${checks.length?checks.map(i=>{const amt=moneyValue(i.amount),hrs=Number(i.hours)||0;const meta=hrs>0?`${hrs} hrs · $${(amt/hrs).toFixed(2)} /hr`:(i.frequency&&i.frequency!=='once'?cap(i.frequency):'One-time');return `<button class="pr-item${cur&&String(i.id)===String(cur.id)?' on':''}" data-action="select-check" data-id="${escHTML(String(i.id))}"><span class="pr-n"><span>${escHTML(shortDate(paycheckDate(i)))} <em>· ${escHTML(i.source||'Income')}</em></span><small>${escHTML(meta)}</small></span><strong>${fmtMoney(amt)}</strong></button>`;}).join(''):'<div class="pr-empty">No paychecks yet</div>'}</div>`;
-}
 function getPaycheckPlan() {
  const today=isoDate(todayStart()),cp=state.cashPlan||(state.cashPlan={});
  const eligible=eligibleChecks();
@@ -6646,7 +6608,6 @@ function render() {
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
   { const mt=document.getElementById('mtitle'); if(mt) mt.textContent='ledgeon / '+currentTab; }
   document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
-  renderRail();
   refreshPayPeriodAverage();
   window.scrollTo({ top: 0, behavior: 'instant' });
   syncOverlayHistory();
