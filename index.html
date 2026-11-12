@@ -6218,6 +6218,26 @@ function revisePaycheckContribution(value) {
  }else cp.paycheckDrafts={...(cp.paycheckDrafts||{}),[p.check.id]:{__pool:amount}};
 }
 
+// Sinking fund: each bill builds up evenly from its previous due date to its next one; overdue bills count in full.
+function previousBillDate(due, recurrence, anchorDay) {
+  if (recurrence === 'weekly' || recurrence === 'biweekly') return new Date(due.getFullYear(), due.getMonth(), due.getDate() - (recurrence === 'weekly' ? 7 : 14));
+  const months = recurrence === 'yearly' ? 12 : recurrence === 'monthly' ? 1 : 0;
+  if (!months) return null;
+  const idx = due.getFullYear() * 12 + due.getMonth() - months, y = Math.floor(idx / 12), m = idx % 12;
+  return new Date(y, m, Math.min(anchorDay || due.getDate(), new Date(y, m + 1, 0).getDate()));
+}
+function billsShouldHaveSaved(asOf) {
+  let total = 0;
+  for (const b of state.bills) {
+    if (!b.recurring || b.recurring === 'once') continue;
+    const amt = moneyValue(b.amount), due = parseISODate(b.dueDate);
+    if (!amt || !due) continue;
+    const prev = previousBillDate(due, b.recurring, b.anchorDay);
+    const frac = due <= asOf ? 1 : !prev ? 0 : Math.max(0, Math.min(1, Math.round((asOf - prev) / 864e5) / Math.round((due - prev) / 864e5)));
+    total += amt * frac;
+  }
+  return roundCash(total);
+}
 function lastBillPayment(b) {
   return (state.payments||[]).filter(x=>x.billId===b.id && x.afterDue===b.dueDate).sort((a,c)=>(c.recordedAt||0)-(a.recordedAt||0))[0];
 }
@@ -6311,7 +6331,7 @@ function getPaycheckPlan() {
  const essentials=moneyValue(cp.essentials),extra=moneyValue(cp.paycheckBuffer);
  const reserve=recorded?recordedTotal:Math.min(requested,Math.max(0,roundCash(available-essentials-extra)));
  const savedTotal=moneyValue(cp.reserves.__pool);
- return {check,cadence,next,month,paydays:count,target:roundCash(paidTotal+moneyValue(cp.reserves.__pool)+funding.rows.filter(r=>r.paychecks===1).reduce((sum,r)=>sum+r.needed,0)),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
+ return {check,cadence,next,month,paydays:count,target:roundCash(paidTotal+billsShouldHaveSaved(isLatest?todayStart():date)),shouldHave:billsShouldHaveSaved(isLatest?todayStart():date),monthly,monthlyTotal,paidTotal,suggested,available,reserve,essentials,extra,
   left:roundCash(available-reserve-essentials-extra),recorded,savedTotal,rows:funding.rows,
   canUndo:!!recorded && savedTotal>=reserve,unfunded:roundCash(Math.max(0,suggested-reserve))};
 }
