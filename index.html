@@ -5948,7 +5948,7 @@ function renderExpenses() {
     }).join('');
   }
 
-  return `<div class="x5">${pieHTML}<div class="x5-side"><div class="p5-l">${avail<0?'Over income':'Left after bills'}</div><div class="x5-v"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="x5-s">${ytdMonthlyIncome>0?`Bills are ${expensePctIncome.toFixed(0)}% of income`:'Add income to compare'}</div></div></div>
+  return `<div class="x5">${pieHTML}<div class="x5-side"><div class="p5-l">${avail<0?'Over income':'Left after bills'}</div><div class="x5-v"${avail<0?' style="color:var(--negative)"':''}>${ytdMonthlyIncome>0?fmtMoney(Math.abs(avail),{round:true}):'—'}</div><div class="x5-s">${ytdMonthlyIncome>0?`<span title="Monthly est. from the Income tab: this month's pay so far plus remaining paydays at the paycheck average">Bills are ${expensePctIncome.toFixed(0)}% of ${fmtMoney(ytdMonthlyIncome,{round:true})} est. monthly income</span>`:'Add income to compare'}</div></div></div>
     ${sh('Expenses', {
       add: { action: 'open-modal', type: 'expenses', label: '+ Add' }
     })}
@@ -6221,9 +6221,12 @@ function revisePaycheckContribution(value) {
 function lastBillPayment(b) {
   return (state.payments||[]).filter(x=>x.billId===b.id && x.afterDue===b.dueDate).sort((a,c)=>(c.recordedAt||0)-(a.recordedAt||0))[0];
 }
-// A bill shows as paid (grayed, with Undo) while its last payment still covers the current cycle.
-function billShownPaid(b, nextPayday) {
-  return !!(b.recurring && b.recurring!=='once' && b.dueDate && lastBillPayment(b) && billFundingPaused(b, nextPayday));
+// A bill shows as paid (grayed, with Undo) only if it was marked paid during this paycheck's period.
+function billShownPaid(b, plan) {
+  const pay = lastBillPayment(b);
+  if (!pay || !b.recurring || b.recurring==='once') return false;
+  const from = paycheckDate(plan.check), to = plan.next ? isoDate(plan.next) : '9999-12-31';
+  return pay.date >= from && pay.date < to;
 }
 function billPaidForMonth(bill, month) {
  // Budget every bill due within one calendar month from today, inclusive.
@@ -6247,7 +6250,11 @@ function dueDateFunding(bills, saved, next, cadence) {
    const share=Math.ceil((amount-funded)/paychecks);
    return {bill:b,due,saved:funded/100,needed:(amount-funded)/100,paychecks,suggested:share/100};
   });
- return {rows,suggested:roundCash(rows.reduce((sum,r)=>sum+r.suggested,0))};
+ // Bills due within k paychecks need (their total - savings) by then; take the highest per-paycheck rate.
+ let need=0,level=0;const savedCents=Math.max(0,Math.round(moneyValue(saved)*100));
+ const byK={};rows.forEach(r=>{byK[r.paychecks]=(byK[r.paychecks]||0)+Math.round(moneyValue(r.bill.amount)*100);});
+ Object.keys(byK).map(Number).sort((a,b)=>a-b).forEach(k=>{need+=byK[k];level=Math.max(level,Math.ceil(Math.max(0,need-savedCents)/k));});
+ return {rows,suggested:level/100};
 }
 
 let selectedCheckId = null;
@@ -6293,8 +6300,10 @@ function getPaycheckPlan() {
  const recorded=cp.paycheckPlans?.[check?.id]||null;
  const recordedTotal=recorded?roundCash(Object.values(recorded.allocations||{}).reduce((sum,v)=>sum+moneyValue(v),0)):0;
  const savedBefore=Math.max(0,roundCash(moneyValue(cp.reserves.__pool)-recordedTotal));
- const fundingBills=state.bills;
- const funding=dueDateFunding(fundingBills,savedBefore,next,cadence);
+ // Bills paid during this paycheck's period still count against it: fund them at the due date they were paid for.
+ let paidBack=0;
+ const fundingBills=state.bills.map(b=>{if(!billShownPaid(b,{check,next}))return b;const pay=lastBillPayment(b);paidBack+=moneyValue(pay.fundUsed);return pay.previous?.dueDate?{...b,dueDate:pay.previous.dueDate}:b;});
+ const funding=dueDateFunding(fundingBills,roundCash(savedBefore+paidBack),next,cadence);
  const suggested=funding.suggested;
  const draft=cp.paycheckDrafts?.[check?.id];
  const requested=draft?roundCash(Object.values(draft).reduce((sum,v)=>sum+moneyValue(v),0)):suggested;
@@ -6471,7 +6480,7 @@ function renderBudget() {
  const segments=split.map(item=>{const pct=item.total/basis*100;const segment=`<circle cx="54" cy="54" r="42" pathLength="100" fill="none" stroke="${colors[item.key]}" stroke-width="14" stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="${-offset}"></circle>`;offset+=pct;return segment;}).join('');
  const afterBills=roundCash(p.available-p.suggested-tracking.total);
  const lastPayment=lastBillPayment;
- const paidBills=state.bills.filter(b=>billShownPaid(b,p.next)).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
+ const paidBills=state.bills.filter(b=>billShownPaid(b,p)).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !paidBills.includes(b) && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
  return `<section class="budget-worksheet spending-first">
  ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
