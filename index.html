@@ -3902,6 +3902,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 <style id="ledgeon-paper">
 .src-hero{margin-top:6px}.src-sub{margin-top:4px}
 .ss-chart{margin:18px 24px 4px}
+.chart-col .bar{position:relative;overflow:hidden}
+.chart-col .bar .bar-cash{position:absolute;top:0;left:0;right:0;background:var(--bg);opacity:.6;pointer-events:none}
 .sl-chart{margin:16px 24px 6px}
 .sl-plot{position:relative;height:48px}
 .sl-plot svg{width:100%;height:100%;display:block;overflow:visible}
@@ -5618,6 +5620,7 @@ function renderIncome() {
         label,
         tipLabel,
         income: h.income,
+        cash: state.income.reduce((n, i) => { const d = parseISODate(i.receivedAt || i.createdAt); return d && d >= h.start && d < h.end ? n + incomeCashAmount(i) : n; }, 0),
         movingAverage: averages[idx],
         current: h.current
       };
@@ -5634,7 +5637,8 @@ function renderIncome() {
         ? `${d.getMonth() + 1}/${String(d.getFullYear()).slice(-2)}`
         : String(d.getMonth() + 1);
       const tipLabel = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
-      trendList.push({ label, tipLabel, income: mStats.income, current: i === 0 });
+      const cash = state.income.reduce((n, it) => { const dd = parseISODate(it.receivedAt || it.createdAt); return dd && dd.getFullYear() === d.getFullYear() && dd.getMonth() === d.getMonth() ? n + incomeCashAmount(it) : n; }, 0);
+      trendList.push({ label, tipLabel, income: mStats.income, cash, current: i === 0 });
     }
   }
 
@@ -5650,9 +5654,9 @@ function renderIncome() {
       const hasIncome = h.income > 0;
       const heightPct = hasIncome ? Math.min(100, Math.max(3, (h.income / chartMax) * 100)) : 0;
       const barInner = hasIncome
-        ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%"></div>`
+        ? `<div class="bar${h.current ? ' cur' : ''}" style="height:${heightPct}%">${h.cash > 0 ? `<b class="bar-cash" style="height:${Math.min(100, h.cash / h.income * 100).toFixed(1)}%"></b>` : ''}</div>`
         : '';
-      return `<div class="chart-col${incomeChartMode === 'payperiod' ? ' payperiod-col' : ''}" data-amount="${h.income}" ${Number.isFinite(h.movingAverage) ? `data-moving-average="${h.movingAverage}"` : ''} data-label="${escHTML(h.tipLabel)}">
+      return `<div class="chart-col${incomeChartMode === 'payperiod' ? ' payperiod-col' : ''}" data-amount="${h.income}" data-cash="${h.cash || 0}" ${Number.isFinite(h.movingAverage) ? `data-moving-average="${h.movingAverage}"` : ''} data-label="${escHTML(h.tipLabel)}">
         <div class="bar-track" style="position:relative">${barInner}</div>
         <div class="label">${h.label}</div>
       </div>`;
@@ -5751,7 +5755,8 @@ function renderIncome() {
   const incHead=`<div class="p5-hero"><div class="p5-l">Year to date</div><div class="p5-big">${fmtMoney(stats.ytdIncome,{round:true})}</div>
    <div class="p5-stats"><div><span>This month</span><strong>${fmtMoney(curMonthStats.income,{round:true})}</strong></div><div><span>Monthly est.</span><strong>${fmtMoney(stats.ytdAvgMonthly,{round:true})}</strong></div>${stats.ytdHours>0?`<div><span>Hourly</span><strong>$${stats.ytdHourly.toFixed(2)}</strong></div>`:`<div><span>Latest</span><strong>${fmtMoney(latestPaystubAmount,{round:true})}</strong></div>`}${(()=>{const yr=String(nowD.getFullYear());const cash=state.income.filter(i=>String(i.receivedAt||i.createdAt||'').startsWith(yr)).reduce((n,i)=>n+incomeCashAmount(i),0);return cash>0?`<div><span>Cash ${(stats.ytdIncome>0?cash/stats.ytdIncome*100:0).toFixed(0)}%</span><strong>${fmtMoney(cash,{round:true})}</strong></div>`:'';})()}</div></div>`;
   return `<section class="income-overview">${incHead}
-    ${(()=>{const cut=new Date(nowD.getFullYear()-1,nowD.getMonth(),nowD.getDate());return buildSourceChart(state.income.filter(i=>{const d=parseISODate(i.receivedAt||i.createdAt);return d&&d>=cut;}));})()}
+    ${trendHeader}
+    ${trendChartHTML}
     ${sh('Sources', {
       add: { action: 'open-modal', type: 'income', label: '+ Add' }
     })}
