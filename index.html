@@ -3902,42 +3902,34 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 <style id="ledgeon-paper">
 .src-hero{margin-top:6px}.src-sub{margin-top:4px}
 .ss-chart{margin:18px 24px 4px}
-.cal-nav{margin-bottom:4px}
-.cal-sum{display:flex;margin:10px 20px 4px;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
-.cal-sum>div{flex:1;padding:10px 0 10px 12px;border-left:1px solid var(--border-light);display:flex;flex-direction:column;gap:3px}
-.cal-sum>div:first-child{border-left:0;padding-left:0}
-.cal-sum span{font-size:11px;color:var(--ink-4)}.cal-sum strong{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-.cal{margin:14px 20px 0}
-.cal-wk,.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
-.cal-wk span{text-align:center;font-size:10.5px;color:var(--ink-4);padding-bottom:6px;font-weight:600}
-.cal-grid{border-top:1px solid var(--border-light);border-left:1px solid var(--border-light)}
-.cal-d{all:unset;box-sizing:border-box;height:58px;border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:5px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;position:relative;min-width:0}
-.cal-d.out{cursor:default;background:var(--bg-subtle)}
-.cal-d:not(.out):hover{background:var(--bg-hover)}
-.cal-d.payday{background:var(--accent-soft)}
-.cal-d.sel{box-shadow:inset 0 0 0 1.5px var(--accent)}
-.cal-n{font-size:12px;font-weight:600;color:var(--ink-2);width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;font-variant-numeric:tabular-nums}
-.cal-d.past .cal-n{color:var(--ink-4)}
-.cal-d.today .cal-n{background:var(--accent);color:var(--bg)}
-.cal-pay{font-size:9.5px;font-weight:600;color:var(--accent-strong,var(--accent));line-height:1;font-variant-numeric:tabular-nums;white-space:nowrap}
-.cal-pay.est{opacity:.7}
-.cal-dots{display:flex;gap:3px;align-items:center;margin-top:auto;height:6px}
-.cal-dot{display:inline-block;width:6px;height:6px;border-radius:3px;background:var(--c)}
-.cal-dot.paid{background:transparent;box-shadow:inset 0 0 0 1.5px var(--c);opacity:.6}
-.cal-more{font-size:9px;font-style:normal;color:var(--ink-4);line-height:6px}
-.cal-dots.late::after{content:"";position:absolute;top:5px;right:5px;width:5px;height:5px;border-radius:3px;background:var(--negative)}
-.cal-key{display:flex;gap:16px;justify-content:center;font-size:11px;color:var(--ink-4);padding:10px 0 0}
-.cal-key span{display:inline-flex;align-items:center;gap:6px}
-.cal-paymark{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);margin-right:2px;vertical-align:-1px}
-.r-name .cal-paymark{margin-right:8px}
-.cal-g{scroll-margin:80px}
-.cal-gh{display:flex;justify-content:space-between;padding:12px 20px 4px;font-size:11.5px;font-weight:600;color:var(--ink-3)}
-.cal-gh span:last-child{font-weight:500;color:var(--ink-4)}
-.cal-g.sel .cal-gh{color:var(--accent)}
-.cal-g.past .r-name,.cal-g.past .r-amt{opacity:.55}
-.cal-row.is-paid .r-name,.cal-row.is-paid .r-amt{opacity:.45}
-.cal-payrow.est .r-amt{color:var(--ink-3)}
-.cal-late{color:var(--negative);font-weight:600}
+.mc{margin:0 20px}
+.mc-nav{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.mc-nav button{all:unset;cursor:pointer;color:var(--ink-3);padding:0 6px;font-size:15px;line-height:1}
+.mc-nav button:hover{color:var(--ink)}
+.mc-wk,.mc-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.mc-wk span{text-align:center;font-size:10px;color:var(--ink-4);padding-bottom:4px;font-weight:600}
+.mc-d{all:unset;box-sizing:border-box;height:36px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding-top:3px;cursor:pointer;border-radius:6px;min-width:0}
+.mc-d.out{cursor:default}
+.mc-d:not(.out):hover{background:var(--bg-hover)}
+.mc-d.payday{background:var(--accent-soft)}
+.mc-d.sel{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.mc-n{font-size:11.5px;font-weight:600;color:var(--ink-2);width:20px;height:20px;line-height:20px;text-align:center;border-radius:10px;font-variant-numeric:tabular-nums}
+.mc-d.past .mc-n{color:var(--ink-4)}
+.mc-d.today .mc-n{background:var(--accent);color:var(--bg)}
+.mc-dots{display:flex;gap:2px;height:5px}
+.cal-dot{display:inline-block;width:5px;height:5px;border-radius:3px;background:var(--c)}
+.cal-dot.paid{background:transparent;box-shadow:inset 0 0 0 1.2px var(--c);opacity:.6}
+.cal-paymark{display:inline-block;width:9px;height:9px;border-radius:3px;background:var(--accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent);flex-shrink:0}
+.mc-detail{margin-top:10px;border-top:1px solid var(--border-light);padding-top:8px}
+.mc-h{font-size:11.5px;font-weight:600;color:var(--ink-3);padding:2px 0 4px}
+.mc-it{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13.5px;color:var(--ink)}
+.mc-it[data-action]{cursor:pointer}
+.mc-it .cat-dot{margin:0;flex-shrink:0}
+.mc-it span{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mc-it small{font-size:11.5px;color:var(--ink-4)}
+.mc-it strong{font-weight:600;font-variant-numeric:tabular-nums}
+.mc-it.is-paid span,.mc-it.is-paid strong{opacity:.5}
+.cal-late{color:var(--negative)!important;font-weight:600}
 .chart-col .bar{position:relative;overflow:hidden}
 .chart-col .bar .bar-cash{position:absolute;top:0;left:0;right:0;background:var(--bg);opacity:.6;pointer-events:none}
 .sl-chart{margin:16px 24px 6px}
@@ -4051,9 +4043,9 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 [data-theme="mono"] .x5 .expense-cat-list{grid-template-columns:1fr!important;gap:0!important;border-top:1px solid var(--border-light)}
 [data-theme="mono"] .x5 .expense-cat-row{padding:7px 0!important;border-bottom:1px solid var(--border-light)!important}
 [data-theme="mono"] .x5 .expense-cat-pct{font-family:var(--mono)}
-[data-theme="mono"] .ss-top,[data-theme="mono"] .ss-axis,[data-theme="mono"] .src-sub,[data-theme="mono"] .cal-n,[data-theme="mono"] .cal-pay,[data-theme="mono"] .cal-sum strong,[data-theme="mono"] .cal-wk span,[data-theme="mono"] .cal-gh{font-family:var(--mono)}
-[data-theme="mono"] .cal-gh,[data-theme="mono"] .cal-wk span,[data-theme="mono"] .cal-key{text-transform:lowercase}
-[data-theme="mono"] .cal-d,[data-theme="mono"] .cal-n,[data-theme="mono"] .cal-paymark,[data-theme="mono"] .cal-dot{border-radius:0}
+[data-theme="mono"] .ss-top,[data-theme="mono"] .ss-axis,[data-theme="mono"] .src-sub,[data-theme="mono"] .mc-n,[data-theme="mono"] .mc-nav,[data-theme="mono"] .mc-wk span,[data-theme="mono"] .mc-h,[data-theme="mono"] .mc-it strong{font-family:var(--mono)}
+[data-theme="mono"] .mc-wk span,[data-theme="mono"] .mc-nav,[data-theme="mono"] .mc-h{text-transform:lowercase}
+[data-theme="mono"] .mc-d,[data-theme="mono"] .mc-n,[data-theme="mono"] .cal-paymark,[data-theme="mono"] .cal-dot{border-radius:0}
 [data-theme="mono"] .ss-bar i,[data-theme="mono"] .ss-key b{border-radius:0}
 [data-theme="mono"] .row{border-color:var(--border-light)!important}
 [data-theme="mono"] .top-pages.bottom-pages{border-top:1px solid var(--border-light)!important;background:var(--bg)!important}
@@ -4112,7 +4104,6 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
   <button data-tab="income">Income</button>
   <button data-tab="expenses">Expenses</button>
   <button data-tab="budget">Budget</button>
-  <button data-tab="calendar">Calendar</button>
 </nav>
 
 <div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><input class="input" id="spending-category" maxlength="30" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-budget-mode">Budget</label><select class="select" id="spending-budget-mode"><option value="percent">Percent (%)</option><option value="fixed">Dollars ($)</option></select></div><div class="fcol"><label class="flbl" for="spending-budget-value">Suggested amount</label><input class="input" id="spending-budget-value" type="number" min="0" step="0.01" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Save</button></div><div id="category-spending-entries"></div></div></div></div>
@@ -4399,7 +4390,7 @@ const TAX_KEY = 'ledgeon-tax-pct';
 const SYNC_CONFIG_KEY = 'ledgeon-sync-config';
 const SYNC_WORKER_URL = 'https://ledgeon-sync.danielssouthworth.workers.dev';
 const THEME_KEY = 'ledgeon-theme';
-const TABS = ['income', 'expenses', 'budget', 'calendar'];
+const TABS = ['income', 'expenses', 'budget'];
 
 const CATEGORIES = {
   housing:   { label: 'housing',   color: '#d4a574' },
@@ -4822,7 +4813,11 @@ function getCurrentMonthIncomeEstimate() {
  const usable=first<0?[]:recent.slice(first);
  const averages=paycheckEMA(history.list,history.periodDays);
  const latestAverage=averages[averages.length-1];
- const perCheck=Number.isFinite(latestAverage)?latestAverage:usable.length?usable.reduce((sum,p)=>sum+p.income,0)/usable.length:0;
+ // Per paycheck: the lower of the EMA and the median of the last 4 paychecks (backtested: fewer high misses).
+ const lastChecks=history.list.filter(p=>p.income>0).slice(-4).map(p=>p.income).sort((x,y)=>x-y);
+ const median=lastChecks.length?(lastChecks.length%2?lastChecks[(lastChecks.length-1)/2]:(lastChecks[lastChecks.length/2-1]+lastChecks[lastChecks.length/2])/2):null;
+ const emaOrAvg=Number.isFinite(latestAverage)?latestAverage:usable.length?usable.reduce((sum,p)=>sum+p.income,0)/usable.length:0;
+ const perCheck=median!==null&&emaOrAvg>0?Math.min(emaOrAvg,median):emaOrAvg;
  const received=roundCash(state.income.reduce((sum,item)=>sum+recordedIncomeOccurrences(item,start,end).reduce((n,o)=>n+o.amount,0),0));
  const last=history.list[history.list.length-1];
  let next=new Date(getIncomePaySchedule().anchor),remaining=0;
@@ -5797,6 +5792,7 @@ function renderIncome() {
   return `<section class="income-overview">${incHead}
     ${trendHeader}
     ${trendChartHTML}
+    ${renderMiniCalendar()}
     ${sh('Sources', {
       add: { action: 'open-modal', type: 'income', label: '+ Add' }
     })}
@@ -6773,49 +6769,49 @@ function calendarEvents(start, end) {
   }
   return ev.sort((a, b) => a.date - b.date || (a.type === 'pay' ? -1 : 1));
 }
-function renderCalendar() {
+function renderMiniCalendar() {
   const [y, m] = calMonth.split('-').map(Number);
   const start = new Date(y, m - 1, 1), end = new Date(y, m, 1), today = todayStart(), todayIso = isoDate(today);
-  const sch = getIncomePaySchedule();
+  const sch = getIncomePaySchedule(), colors = catColorMap();
   const ev = calendarEvents(start, end);
-  // pay periods: each payday covers bills due before the next one
-  const after = calendarEvents(end, new Date(y, m, 1 + sch.periodDays * 2)).filter(e => e.type === 'pay');
-  const pays = ev.filter(e => e.type === 'pay'), allPays = [...pays, ...after];
-  pays.forEach(p => { const nx = allPays.find(q => q.date > p.date); p.until = nx ? nx.date : new Date(p.date.getFullYear(), p.date.getMonth(), p.date.getDate() + sch.periodDays);
-    p.covers = roundCash([...ev, ...calendarEvents(end, p.until)].filter(e => e.type === 'bill' && e.status !== 'paid' && e.date >= p.date && e.date < p.until).reduce((n, e) => n + e.amt, 0)); });
   const byDay = {}; ev.forEach(e => (byDay[isoDate(e.date)] = byDay[isoDate(e.date)] || []).push(e));
-  const colors = catColorMap();
-  const billColor = b => colors[b.category || 'other'] || 'var(--ink-4)';
-  // grid
+  const color = b => colors[b.category || 'other'] || 'var(--ink-4)';
   const lead = start.getDay(), days = new Date(y, m, 0).getDate(), cells = [];
-  for (let i = 0; i < lead; i++) cells.push('<span class="cal-d out"></span>');
+  for (let i = 0; i < lead; i++) cells.push('<span class="mc-d out"></span>');
   for (let n = 1; n <= days; n++) {
     const iso = isoDate(new Date(y, m - 1, n)), list = byDay[iso] || [];
-    const pay = list.find(e => e.type === 'pay'), bills = list.filter(e => e.type === 'bill');
-    const dots = bills.slice(0, 3).map(e => `<i class="cal-dot${e.status === 'paid' ? ' paid' : ''}" style="--c:${billColor(e.bill)}"></i>`).join('') + (bills.length > 3 ? '<i class="cal-more">+</i>' : '');
+    const pay = list.some(e => e.type === 'pay'), bills = list.filter(e => e.type === 'bill');
     const late = bills.some(e => e.status === 'late');
-    cells.push(`<button class="cal-d${iso === todayIso ? ' today' : ''}${iso === calDay ? ' sel' : ''}${iso < todayIso ? ' past' : ''}${pay ? ' payday' : ''}" data-action="cal-day" data-date="${iso}" aria-label="${escHTML(exactDate(iso))}${pay ? ', payday' : ''}${bills.length ? `, ${bills.length} bill${bills.length > 1 ? 's' : ''}` : ''}"><span class="cal-n">${n}</span>${pay ? `<span class="cal-pay${pay.est ? ' est' : ''}">${pay.est ? '~' : ''}${pay.amt >= 1000 ? '$' + (pay.amt / 1000).toFixed(1) + 'k' : '$' + Math.round(pay.amt)}</span>` : ''}<span class="cal-dots${late ? ' late' : ''}">${dots}</span></button>`);
+    const dots = bills.slice(0, 3).map(e => `<i class="cal-dot${e.status === 'paid' ? ' paid' : ''}" style="--c:${late && e.status === 'late' ? 'var(--negative)' : color(e.bill)}"></i>`).join('');
+    cells.push(`<button class="mc-d${iso === todayIso ? ' today' : ''}${iso === calDay ? ' sel' : ''}${iso < todayIso ? ' past' : ''}${pay ? ' payday' : ''}" data-action="cal-day" data-date="${iso}" aria-label="${escHTML(exactDate(iso))}${pay ? ', payday' : ''}${bills.length ? `, ${bills.length} bill${bills.length > 1 ? 's' : ''}` : ''}"><span class="mc-n">${n}</span><span class="mc-dots">${dots}</span></button>`);
   }
-  while (cells.length % 7) cells.push('<span class="cal-d out"></span>');
-  // summary
-  const billTotal = roundCash(ev.filter(e => e.type === 'bill').reduce((n, e) => n + e.amt, 0));
-  const payTotal = roundCash(pays.reduce((n, p) => n + p.amt, 0)), anyEst = pays.some(p => p.est);
-  // agenda
-  const rel = d => { const n = Math.round((d - today) / 864e5); return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : n > 0 ? `in ${n} days` : `${-n} days ago`; };
-  const groups = Object.keys(byDay).sort().map(iso => {
-    const d = parseISODate(iso);
-    const rows = byDay[iso].map(e => e.type === 'pay'
-      ? `<div class="row cal-row cal-payrow${e.est ? ' est' : ''}"><div><div class="r-name"><i class="cal-paymark"></i>${e.est ? 'Payday' : escHTML([...new Set(e.sources)].join(', '))}</div><div class="r-meta">${e.est ? 'Estimated · EMA' : 'Paycheck'}${e.covers > 0 ? ` · ${fmtMoney(e.covers, {round:true})} in bills due by ${escHTML(shortDate(isoDate(new Date(e.until.getFullYear(), e.until.getMonth(), e.until.getDate() - 1))))}` : ''}</div></div><div class="source-right"><span class="r-amt">${e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</span></div></div>`
-      : `<div class="row clickable cal-row${e.status === 'paid' ? ' is-paid' : ''}" data-action="edit" data-type="expenses" data-id="${e.bill.id}"><div><div class="r-name"><i class="cat-dot" style="background:${billColor(e.bill)}"></i>${escHTML(e.bill.name)}</div><div class="r-meta">${e.status === 'paid' ? 'Paid' : e.status === 'late' ? '<span class="cal-late">Late</span>' : cap((CATEGORIES[e.bill.category] || CATEGORIES.other).label)}</div></div><div class="source-right"><span class="r-amt">${fmtMoney(e.amt, {round:true})}</span><span class="row-chevron">›</span></div></div>`).join('');
-    return `<div class="cal-g${iso === calDay ? ' sel' : ''}${iso < todayIso ? ' past' : ''}" id="cal-${iso}"><div class="cal-gh"><span>${escHTML(d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}))}</span><span>${rel(d)}</span></div>${rows}</div>`;
-  }).join('');
+  while (cells.length % 7) cells.push('<span class="mc-d out"></span>');
+  // details for the tapped day (or today)
   const isNow = calMonth === todayIso.slice(0, 7);
-  return `<div class="pc-switch pc-check cal-nav"><button data-action="cal-month" data-step="-1" aria-label="Previous month">‹</button><span><strong>${escHTML(start.toLocaleDateString('en-US', {month:'long', year:'numeric'}))}</strong>${isNow ? '' : ` · <span class="lnk" data-action="cal-today">today</span>`}</span><button data-action="cal-month" data-step="1" aria-label="Next month">›</button></div>
-  <div class="cal-sum"><div><span>Bills</span><strong>${fmtMoney(billTotal, {round:true})}</strong></div><div><span>Paydays</span><strong>${pays.length}</strong></div><div><span>Pay${anyEst ? ' (est.)' : ''}</span><strong>${fmtMoney(payTotal, {round:true})}</strong></div></div>
-  <div class="cal"><div class="cal-wk">${['S','M','T','W','T','F','S'].map(x => `<span>${x}</span>`).join('')}</div><div class="cal-grid">${cells.join('')}</div>
-  <div class="cal-key"><span><i class="cal-paymark"></i>payday</span><span><i class="cal-dot" style="--c:var(--ink-3)"></i>bill due</span><span><i class="cal-dot paid" style="--c:var(--ink-3)"></i>paid</span><span><i class="cal-dot" style="--c:var(--negative);width:5px;height:5px"></i>late</span></div></div>
-  ${sh(start.toLocaleDateString('en-US', {month:'long'}).toLowerCase())}
-  <div class="cal-agenda">${groups || '<div class="empty">Nothing this month</div>'}</div>`;
+  const selIso = calDay || (isNow ? todayIso : null);
+  const item = e => {
+    if (e.type === 'pay') {
+      const nextPay = calendarEvents(new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + 1), new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + sch.periodDays * 2)).find(x => x.type === 'pay');
+      const until = nextPay ? nextPay.date : new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + sch.periodDays);
+      const covers = roundCash(calendarEvents(e.date, until).filter(x => x.type === 'bill' && x.status !== 'paid').reduce((n, x) => n + x.amt, 0));
+      return `<div class="mc-it"><i class="cal-paymark"></i><span>${e.est ? 'Payday (est.)' : escHTML([...new Set(e.sources)].join(', '))}${covers > 0 ? `<small>${fmtMoney(covers, {round:true})} in bills this pay period</small>` : ''}</span><strong>${e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</strong></div>`;
+    }
+    return `<div class="mc-it${e.status === 'paid' ? ' is-paid' : ''}" data-action="edit" data-type="expenses" data-id="${e.bill.id}"><i class="cat-dot" style="background:${color(e.bill)}"></i><span>${escHTML(e.bill.name)}${e.status === 'paid' ? '<small>Paid</small>' : e.status === 'late' ? '<small class="cal-late">Late</small>' : ''}</span><strong>${fmtMoney(e.amt, {round:true})}</strong></div>`;
+  };
+  let detail = '';
+  if (selIso) {
+    const list = byDay[selIso] || [], d = parseISODate(selIso);
+    const label = selIso === todayIso ? 'Today' : d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+    if (list.length) detail = `<div class="mc-h">${escHTML(label)}</div>${list.map(item).join('')}`;
+    else {
+      const nx = calendarEvents(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), new Date(d.getFullYear(), d.getMonth() + 2, 1)).find(e => e.type === 'pay' || e.status !== 'paid');
+      detail = `<div class="mc-h">${escHTML(label)} · nothing due${nx ? ` · next ${escHTML(nx.date.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}))}` : ''}</div>${nx ? item(nx) : ''}`;
+    }
+  }
+  const nav = `<span class="mc-nav"><button data-action="cal-month" data-step="-1" aria-label="Previous month">‹</button><span>${escHTML(start.toLocaleDateString('en-US', {month:'short', year:'numeric'}))}</span><button data-action="cal-month" data-step="1" aria-label="Next month">›</button></span>`;
+  return `${sh('Calendar', {meta: nav})}
+  <div class="mc"><div class="mc-wk">${['S','M','T','W','T','F','S'].map(x => `<span>${x}</span>`).join('')}</div><div class="mc-grid">${cells.join('')}</div>
+  ${detail ? `<div class="mc-detail">${detail}</div>` : ''}</div>`;
 }
 
 function render() {
@@ -6831,7 +6827,6 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
-  else if (currentTab === 'calendar') main.innerHTML = renderCalendar();
   { const mt=document.getElementById('mtitle'); if(mt) mt.textContent='ledgeon / '+currentTab; }
   document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   refreshPayPeriodAverage();
@@ -7152,7 +7147,7 @@ document.addEventListener('click', e => {
   if (act === 'check-older' || act === 'check-newer') { const el=eligibleChecks(); let i=el.indexOf(getPaycheckPlan().check)+(act==='check-older'?1:-1); if(i>=0&&i<el.length){ selectedCheckId = i===0?null:el[i].id; render(); } return; }
   if (act === 'cal-month') { const [y,m]=calMonth.split('-').map(Number); const d=new Date(y,m-1+Number(btn.dataset.step),1); calMonth=isoDate(d).slice(0,7); calDay=null; render(); return; }
   if (act === 'cal-today') { calMonth=isoDate(todayStart()).slice(0,7); calDay=null; render(); return; }
-  if (act === 'cal-day') { calDay=btn.dataset.date; render(); const g=document.getElementById('cal-'+calDay); if(g) g.scrollIntoView({block:'center',behavior:'smooth'}); return; }
+  if (act === 'cal-day') { calDay=calDay===btn.dataset.date?null:btn.dataset.date; render(); return; }
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
   else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
   else if (act === 'close-source-detail') { sourceDetailView = null; render(); }
