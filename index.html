@@ -3682,8 +3682,8 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 .budget-worksheet .worksheet-save .budget-save-button{width:auto;min-height:0;padding:6px 0;border-radius:0;background:transparent;color:var(--accent);font-size:12px;font-weight:600;text-align:left}
 .budget-worksheet .worksheet-save .budget-save-button:hover{text-decoration:underline}
 /* Distinct, muted Budget colors; Expenses keeps its purple palette. */
-.budget-worksheet{--budget-bills:var(--accent);--budget-groceries:#e58e46;--budget-gas:#e54e46;--budget-savings:#46e58e;--budget-other:#469be5}
-[data-theme="dark"] .budget-worksheet{--budget-groceries:#f8bc8b;--budget-gas:#f8908b;--budget-savings:#8bf8bc;--budget-other:#8bc5f8}
+.budget-worksheet,.bx{--budget-bills:var(--accent);--budget-groceries:#e58e46;--budget-gas:#e54e46;--budget-savings:#46e58e;--budget-other:#469be5}
+[data-theme="dark"] .budget-worksheet,[data-theme="dark"] .bx{--budget-groceries:#f8bc8b;--budget-gas:#f8908b;--budget-savings:#8bf8bc;--budget-other:#8bc5f8}
 /* Compact bill list and a single paycheck summary/footer. */
 .budget-worksheet .simple-bill-row{padding:8px 0;gap:12px}
 .budget-worksheet .simple-bill-row .worksheet-name,.budget-worksheet .simple-bill-amount{font-size:12px;font-weight:500}
@@ -4010,9 +4010,9 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 </style>
 <style id="ledgeon-mono">
 [data-theme="mono"]{--bg:#ffffff;--bg-subtle:#faf9f7;--bg-hover:#f3f1ec;--border:#e7e2da;--border-light:#f1eee7;--ink:#1b1a17;--ink-2:#56524b;--ink-3:#79746a;--ink-4:#a89f92;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-strong:#4338ca;--positive:#15803d;--positive-soft:#dcfce7;--negative:#b91c1c;--negative-soft:#fef2f2;--warning:#b45309;--warning-soft:#fef3c7;color-scheme:light}
-[data-theme="mono"] .budget-worksheet{--budget-groceries:#c2702a;--budget-gas:#d9534a;--budget-savings:#15803d;--budget-other:#2f7fc4}
+[data-theme="mono"] .budget-worksheet,[data-theme="mono"] .bx{--budget-groceries:#c2702a;--budget-gas:#d9534a;--budget-savings:#15803d;--budget-other:#2f7fc4}
 [data-theme="mono"][data-shade="dark"]{--bg:#0f1012;--bg-subtle:#15161a;--bg-hover:#1b1d22;--border:#2a2c33;--border-light:#1d1f24;--ink:#ecebe6;--ink-2:#b9bac0;--ink-3:#8b8e97;--ink-4:#5a5d66;--accent:#a5acff;--accent-soft:#1d1f3a;--accent-strong:#8b93f8;--positive:#7ee2a8;--positive-soft:#0f2a1c;--negative:#f0a69f;--negative-soft:#3a1714;--warning:#f0c27a;--warning-soft:#33260f;color-scheme:dark}
-[data-theme="mono"][data-shade="dark"] .budget-worksheet{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
+[data-theme="mono"][data-shade="dark"] .budget-worksheet,[data-theme="mono"][data-shade="dark"] .bx{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
 html[data-theme] .p5-big{font-size:40px;letter-spacing:-1.5px}
 html[data-theme] .x5-v{font-size:28px}
 html[data-theme] .r-amt,html[data-theme] .sc-row strong{font-size:14px!important;font-weight:500!important}
@@ -4077,19 +4077,78 @@ html[data-theme] .sh,html[data-theme] .trend-head,html[data-theme] #content .sh{
 html[data-theme] .chart{padding-left:24px!important;padding-right:24px!important}
 html[data-theme] .row,html[data-theme] #content .row.source-row{padding-left:24px!important;padding-right:24px!important}
 html[data-theme] .x5 .expense-cat-row{margin-left:0!important;margin-right:0!important}
-/* Compare view: same parts as the Income trend chart */
-.cmp-chart .chart-layout{height:128px!important}
-.cmp-cols{flex:1;min-width:0;display:flex;gap:3px;position:relative;padding:0 2px}
-.cmp-cols .chart-col{flex:1 1 0!important;width:auto!important;min-width:0!important;display:flex;flex-direction:column;align-items:center}
-.cmp-cols .bar-track{flex:1;width:100%;display:flex;align-items:flex-end;gap:1px;position:relative}
-.cmp-cols .chart-col .bar{flex:1 1 0;width:auto!important;margin:0!important;background:var(--c)!important;opacity:1!important}
-.cmp-lines{position:absolute;left:2px;right:2px;top:0;bottom:20px;width:calc(100% - 4px);height:calc(100% - 20px);overflow:visible;pointer-events:none}
-.cmp-lines path{fill:none;stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
-.cmp-key{display:inline-flex;gap:12px;font-size:12px;color:var(--ink-3)}
-.cmp-key span{display:inline-flex;align-items:center;gap:5px}
-.cmp-key i,.bt-row i{display:inline-block;width:8px;height:8px;border-radius:2px}
+.lc-intro{margin:6px 24px 0;font-size:13px;color:var(--ink-3);line-height:1.45}
+.lc-key{display:flex;flex-wrap:wrap;gap:8px 16px;margin:14px 24px 0;font-size:12.5px;color:var(--ink-2)}
+.lc-key span{display:inline-flex;align-items:center;gap:6px}.lc-key i{width:8px;height:8px;border-radius:4px;display:inline-block}
+.lc-wrap{padding:4px 24px 8px}
+.lc{position:relative;display:flex;flex-direction:column}
+.lc-plot{position:relative;flex:1;margin-left:38px;margin-top:6px}
+.lc-g{position:absolute;left:0;right:0;border-top:1px solid var(--border-light)}
+.lc-g span{position:absolute;right:calc(100% + 8px);top:-7px;font-size:10px;color:var(--ink-4);white-space:nowrap;font-variant-numeric:tabular-nums}
+.lc-plot svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lc-plot path{fill:none;stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
+.lc-dot{position:absolute;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;box-shadow:0 0 0 2px var(--bg)}
+.lc-hit{position:absolute;top:0;bottom:0;width:8.333%;cursor:default}
+.lc-hit:hover{background:var(--bg-hover);opacity:.5}
+.lc-x{display:flex;margin-left:38px;padding-top:8px}
+.lc-x span{flex:1;text-align:center;font-size:10px;color:var(--ink-4)}
 .bt-row{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.6}
+.bt-row i{display:inline-block;width:8px;height:8px;border-radius:4px}
 .bt-row b{margin-left:auto;padding-left:10px;font-weight:600}
+
+/* ---------- Budget ---------- */
+.bx{padding-bottom:24px}
+.bx .bx-nav{margin:4px 24px 0!important}
+.bx-hero{margin-top:18px!important}
+.bx-sub{font-size:13px;color:var(--ink-3);margin-top:2px}
+.bx-sum{display:flex;margin-top:16px;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
+.bx-sum div{flex:1;padding:11px 0;display:flex;flex-direction:column;gap:3px}
+.bx-sum div+div{padding-left:12px;border-left:1px solid var(--border-light)}
+.bx-sum span{font-size:12px;color:var(--ink-3)}
+.bx-sum b{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.bx-list{margin:0 24px}
+.bx-cat{all:unset;box-sizing:border-box;display:block;width:100%;padding:12px 0 13px;border-bottom:1px solid var(--border-light);cursor:pointer}
+.bx-cat:last-child{border-bottom:0}
+.bx-cat-top{display:flex;align-items:center;gap:10px}
+.bx-cat-top i{width:8px;height:8px;border-radius:3px;flex-shrink:0}
+.bx-cat-n{flex:1;font-size:15px;font-weight:500;color:var(--ink)}
+.bx-cat-v{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.bx-cat-v small{font-size:12px;font-weight:400;color:var(--ink-3)}
+.bx-cat-v.neg{color:var(--negative)}
+.bx-cat-meta{display:flex;justify-content:space-between;margin:3px 0 8px 18px;font-size:12px;color:var(--ink-3)}
+.bx-log{color:var(--accent);font-weight:500}
+.bx-meter{display:block;height:4px;border-radius:2px;background:var(--bg-hover);overflow:hidden;margin-left:18px}
+.bx-meter span{display:block;height:100%;border-radius:2px;background:var(--accent)}
+.bx-meter.big{height:6px;border-radius:3px;margin:10px 0 0}
+.bx-alert{margin:8px 24px 0;font-size:12.5px;color:var(--warning)}
+.bx-acts{display:inline-flex;gap:14px;margin-left:auto}
+.bx-save{margin:2px 24px 0;padding:14px 16px;border:1px solid var(--border-light);border-radius:12px;background:var(--bg-subtle)}
+.bx-save-top{display:flex;justify-content:space-between;align-items:flex-end}
+.bx-save-l{display:block;font-size:12px;color:var(--ink-3);margin-bottom:2px}
+.bx-save-top b{font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.bx-status{font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px}
+.bx-status.ok{color:var(--positive);background:var(--positive-soft)}
+.bx-status.warn{color:var(--warning);background:var(--warning-soft)}
+.bx-save-cap{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--ink-3)}
+@media (max-width:380px){.bx-save-cap{flex-direction:column;gap:2px}}
+.bx-sub-h{margin:18px 24px 0;font-size:12px;font-weight:500;color:var(--ink-4)}
+.bx-bill{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-light)}
+.bx-bill:last-child{border-bottom:0}
+.bx-bill-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.bx-bill-n{font-size:15px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bx-bill-m{font-size:12px;color:var(--ink-3)}
+.bx-bill-m.late{color:var(--negative);font-weight:500}
+.bx-bill>b{font-size:15px;font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.bx-btn{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:6px 12px;border-radius:8px}
+.bx-btn.ghost{color:var(--ink-3);background:transparent;box-shadow:inset 0 0 0 1px var(--border)}
+.bx-bill.is-paid .bx-bill-n,.bx-bill.is-paid>b{color:var(--ink-3)}
+.bx-empty{font-size:13px;color:var(--ink-3);padding:12px 0}
+.bx-paid{margin:6px 24px 0;border-top:1px solid var(--border-light)}
+.bx-paid summary{list-style:none;display:flex;justify-content:space-between;padding:12px 0;font-size:13px;font-weight:500;color:var(--ink-3);cursor:pointer}
+.bx-paid summary::-webkit-details-marker{display:none}
+.bx-paid summary span:first-child::before{content:"›";display:inline-block;margin-right:8px;transition:transform .15s}
+.bx-paid[open] summary span:first-child::before{transform:rotate(90deg)}
+.bx-paid .bx-list{margin:0}
 /* Calendar */
 .cal2{margin:0 24px}
 .sh .x:has(.cal2-nav){margin-left:auto}
@@ -6602,6 +6661,7 @@ function billSavingsSegments(plan) {
  return parts.map(part=>{const amount=Math.min(remaining,part.amount);remaining-=amount;return {...part,amount};}).filter(part=>part.amount>0);
 }
 
+let budgetPaidOpen = false;
 function renderBudget() {
  const p=getPaycheckPlan();
  if(!p.check)return `${blk('Latest paycheck','No paycheck yet','')}${sh('Income',{add:{action:'open-modal',type:'income',label:'+ Add'}})}`;
@@ -6616,24 +6676,38 @@ function renderBudget() {
  const lastPayment=lastBillPayment;
  const paidBills=state.bills.filter(b=>billShownPaid(b,p)).sort((a,b)=>a.dueDate.localeCompare(b.dueDate));
  const unpaidBills=state.bills.filter(b=>b.recurring && b.recurring!=='once' && !paidBills.includes(b) && !billPaidForMonth(b,p.month)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
- return `<section class="budget-worksheet spending-first">
- ${(()=>{const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;const hrs=Number(p.check.hours)||0;return `<div class="pc-head">
- <div class="pc-switch pc-check"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${fmtMoney(p.available,{round:true})}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>
- <div class="b5-hero"><div class="p5-big"${afterBills<0?' style="color:var(--negative)"':''}>${fmtMoney(Math.abs(afterBills),{round:true})}</div><div class="b5-sub">${afterBills<0?'over budget':'left to spend'}${end?` until ${escHTML(shortDate(isoDate(end)))}`:''}</div></div>
- <div class="pc-bar">${split.map(item=>`<i style="width:${Math.max(0,item.total/basis*100)}%;background:${colors[item.key]}"></i>`).join('')}</div><div class="b5-cap"><span>Bills ${fmtMoney(p.suggested,{round:true})}</span><span>Spending ${fmtMoney(Math.max(0,p.available-p.suggested),{round:true})}</span></div>
- </div>`;})()}
- <div class="pc-cols"><div class="pc-col"><div class="sf-heading"><h3>Spending</h3></div>
- <div class="sf-spending-grid">${categories.map(({key,label})=>{const remaining=roundCash(tracking.targets[key]-tracking.spent[key]);return `<button class="sf-spending-cell sc" data-action="open-spending" data-category="${key}" aria-label="Log ${escHTML(label)}"><span class="sc-row"><i style="background:${colors[key]}"></i><span class="sc-name">${escHTML(label)}</span><strong class="${remaining<0?'sf-over':''}">${remaining<0?'−':''}${fmtMoney(Math.abs(remaining),{round:true})}</strong><small>/ ${fmtMoney(tracking.targets[key],{round:true})}</small><span class="sc-plus" aria-hidden="true">+</span></span><span class="sf-track-meter"><span style="width:${tracking.targets[key]>0?Math.min(100,tracking.spent[key]/tracking.targets[key]*100):tracking.spent[key]>0?100:0}%;background:${colors[key]}"></span></span></button>`}).join('')}</div>
- ${Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)>Math.max(0,p.available-p.suggested)+.01?`<p class="sf-alert">Categories exceed available spending by ${fmtMoney(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-Math.max(0,p.available-p.suggested))}.</p>`:''}
- </div><section class="bill-progress-section bs">
- <div class="sf-heading"><h3>Bill savings</h3><span class="bs-acts"><button class="sf-action" data-action="open-bill-entry">+ Add</button><button class="sf-action" data-action="open-bill-balance">Adjust</button></span></div>
- ${(()=>{const cc=catColorMap(),tot=Math.max(1,p.monthlyTotal),have=p.savedTotal+p.paidTotal,behind=roundCash(p.target-have);return `<div class="bs-line"><strong>${fmtMoney(p.savedTotal,{round:true})}</strong><span>saved${p.paidTotal>0?` · ${fmtMoney(p.paidTotal,{round:true})} paid`:''}</span><em>of ${fmtMoney(p.monthlyTotal,{round:true})}</em></div>
- <div class="bs-track" role="meter" aria-label="Bill savings" aria-valuemin="0" aria-valuemax="${tot}" aria-valuenow="${Math.min(have,tot)}"><span class="bs-fill">${billSavingsSegments(p).map(s=>`<i style="width:${s.amount/tot*100}%;background:${s.color}" title="${escHTML(s.label)} · ${fmtMoney(s.amount)}"></i>`).join('')}</span><b style="left:${Math.min(100,p.target/tot*100)}%"></b></div>
- <div class="bs-cap"><span>${behind>0.5?`<span class="bs-warn">${fmtMoney(behind,{round:true})} behind</span>`:`On target`}</span><span>${fmtMoney(p.suggested,{round:true})} / paycheck</span></div>
- <div class="bs-list">${unpaidBills.map(b=>`<div class="bs-row"><span class="bs-n">${escHTML(b.name)}${b.dueDate?`<small>${escHTML(daysUntil(b.dueDate))}</small>`:''}</span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring),{round:true})}</strong><button class="bs-paid" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`).join('')||'<div class="bs-done">All bills paid this month</div>'}${paidBills.map(b=>`<div class="bs-row is-paid"><span class="bs-n">${escHTML(b.name)}<small>Next due ${escHTML(daysUntil(b.dueDate).replace(/^In /,'in '))}</small></span><strong>${fmtMoney(monthlyEq(moneyValue(b.amount),b.recurring),{round:true})}</strong><button class="bs-paid bs-undo" data-action="undo-bill" data-id="${escHTML(lastPayment(b).id)}" aria-label="Undo ${escHTML(b.name)} payment">Undo</button></div>`).join('')}</div>`;})()}
- </section></div>
- </section>
- ${renderMiniCalendar()}`;
+ // ---- Budget, laid out top to bottom: what's left → spending → bills → calendar ----
+ const el=eligibleChecks(),pos=Math.max(0,el.indexOf(p.check)),end=p.next?new Date(p.next.getTime()-864e5):null;
+ const daysLeft=end&&end>=todayStart()?Math.round((end-todayStart())/864e5)+1:null;
+ const spendBudget=Math.max(0,roundCash(p.available-p.suggested));
+ const overTargets=roundCash(Object.values(tracking.targets).reduce((sum,v)=>sum+v,0)-spendBudget);
+ const have=p.savedTotal, need=Math.max(0,roundCash(p.target-p.paidTotal)), behind=roundCash(need-have);
+ const fmt=v=>fmtMoney(v,{round:true});
+ const nav=`<div class="pc-switch pc-check bx-nav"><button data-action="check-newer" aria-label="Newer paycheck"${pos===0?' disabled':''}>‹</button><span><strong>${escHTML(shortDate(paycheckDate(p.check)))} paycheck</strong> · ${fmt(p.available)}</span><button data-action="check-older" aria-label="Older paycheck"${pos>=el.length-1?' disabled':''}>›</button></div>`;
+ const hero=`<div class="p5-hero bx-hero"><div class="p5-l">Left to spend</div><div class="p5-big"${afterBills<0?' style="color:var(--negative)"':''}>${afterBills<0?'−':''}${fmt(Math.abs(afterBills))}</div>
+   <div class="bx-sub">${afterBills<0?'Over budget':''}${end?`${afterBills<0?' · ':''}${daysLeft===null?'Ended':'Until'} ${escHTML(end.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}))}${daysLeft!==null?` · ${daysLeft} day${daysLeft===1?'':'s'} left`:''}`:''}</div>
+   <div class="bx-sum">
+     <div><span>Paycheck</span><b>${fmt(p.available)}</b></div>
+     <div><span>Bills</span><b>−${fmt(p.suggested)}</b></div>
+     <div><span>Spent</span><b>${tracking.total>0?'−':''}${fmt(tracking.total)}</b></div>
+   </div></div>`;
+ const spending=`${sh('Spending')}<div class="bx-list">${categories.map(({key,label})=>{const t=tracking.targets[key],sp=tracking.spent[key],left=roundCash(t-sp),pct=t>0?Math.min(100,sp/t*100):sp>0?100:0;return `<button class="bx-cat" data-action="open-spending" data-category="${key}" aria-label="Log ${escHTML(label)} spending">
+     <span class="bx-cat-top"><i style="background:${colors[key]}"></i><span class="bx-cat-n">${escHTML(label)}</span><span class="bx-cat-v${left<0?' neg':''}">${left<0?'−':''}${fmt(Math.abs(left))} <small>${left<0?'over':'left'}</small></span></span>
+     <span class="bx-cat-meta"><span>${sp>0?`${fmt(sp)} spent of ${fmt(t)}`:`${fmt(t)} budgeted`}</span><span class="bx-log">Log</span></span>
+     <span class="bx-meter"><span style="width:${pct}%;background:${left<0?'var(--negative)':colors[key]}"></span></span></button>`;}).join('')}</div>
+   ${overTargets>0.01?`<p class="bx-alert">Categories add up to ${fmt(overTargets)} more than this paycheck's spending money.</p>`:''}`;
+ const billRow=b=>`<div class="bx-bill"><div class="bx-bill-l"><span class="bx-bill-n">${escHTML(b.name)}</span><span class="bx-bill-m${b.dueDate&&b.dueDate<isoDate(todayStart())?' late':''}">${b.dueDate?`${escHTML(daysUntil(b.dueDate))} · ${escHTML(shortDate(b.dueDate))}`:'No due date'}</span></div><b>${fmt(monthlyEq(moneyValue(b.amount),b.recurring))}</b><button class="bx-btn" data-action="pay-bill" data-budget-month="${p.month}" data-due-date="${escHTML(b.dueDate||'')}" data-id="${escHTML(b.id)}" aria-label="Mark ${escHTML(b.name)} paid">Paid</button></div>`;
+ const paidRow=b=>`<div class="bx-bill is-paid"><div class="bx-bill-l"><span class="bx-bill-n">${escHTML(b.name)}</span><span class="bx-bill-m">Next due ${escHTML(daysUntil(b.dueDate).replace(/^In /,'in '))}</span></div><b>${fmt(monthlyEq(moneyValue(b.amount),b.recurring))}</b><button class="bx-btn ghost" data-action="undo-bill" data-id="${escHTML(lastPayment(b).id)}" aria-label="Undo ${escHTML(b.name)} payment">Undo</button></div>`;
+ const bills=`<div class="sh"><h3>Bills</h3><span class="bx-acts"><button class="sf-action" data-action="open-bill-entry">+ Add</button><button class="sf-action" data-action="open-bill-balance">Adjust</button></span></div>
+   <div class="bx-save">
+     <div class="bx-save-top"><div><span class="bx-save-l">Saved for bills</span><b>${fmt(have)}</b></div><div class="bx-status ${behind>0.5?'warn':'ok'}">${behind>0.5?`${fmt(behind)} behind`:'On track'}</div></div>
+     <div class="bx-meter big"><span style="width:${need>0?Math.min(100,have/need*100):100}%"></span></div>
+     <div class="bx-save-cap"><span>Should have ${fmt(need)} by now</span><span>Set aside ${fmt(p.suggested)} / paycheck</span></div>
+   </div>
+   <div class="bx-sub-h">Due next</div>
+   <div class="bx-list">${unpaidBills.map(billRow).join('')||'<div class="bx-empty">Nothing left to pay this cycle</div>'}</div>
+   ${paidBills.length?`<details class="bx-paid"${budgetPaidOpen?' open':''} ontoggle="budgetPaidOpen=this.open"><summary><span>Paid this paycheck</span><span>${paidBills.length} · ${fmt(paidBills.reduce((n,b)=>n+monthlyEq(moneyValue(b.amount),b.recurring),0))}</span></summary><div class="bx-list">${paidBills.map(paidRow).join('')}</div></details>`:''}`;
+ return `<div class="bx">${nav}${hero}${spending}${bills}${renderMiniCalendar()}</div>`;
 }
 
 function renderBudgetSpendingDetail() {
@@ -6881,63 +6955,56 @@ function renderMiniCalendar() {
 
 // ──── Compare view: this year vs earlier years, built from the same chart parts as Income ────
 let incomeChartsView = false;
-function compareYearPalette(n) { return ['var(--accent)', 'var(--ink-4)', '#e0893a', 'var(--positive)', '#2f7fc4'].slice(0, n); }
+function chartPalette() {
+  const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+  return [v('--accent') || '#4f46e5', '#e0893a', v('--positive') || '#15803d', '#d9534a', '#2f7fc4', '#a16207', v('--ink-3') || '#79746a', '#be185d'];
+}
+function incomeChartSeries() {
+  const map = {};
+  for (const i of state.income) {
+    const d = paycheckDate(i);
+    if (!/^\d{4}-\d{2}/.test(d)) continue;
+    const base = moneyValue(i.baseAmount != null ? i.baseAmount : i.amount);
+    if (!(base > 0)) continue;
+    const key = (i.source || 'Unknown') + ' ' + d.slice(0, 4);
+    const g = map[key] || (map[key] = { label: key, year: d.slice(0, 4), months: Array(12).fill(null) });
+    const m = +d.slice(5, 7) - 1; g.months[m] = (g.months[m] || 0) + base;
+  }
+  return Object.values(map).sort((a, b) => a.year.localeCompare(b.year) || a.label.localeCompare(b.label));
+}
+// Line chart drawn with the same parts and type as the rest of the site.
+function lineChartHTML(series, { height = 190 } = {}) {
+  const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const vals = series.flatMap(x => x.values.filter(v => v != null));
+  const step = (() => { const raw = Math.max(1, ...vals) / 4, mag = 10 ** Math.floor(Math.log10(raw)), n = raw / mag; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag; })();
+  const max = step * 4, X = m => (m + .5) / 12 * 100, Y = v => 100 - v / max * 100;
+  const k = v => v >= 1000 ? '$' + (v / 1000).toFixed(v % 1000 ? 1 : 0).replace(/\.0$/, '') + 'k' : '$' + v;
+  const grid = [4, 3, 2, 1, 0].map(t => `<div class="lc-g" style="top:${Y(t * step)}%"><span>${k(t * step)}</span></div>`).join('');
+  const paths = series.map(x => {
+    let d = '', pen = false;
+    x.values.forEach((v, m) => { if (v == null) { pen = false; return; } d += `${pen ? 'L' : 'M'}${X(m).toFixed(2)},${Y(v).toFixed(2)} `; pen = true; });
+    return `<path d="${d}" style="stroke:${x.color}"></path>`;
+  }).join('');
+  const dots = series.map(x => x.values.map((v, m) => v == null ? '' : `<i class="lc-dot" style="left:${X(m)}%;top:${Y(v)}%;background:${x.color}"></i>`).join('')).join('');
+  const hits = MN.map((name, m) => {
+    const rows = series.filter(x => x.values[m] != null);
+    return rows.length ? `<div class="lc-hit" style="left:${m / 12 * 100}%" data-amount="1" data-label="${name}" data-tip="${escHTML(rows.map(x => `<div class="bt-row"><i style="background:${x.color}"></i>${escHTML(x.label)}<b>${fmtMoney(x.values[m], {round:true})}</b></div>`).join(''))}"></div>` : '';
+  }).join('');
+  return `<div class="lc" style="height:${height}px"><div class="lc-plot">${grid}<svg viewBox="0 0 100 100" preserveAspectRatio="none">${paths}</svg>${dots}${hits}</div><div class="lc-x">${MN.map(n => `<span>${n}</span>`).join('')}</div></div>`;
+}
 function renderChartsTab() {
   const back = '<div class="detail-top"><button class="back-btn" data-action="close-charts">← Income</button></div>';
-  const today = todayStart(), thisYear = today.getFullYear();
-  const byYear = {};
-  for (const i of state.income) {
-    const d = parseISODate(paycheckDate(i)), a = moneyValue(i.amount);
-    if (!d || !(a > 0)) continue;
-    const y = d.getFullYear(), m = d.getMonth();
-    const Y = byYear[y] || (byYear[y] = { year: y, months: Array(12).fill(0), total: 0, sameDates: 0 });
-    Y.months[m] += a; Y.total += a;
-    const md = new Date(thisYear, m, d.getDate());
-    if (md <= today) Y.sameDates += a;
-  }
-  const years = Object.keys(byYear).map(Number).sort((a, b) => b - a).slice(0, 3); // newest first, up to 3
-  if (!years.length) return back + '<div class="note" style="padding:24px">No income logged yet.</div>';
-  const cur = byYear[years[0]], prev = byYear[years[1]];
-  const colors = compareYearPalette(years.length), colorOf = y => colors[years.indexOf(y)];
-  const change = prev && prev.sameDates > 0 ? (cur.sameDates - prev.sameDates) / prev.sameDates * 100 : null;
-  const bestM = cur.months.reduce((b, v, m) => v > cur.months[b] ? m : b, 0);
-  const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const k = v => v >= 1000 ? '$' + (v / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : '$' + Math.round(v);
-  const hero = `<div class="p5-hero"><div class="p5-l">${cur.year === thisYear ? `${cur.year} so far` : cur.year}</div><div class="p5-big">${fmtMoney(cur.year === thisYear ? cur.sameDates : cur.total, {round:true})}</div>
-    <div class="p5-stats">
-      <div><span>${prev ? `${prev.year}, same dates` : 'Last year'}</span><strong>${prev ? fmtMoney(prev.sameDates, {round:true}) : '—'}</strong></div>
-      <div><span>Change</span><strong${change !== null ? ` style="color:var(--${change >= 0 ? 'positive' : 'negative'})"` : ''}>${change === null ? '—' : (change >= 0 ? '+' : '−') + Math.abs(change).toFixed(0) + '%'}</strong></div>
-      <div><span>Best month</span><strong>${cur.months[bestM] > 0 ? MN[bestM] + ' ' + k(cur.months[bestM]) : '—'}</strong></div>
-    </div></div>`;
-  const legend = `<span class="cmp-key">${years.map(y => `<span><i style="background:${colorOf(y)}"></i>${y}</span>`).join('')}</span>`;
-  const yAxis = max => `<div class="chart-y"><span>${fmtMoney(max, {round:true})}</span><span>${fmtMoney(max / 2, {round:true})}</span><span>$0</span></div>`;
-  const tip = (m, vals) => years.map(y => `<div class="bt-row"><i style="background:${colorOf(y)}"></i>${y}<b>${fmtMoney(vals(y, m), {round:true})}</b></div>`).join('');
-  // Each month: grouped bars, same bar style as the Income trend
-  const mMax = Math.max(1, ...years.flatMap(y => byYear[y].months));
-  const monthCols = MN.map((name, m) => {
-    const bars = years.slice().reverse().map(y => { const v = byYear[y].months[m]; return `<div class="bar" style="--c:${colorOf(y)};height:${v > 0 ? Math.max(3, v / mMax * 100) : 0}%"></div>`; }).join('');
-    const sum = years.reduce((n, y) => n + byYear[y].months[m], 0);
-    return `<div class="chart-col" data-amount="${sum}" data-label="${name}" data-tip="${escHTML(tip(m, (y, mm) => byYear[y].months[mm]))}"><div class="bar-track">${bars}</div><div class="label">${name.charAt(0)}</div></div>`;
-  }).join('');
-  // Running total: lines drawn like the EMA line
-  const running = y => { let t = 0; const last = y === thisYear ? today.getMonth() : 11; return byYear[y].months.map((v, m) => m > last ? null : (t += v)); };
-  const runs = Object.fromEntries(years.map(y => [y, running(y)]));
-  const rMax = Math.max(1, ...years.flatMap(y => runs[y].filter(v => v !== null)));
-  const path = y => runs[y].map((v, m) => v === null ? '' : `${m === 0 ? 'M' : 'L'}${((m + .5) / 12 * 100).toFixed(2)},${(100 - v / rMax * 100).toFixed(2)}`).join(' ');
-  const runCols = MN.map((name, m) => `<div class="chart-col" data-amount="${Math.max(0, ...years.map(y => runs[y][m] || 0))}" data-label="Through ${name}" data-tip="${escHTML(tip(m, (y, mm) => runs[y][mm] || 0))}"><div class="bar-track"></div><div class="label">${name.charAt(0)}</div></div>`).join('');
-  const lines = `<svg class="cmp-lines" viewBox="0 0 100 100" preserveAspectRatio="none">${years.slice().reverse().map(y => `<path d="${path(y)}" style="stroke:${colorOf(y)}"></path>`).join('')}</svg>`;
-  const chart = (cols, max, extra = '') => `<div class="chart cmp-chart"><div class="chart-layout">${yAxis(max)}<div class="cmp-cols">${cols}${extra}</div></div></div>`;
-  // By job
-  const jobs = {};
-  for (const i of state.income) { const d = paycheckDate(i), a = moneyValue(i.amount); if (!d || !(a > 0)) continue; const key = (i.source || 'Unknown'); const J = jobs[key] || (jobs[key] = { name: key, total: 0, n: 0, first: d, last: d }); J.total += a; J.n++; if (d < J.first) J.first = d; if (d > J.last) J.last = d; }
-  const mon = d => parseISODate(d).toLocaleDateString('en-US', {month:'short', year:'numeric'});
-  const jobRows = Object.values(jobs).sort((a, b) => b.last.localeCompare(a.last)).map(J => `<div class="row clickable source-row" data-action="view-source" data-source="${escHTML(J.name)}">
-      <div><div class="r-name">${escHTML(J.name)}</div><div class="r-meta">${mon(J.first)} – ${mon(J.last)} · ${J.n} paychecks</div></div>
-      <div class="source-right"><span class="r-amt pos">${fmtMoney(J.total)}</span><span class="row-chevron">›</span></div></div>`).join('');
-  return `${back}${hero}
-    ${sh('Each month', {meta: legend})}${chart(monthCols, mMax)}
-    ${sh('Running total', {meta: legend})}${chart(runCols, rMax, lines)}
-    ${sh('By job')}${jobRows}`;
+  const ser = incomeChartSeries();
+  if (!ser.length) return back + '<div class="note" style="padding:24px">No income logged yet.</div>';
+  const pal = chartPalette();
+  const withColor = (fn) => ser.map((x, k) => ({ label: x.label, color: pal[k % pal.length], values: fn(x.months) }));
+  const running = g => { const idx = g.map((v, i) => v == null ? -1 : i).filter(i => i >= 0); const lo = idx[0], hi = idx[idx.length - 1]; let t = 0; return g.map((v, i) => { if (i < lo || i > hi) return null; t += v || 0; return Math.round(t); }); };
+  const legend = `<div class="lc-key">${ser.map((x, k) => `<span><i style="background:${pal[k % pal.length]}"></i>${escHTML(x.label)}</span>`).join('')}</div>`;
+  return `${back}
+    <div class="lc-intro">Each job and year, month by month. Base pay only, cash tips not included.</div>
+    ${legend}
+    ${sh('Income each month')}<div class="lc-wrap">${lineChartHTML(withColor(g => g.map(v => v == null ? null : Math.round(v))))}</div>
+    ${sh('Running total')}<div class="lc-wrap">${lineChartHTML(withColor(running))}</div>`;
 }
 
 function render() {
@@ -7076,7 +7143,7 @@ document.addEventListener('mouseover', e => {
     showExpenseTooltip(expenseEl, rect.left + rect.width / 2, rect.top);
     return;
   }
-  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount]');
+  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount], .lc-hit[data-amount]');
   if (!col) return;
   const rect = col.getBoundingClientRect();
   showBarTooltip(col, rect.left + rect.width / 2, rect.top);
@@ -7087,7 +7154,7 @@ document.addEventListener('mouseout', e => {
     hideBarTooltip();
     return;
   }
-  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount]');
+  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount], .lc-hit[data-amount]');
   if (col && (!e.relatedTarget || !col.contains(e.relatedTarget))) hideBarTooltip();
 });
 document.addEventListener('touchstart', e => {
@@ -7098,7 +7165,7 @@ document.addEventListener('touchstart', e => {
     showExpenseTooltip(expenseEl, t ? t.clientX : rect.left + rect.width / 2, rect.top);
     return;
   }
-  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount]');
+  const col = e.target.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount], .lc-hit[data-amount]');
   if (!col) return;
   const rect = col.getBoundingClientRect();
   showBarTooltip(col, rect.left + rect.width / 2, rect.top);
@@ -7107,7 +7174,7 @@ document.addEventListener('touchmove', e => {
   const touch = e.touches[0];
   if (!touch) return;
   const el = document.elementFromPoint(touch.clientX, touch.clientY);
-  const col = el && el.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount]');
+  const col = el && el.closest('.chart-col[data-amount], .ss-bar[data-amount], .sl-hit[data-amount], .lc-hit[data-amount]');
   if (col) {
     const rect = col.getBoundingClientRect();
     showBarTooltip(col, rect.left + rect.width / 2, rect.top);
