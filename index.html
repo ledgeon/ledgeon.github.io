@@ -3902,16 +3902,6 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 <style id="ledgeon-paper">
 .src-hero{margin-top:6px}.src-sub{margin-top:4px}
 .ss-chart{margin:18px 24px 4px}
-.up{margin:0 20px}
-.up-row{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--border-light);font-size:14px}
-.up-row:last-child{border-bottom:0}
-.up-row[data-action]{cursor:pointer}
-.up-d{width:92px;flex-shrink:0;font-size:12.5px;color:var(--ink-4)}
-.up-d.late{color:var(--negative);font-weight:600}
-.up-n{flex:1;min-width:0;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.up-a{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
-.up-a.pay{color:var(--positive)}
-[data-theme="mono"] .up-d,[data-theme="mono"] .up-a{font-family:var(--mono)}
 .mc{margin:0 20px}
 .mc-nav{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
 .mc-nav button{all:unset;cursor:pointer;color:var(--ink-3);padding:0 6px;font-size:15px;line-height:1}
@@ -4023,51 +4013,105 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
 [data-theme="mono"] .budget-worksheet{--budget-groceries:#c2702a;--budget-gas:#d9534a;--budget-savings:#15803d;--budget-other:#2f7fc4}
 [data-theme="mono"][data-shade="dark"]{--bg:#0f1012;--bg-subtle:#15161a;--bg-hover:#1b1d22;--border:#2a2c33;--border-light:#1d1f24;--ink:#ecebe6;--ink-2:#b9bac0;--ink-3:#8b8e97;--ink-4:#5a5d66;--accent:#a5acff;--accent-soft:#1d1f3a;--accent-strong:#8b93f8;--positive:#7ee2a8;--positive-soft:#0f2a1c;--negative:#f0a69f;--negative-soft:#3a1714;--warning:#f0c27a;--warning-soft:#33260f;color-scheme:dark}
 [data-theme="mono"][data-shade="dark"] .budget-worksheet{--budget-groceries:#e0a774;--budget-gas:#f0a69f;--budget-savings:#7ee2a8;--budget-other:#86b8e8}
-[data-theme="mono"]{--mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
-[data-theme="mono"] .mtitle{font-family:var(--mono)!important;font-size:12px!important;font-weight:400!important;letter-spacing:0!important;color:var(--ink-3)!important}
-[data-theme="mono"] .p5-big,[data-theme="mono"] .x5-v,[data-theme="mono"] .p5-stats strong,[data-theme="mono"] .r-amt,[data-theme="mono"] .expense-cat-amt,[data-theme="mono"] .expense-donut-hole strong,[data-theme="mono"] .sc-row strong,[data-theme="mono"] .sc-row small,[data-theme="mono"] .bs-line strong,[data-theme="mono"] .bs-row strong,[data-theme="mono"] .pc-switch,[data-theme="mono"] .b5-cap,[data-theme="mono"] .bar-labels,[data-theme="mono"] .chart-y{font-family:var(--mono)!important;font-weight:600;letter-spacing:-.5px}
-[data-theme="mono"] .p5-big{font-size:40px;letter-spacing:-1.5px}
-[data-theme="mono"] .x5-v{font-size:28px}
-[data-theme="mono"] .r-amt,[data-theme="mono"] .sc-row strong{font-size:14px!important;font-weight:500!important}
-[data-theme="mono"] .p5-stats{gap:0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);margin-top:18px}
-[data-theme="mono"] .p5-stats div{flex:1;padding:12px 0}
-[data-theme="mono"] .p5-stats div+div{padding-left:12px;border-left:1px solid var(--border-light)}
-[data-theme="mono"] .p5-stats strong{font-size:15px;font-weight:500}
-[data-theme="mono"] .sh h3,[data-theme="mono"] .sf-heading h3,[data-theme="mono"] .trend-head h3,[data-theme="mono"] .p5-l{font-family:var(--mono)!important;font-size:11px!important;text-transform:lowercase!important;color:var(--ink-3)!important}
-[data-theme="mono"] .sh .add,[data-theme="mono"] .sf-action{font-family:var(--mono)!important;font-size:11px!important;font-weight:400!important;text-transform:lowercase}
-[data-theme="mono"] .pc-switch{border-top:1px solid var(--border-light)!important;border-bottom:1px solid var(--border-light)!important;text-transform:lowercase;font-size:12px!important;color:var(--ink-3)}
-[data-theme="mono"] .pc-switch strong{font-weight:400}
-[data-theme="mono"] .b5-hero{text-align:left}
-[data-theme="mono"] .pc-bar{height:8px!important;gap:2px!important}
-[data-theme="mono"] .pc-bar i,[data-theme="mono"] .sc-row i,[data-theme="mono"] .expense-cat-dot,[data-theme="mono"] .cat-dot{border-radius:0!important}
-[data-theme="mono"] .pc-bar i{border-radius:0}
-[data-theme="mono"] .b5-cap{text-transform:lowercase;font-weight:400!important}
-[data-theme="mono"] .sc .sf-track-meter,[data-theme="mono"] .sc .sf-track-meter>span{height:2px!important;border-radius:0!important}
-[data-theme="mono"] .sc{padding:12px 0 8px!important}
-[data-theme="mono"] .sc-plus{font-family:var(--mono)}
-[data-theme="mono"] .bs-paid{font-family:var(--mono);font-weight:400;background:transparent!important;border:1px solid var(--border);border-radius:0}
-[data-theme="mono"] .bs-track,[data-theme="mono"] .bs-fill{border-radius:0!important;height:4px!important}
-[data-theme="mono"] .bs-track b{width:1px!important;background:var(--ink)!important}
-[data-theme="mono"] .expense-donut-track{stroke:var(--border-light)!important}
-[data-theme="mono"] .expense-donut-hole{background:var(--bg)!important}
-[data-theme="mono"] .x5 .expense-cat-list{grid-template-columns:1fr!important;gap:0!important;border-top:1px solid var(--border-light)}
-[data-theme="mono"] .x5 .expense-cat-row{padding:7px 0!important;border-bottom:1px solid var(--border-light)!important}
-[data-theme="mono"] .x5 .expense-cat-pct{font-family:var(--mono)}
-[data-theme="mono"] .ss-top,[data-theme="mono"] .ss-axis,[data-theme="mono"] .src-sub,[data-theme="mono"] .mc-n,[data-theme="mono"] .mc-nav,[data-theme="mono"] .mc-wk span,[data-theme="mono"] .mc-h,[data-theme="mono"] .mc-it strong{font-family:var(--mono)}
-[data-theme="mono"] .mc-wk span,[data-theme="mono"] .mc-nav,[data-theme="mono"] .mc-h{text-transform:lowercase}
-[data-theme="mono"] .mc-d,[data-theme="mono"] .mc-n,[data-theme="mono"] .cal-paymark,[data-theme="mono"] .cal-dot{border-radius:0}
-[data-theme="mono"] .ss-bar i,[data-theme="mono"] .ss-key b{border-radius:0}
-[data-theme="mono"] .row{border-color:var(--border-light)!important}
-[data-theme="mono"] .top-pages.bottom-pages{border-top:1px solid var(--border-light)!important;background:var(--bg)!important}
-[data-theme="mono"] .top-pages.bottom-pages button{font-family:var(--mono)!important;font-weight:400!important;font-size:12px!important;color:var(--ink-4)!important;text-transform:lowercase}
-[data-theme="mono"] .top-pages.bottom-pages button.active{color:var(--accent)!important}
-[data-theme="mono"] .top-pages.bottom-pages button.active span,[data-theme="mono"] .top-pages.bottom-pages button.active{letter-spacing:0}
-[data-theme="mono"] .top-pages.bottom-pages button.active::after{content:"]"!important;display:inline!important;position:static!important;background:none!important;width:auto!important;height:auto!important}
-[data-theme="mono"] .top-pages.bottom-pages button.active::before{content:"["!important;display:inline!important;position:static!important;background:none!important;width:auto!important;height:auto!important;margin:0!important;border-radius:0!important}
-[data-theme="mono"] .modal-c{background:var(--bg-subtle)!important;border:1px solid var(--border)}
-[data-theme="mono"] .input,[data-theme="mono"] .select{background:var(--bg)!important;color:var(--ink)!important;border-color:var(--border)!important}
+html[data-theme] .p5-big{font-size:40px;letter-spacing:-1.5px}
+html[data-theme] .x5-v{font-size:28px}
+html[data-theme] .r-amt,html[data-theme] .sc-row strong{font-size:14px!important;font-weight:500!important}
+html[data-theme] .p5-stats{gap:0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);margin-top:18px}
+html[data-theme] .p5-stats div{flex:1;padding:12px 0}
+html[data-theme] .p5-stats div+div{padding-left:12px;border-left:1px solid var(--border-light)}
+html[data-theme] .p5-stats strong{font-size:15px;font-weight:500}
+html[data-theme] .pc-switch{border-top:1px solid var(--border-light)!important;border-bottom:1px solid var(--border-light)!important;font-size:12px!important;color:var(--ink-3)}
+html[data-theme] .pc-switch strong{font-weight:400}
+html[data-theme] .b5-hero{text-align:left}
+html[data-theme] .pc-bar{height:8px!important;gap:2px!important}
+html[data-theme] .sc .sf-track-meter,html[data-theme] .sc .sf-track-meter>span{height:2px!important}
+html[data-theme] .sc{padding:12px 0 8px!important}
+html[data-theme] .bs-track,html[data-theme] .bs-fill{height:4px!important}
+html[data-theme] .bs-track b{width:1px!important;background:var(--ink)!important}
+html[data-theme] .expense-donut-track{stroke:var(--border-light)!important}
+html[data-theme] .expense-donut-hole{background:var(--bg)!important}
+html[data-theme] .x5 .expense-cat-list{grid-template-columns:1fr!important;gap:0!important;border-top:1px solid var(--border-light)}
+html[data-theme] .x5 .expense-cat-row{padding:7px 0!important;border-bottom:1px solid var(--border-light)!important}
+html[data-theme] .row{border-color:var(--border-light)!important}
+html[data-theme] .top-pages.bottom-pages{border-top:1px solid var(--border-light)!important;background:var(--bg)!important}
+html[data-theme] .top-pages.bottom-pages button.active{color:var(--accent)!important}
+html[data-theme] .modal-c{background:var(--bg-subtle)!important;border:1px solid var(--border)}
+html[data-theme] .input,html[data-theme] .select{background:var(--bg)!important;color:var(--ink)!important;border-color:var(--border)!important}
 </style>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="ledgeon-unified">
+/* One look for every theme (based on the Charts view). Themes only change colors. */
+html[data-theme] body,html[data-theme] body :not(svg):not(svg *){font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif!important}
+html[data-theme] .p5-big,html[data-theme] .x5-v,html[data-theme] .p5-stats strong,html[data-theme] .r-amt,html[data-theme] .expense-cat-amt,html[data-theme] .expense-cat-pct,html[data-theme] .bs-row strong,html[data-theme] .bs-line strong,html[data-theme] .sc-row strong,html[data-theme] .up-a,html[data-theme] .chart-y,html[data-theme] .chart-x{font-variant-numeric:tabular-nums}
+html[data-theme] .mtitle{font-size:18px!important;font-weight:600!important;letter-spacing:-.2px!important;color:var(--ink)!important;text-transform:none!important}
+html[data-theme] .sh h3,html[data-theme] .sf-heading h3,html[data-theme] .trend-head h3,html[data-theme] .p5-l,html[data-theme] .cal2-h{font-size:13px!important;font-weight:500!important;color:var(--ink-3)!important;text-transform:none!important;letter-spacing:0!important}
+html[data-theme] .sh .add,html[data-theme] .sf-action,html[data-theme] .view-link{font-size:13px!important;font-weight:500!important;color:var(--accent)!important;text-transform:none!important;letter-spacing:0!important}
+html[data-theme] .pc-switch,html[data-theme] .b5-cap{text-transform:none!important}
+html[data-theme] .p5-big{font-size:38px!important;font-weight:600!important;letter-spacing:-1px!important}
+html[data-theme] .x5-v{font-size:28px!important;font-weight:600!important;letter-spacing:-.5px!important}
+html[data-theme] .p5-stats span{font-size:12px!important;color:var(--ink-3)!important;text-transform:none!important;letter-spacing:0!important}
+html[data-theme] .p5-stats strong{font-size:15px!important;font-weight:600!important;color:var(--ink)!important}
+html[data-theme] .r-name{font-size:15px!important;font-weight:500!important}
+html[data-theme] .r-meta{font-size:12px!important;color:var(--ink-3)!important}
+html[data-theme] .r-amt{font-size:15px!important;font-weight:500!important}
+html[data-theme] .bs-paid{font-size:12px!important;font-weight:500!important;background:transparent!important;border:1px solid var(--border)!important;border-radius:6px!important;color:var(--accent)!important;padding:4px 10px!important}
+html[data-theme] .bs-paid.bs-undo{color:var(--ink-3)!important;box-shadow:none!important}
+html[data-theme] .cat-dot,html[data-theme] .expense-cat-dot,html[data-theme] .sc-row i{border-radius:3px!important}
+html[data-theme] .top-pages.bottom-pages button{font-size:12.5px!important;font-weight:500!important;text-transform:none!important;letter-spacing:0!important}
+html[data-theme] .top-pages.bottom-pages button.active{color:var(--accent)!important;font-weight:600!important}
+/* Charts view */
+.ch-wrap{margin:0 auto;padding:4px 24px 40px;max-width:900px}
+.ch-wrap h2{font-size:18px;font-weight:500;margin:6px 0 4px;color:var(--ink)}
+.ch-sub,.ch-note{font-size:12px;color:var(--ink-3);margin:0}.ch-note{margin-top:14px}
+.ch-lg{display:flex;flex-wrap:wrap;gap:10px 14px;margin:12px 0 10px;font-size:12px;color:var(--ink-3)}
+.ch-lg span{display:flex;align-items:center;gap:4px}.ch-lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.ch-t{font-size:13px;color:var(--ink-3);margin:0 0 4px}.ch-box{position:relative;width:100%;height:260px}
+.view-link{all:unset;box-sizing:border-box;width:calc(100% - 48px);cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin:10px 24px 0;padding:12px 0;border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light)}
+.view-link span{color:var(--ink-4);font-size:16px;line-height:1}
+html[data-theme] .p5-stats span{white-space:nowrap}
+/* one 24px side margin everywhere */
+html[data-theme] .sh,html[data-theme] .trend-head{padding-left:24px!important;padding-right:24px!important}
+html[data-theme] .chart{padding-left:24px!important;padding-right:24px!important}
+html[data-theme] .row,html[data-theme] #content .row.source-row{padding-left:24px!important;padding-right:24px!important}
+html[data-theme] .x5 .expense-cat-row{margin-left:0!important;margin-right:0!important}
+@media (max-width:380px){html[data-theme] .p5-stats span{font-size:11px!important}html[data-theme] .p5-stats strong{font-size:14px!important}html[data-theme] .p5-stats div+div{padding-left:8px!important}}
+/* Calendar */
+.cal2{margin:0 24px}
+.sh .x:has(.cal2-nav){margin-left:auto}
+.cal2-nav{margin-left:auto;display:inline-flex;align-items:center;gap:2px;font-size:13px;color:var(--ink-2);font-weight:500}
+.cal2-nav button{all:unset;cursor:pointer;color:var(--ink-3);padding:2px 8px;font-size:16px;line-height:1}
+.cal2-nav button:hover{color:var(--ink)}
+.cal2-wk,.cal2-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal2-wk span{text-align:center;font-size:11px;color:var(--ink-4);padding-bottom:6px}
+.cal2-d{all:unset;box-sizing:border-box;height:40px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0}
+.cal2-d.out{cursor:default}
+.cal2-n{width:28px;height:28px;line-height:28px;text-align:center;border-radius:14px;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums}
+.cal2-d.past .cal2-n{color:var(--ink-4)}
+.cal2-d.pay .cal2-n{color:var(--accent);font-weight:600;background:var(--accent-soft)}
+.cal2-d.today .cal2-n{background:var(--accent);color:var(--bg);font-weight:600}
+.cal2-d.sel .cal2-n{box-shadow:0 0 0 1.5px var(--accent)}
+.cal2-d:not(.out):hover .cal2-n{box-shadow:0 0 0 1px var(--border)}
+.cal2-dot{width:4px;height:4px;border-radius:2px;background:var(--ink-3)}
+.cal2-dot.late{background:var(--negative)}
+.cal2-dot.none{background:transparent}
+.cal2-key{display:flex;gap:16px;font-size:11.5px;color:var(--ink-3);padding:6px 0 2px}
+.cal2-key span{display:inline-flex;align-items:center;gap:6px}
+.cal2-key i{display:inline-block}
+.cal2-key .k-pay{width:12px;height:12px;border-radius:6px;background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.cal2-key .k-bill{width:4px;height:4px;border-radius:2px;background:var(--ink-3)}
+.cal2-list{margin:8px 24px 0}
+.cal2-lh{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 2px;font-size:13px;font-weight:500;color:var(--ink-3)}
+.cal2-lh button{all:unset;cursor:pointer;color:var(--accent);font-size:13px;font-weight:500}
+.up-row{display:flex;align-items:baseline;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-light);font-size:14px}
+.up-row:last-child{border-bottom:0}
+.up-row[data-action]{cursor:pointer}
+.up-d{width:96px;flex-shrink:0;font-size:12.5px;color:var(--ink-3)}
+.up-d.late{color:var(--negative);font-weight:600}
+.up-n{flex:1;min-width:0;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-a{font-weight:500;color:var(--ink)}
+.up-a.pay{color:var(--positive)}
+.up-empty{font-size:13px;color:var(--ink-3);padding:10px 0}
+</style>
+
 </head>
 
 
@@ -4114,7 +4158,6 @@ main#content>.source-row:has(.cat-dot){padding-left:22px!important}
   <button data-tab="income">Income</button>
   <button data-tab="expenses">Expenses</button>
   <button data-tab="budget">Budget</button>
-  <button data-tab="charts">Charts</button>
 </nav>
 
 <div class="modal" id="modal-spending" role="dialog" aria-modal="true" aria-labelledby="spending-modal-title"><div class="modal-bd" data-action="close-modal"></div><div class="modal-c"><div class="modal-t" id="spending-modal-title">Log spending</div><div class="budget-amounts-form"><div class="frow"><div class="fcol"><label class="flbl" for="spending-category">Category</label><input class="input" id="spending-category" maxlength="30" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-budget-mode">Budget</label><select class="select" id="spending-budget-mode"><option value="percent">Percent (%)</option><option value="fixed">Dollars ($)</option></select></div><div class="fcol"><label class="flbl" for="spending-budget-value">Suggested amount</label><input class="input" id="spending-budget-value" type="number" min="0" step="0.01" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-amount">Amount</label><input class="input" id="spending-amount" type="number" min="0.01" step="0.01" required></div><div class="fcol"><label class="flbl" for="spending-date">Date</label><input class="input" id="spending-date" type="date" required></div></div><div class="frow"><div class="fcol"><label class="flbl" for="spending-note">Note</label><input class="input" id="spending-note" maxlength="120"></div></div><div class="factions"><button type="button" data-action="close-modal">Cancel</button><button type="button" class="primary" data-action="save-spending">Save</button></div><div id="category-spending-entries"></div></div></div></div>
@@ -4416,7 +4459,7 @@ const TAX_KEY = 'ledgeon-tax-pct';
 const SYNC_CONFIG_KEY = 'ledgeon-sync-config';
 const SYNC_WORKER_URL = 'https://ledgeon-sync.danielssouthworth.workers.dev';
 const THEME_KEY = 'ledgeon-theme';
-const TABS = ['income', 'expenses', 'budget', 'charts'];
+const TABS = ['income', 'expenses', 'budget'];
 
 const CATEGORIES = {
   housing:   { label: 'housing',   color: '#d4a574' },
@@ -5501,6 +5544,7 @@ function renderSourceDetail(sourceName) {
 
 function renderIncome() {
   if (sourceDetailView) return renderSourceDetail(sourceDetailView);
+  if (incomeChartsView) return renderChartsTab();
 
   const stats = getIncomeStats();
   const nowD = new Date();
@@ -5672,7 +5716,7 @@ function renderIncome() {
 
       // Keep bottom labels consistent: compact M/D at a regular cadence.
       const labelEvery = payHist.periodType === 'biweekly' ? 2 : 4;
-      const showLabel = idx === 0 || idx === arr.length - 1 || idx % labelEvery === 0;
+      const showLabel = idx % labelEvery === 0 || (idx === arr.length - 1 && idx % labelEvery >= 2); // skip the last label if it would crowd the previous one
       const label = showLabel
         ? `${receivedDate.getMonth() + 1}/${receivedDate.getDate()}`
         : '';
@@ -5818,6 +5862,7 @@ function renderIncome() {
   return `<section class="income-overview">${incHead}
     ${trendHeader}
     ${trendChartHTML}
+    <button class="view-link" data-action="open-charts">Compare jobs and years <span>›</span></button>
     ${renderMiniCalendar()}
     ${sh('Sources', {
       add: { action: 'open-modal', type: 'income', label: '+ Add' }
@@ -6797,13 +6842,38 @@ function calendarEvents(start, end) {
 }
 // Next two weeks of bills and paydays as plain rows.
 function renderMiniCalendar() {
-  const today = todayStart(), end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
-  const ev = calendarEvents(new Date(today.getFullYear(), today.getMonth() - 2, 1), end)
-    .filter(e => e.type === 'pay' ? e.date >= today : e.status === 'late' || (e.status === 'due' && e.date >= today));
-  if (!ev.length) return '';
-  const label = d => { const n = Math.round((d - today) / 864e5); return n < 0 ? 'Late' : n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}); };
-  const rows = ev.map(e => `<div class="up-row${e.type === 'bill' ? '" data-action="edit" data-type="expenses" data-id="' + e.bill.id : ''}"><span class="up-d${e.type === 'bill' && e.status === 'late' ? ' late' : ''}">${escHTML(label(e.date))}</span><span class="up-n">${e.type === 'pay' ? (e.est ? 'Payday' : escHTML([...new Set(e.sources)].join(', '))) : escHTML(e.bill.name)}</span><span class="up-a${e.type === 'pay' ? ' pay' : ''}">${e.type === 'pay' && e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</span></div>`).join('');
-  return `${sh('Upcoming')}<div class="up">${rows}</div>`;
+  const [y, m] = calMonth.split('-').map(Number);
+  const start = new Date(y, m - 1, 1), end = new Date(y, m, 1), today = todayStart(), todayIso = isoDate(today);
+  const inMonth = calendarEvents(start, end);
+  const byDay = {}; inMonth.forEach(e => (byDay[isoDate(e.date)] = byDay[isoDate(e.date)] || []).push(e));
+  const cells = [];
+  for (let i = 0; i < start.getDay(); i++) cells.push('<span class="cal2-d out"></span>');
+  for (let n = 1, days = new Date(y, m, 0).getDate(); n <= days; n++) {
+    const iso = isoDate(new Date(y, m - 1, n)), list = byDay[iso] || [];
+    const pay = list.some(e => e.type === 'pay'), bills = list.filter(e => e.type === 'bill' && e.status !== 'paid');
+    const late = bills.some(e => e.status === 'late');
+    cells.push(`<button class="cal2-d${iso === todayIso ? ' today' : ''}${iso === calDay ? ' sel' : ''}${iso < todayIso ? ' past' : ''}${pay ? ' pay' : ''}" data-action="cal-day" data-date="${iso}" aria-label="${escHTML(exactDate(iso))}${pay ? ', payday' : ''}${bills.length ? `, ${bills.length} bill${bills.length > 1 ? 's' : ''} due` : ''}"><span class="cal2-n">${n}</span><i class="cal2-dot${bills.length ? (late ? ' late' : '') : ' none'}"></i></button>`);
+  }
+  // list: the tapped day, or the next two weeks
+  const fmtD = d => d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  const label = d => { const n = Math.round((d - today) / 864e5); return n < 0 ? 'Late' : n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : fmtD(d); };
+  const row = (e, dl) => `<div class="up-row${e.type === 'bill' ? '" data-action="edit" data-type="expenses" data-id="' + e.bill.id : ''}"><span class="up-d${e.type === 'bill' && e.status === 'late' ? ' late' : ''}">${escHTML(dl)}</span><span class="up-n">${e.type === 'pay' ? (e.est ? 'Payday' : escHTML([...new Set(e.sources)].join(', '))) : escHTML(e.bill.name)}${e.type === 'bill' && e.status === 'paid' ? ' · paid' : ''}</span><span class="up-a${e.type === 'pay' ? ' pay' : ''}">${e.type === 'pay' && e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</span></div>`;
+  let head, rows;
+  if (calDay) {
+    const d = parseISODate(calDay), list = calendarEvents(d, new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1));
+    head = `<div class="cal2-lh"><span>${escHTML(fmtD(d))}</span><button data-action="cal-day" data-date="${calDay}">Show upcoming</button></div>`;
+    rows = list.length ? list.map(e => row(e, e.type === 'pay' ? 'Payday' : e.status === 'late' ? 'Late' : 'Due')).join('') : '<div class="up-empty">Nothing due this day</div>';
+  } else {
+    const soon = calendarEvents(new Date(today.getFullYear(), today.getMonth() - 2, 1), new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14))
+      .filter(e => e.type === 'pay' ? e.date >= today : e.status === 'late' || (e.status === 'due' && e.date >= today));
+    head = '<div class="cal2-lh"><span>Next 2 weeks</span></div>';
+    rows = soon.length ? soon.map(e => row(e, label(e.date))).join('') : '<div class="up-empty">Nothing due in the next 2 weeks</div>';
+  }
+  const nav = `<span class="cal2-nav"><button data-action="cal-month" data-step="-1" aria-label="Previous month">‹</button>${escHTML(start.toLocaleDateString('en-US', {month:'long', year:'numeric'}))}<button data-action="cal-month" data-step="1" aria-label="Next month">›</button></span>`;
+  return `${sh('Calendar', {meta: nav})}
+  <div class="cal2"><div class="cal2-wk">${['S','M','T','W','T','F','S'].map(x => `<span>${x}</span>`).join('')}</div><div class="cal2-grid">${cells.join('')}</div>
+  <div class="cal2-key"><span><i class="k-pay"></i>Payday</span><span><i class="k-bill"></i>Bill due</span></div></div>
+  <div class="cal2-list">${head}${rows}</div>`;
 }
 
 
@@ -6826,12 +6896,12 @@ function incomeChartSeries() {
   }
   return Object.values(map).sort((a, b) => a.year.localeCompare(b.year) || a.label.localeCompare(b.label));
 }
+let incomeChartsView = false;
 function renderChartsTab() {
   const ser = incomeChartSeries();
-  if (!ser.length) return '<div class="note" style="padding:24px 4px">No income logged yet. Add paychecks on the Income tab and they will chart here.</div>';
+  if (!ser.length) return '<div class="detail-top"><button class="back-btn" data-action="close-charts">← Income</button></div><div class="note" style="padding:24px 20px">No income logged yet.</div>';
   const lg = ser.map((x, k) => `<span><i style="background:${CH_COLORS[k % 8]}"></i>${escHTML(x.label)}</span>`).join('');
-  return `<div class="ch-wrap">
-<style>.ch-wrap{max-width:900px;margin:0 auto;padding:18px 4px 90px}.ch-wrap h2{font-size:18px;font-weight:500;margin:0 0 4px;color:var(--ink)}.ch-sub,.ch-note{font-size:12px;color:var(--ink-3);margin:0}.ch-note{margin-top:14px}.ch-lg{display:flex;flex-wrap:wrap;gap:10px 14px;margin:12px 0 10px;font-size:12px;color:var(--ink-3)}.ch-lg span{display:flex;align-items:center;gap:4px}.ch-lg i{width:10px;height:10px;border-radius:2px;display:inline-block}.ch-t{font-size:13px;color:var(--ink-3);margin:0 0 4px}.ch-box{position:relative;width:100%;height:260px}</style>
+  return `<div class="detail-top"><button class="back-btn" data-action="close-charts">← Income</button></div><div class="ch-wrap">
 <h2>Income by job and year</h2><p class="ch-sub">Base pay only (no cash tips), as logged on the Income tab.</p>
 <div class="ch-lg">${lg}</div>
 <p class="ch-t">Income received each month</p><div class="ch-box"><canvas id="ch-m"></canvas></div>
@@ -6869,8 +6939,8 @@ function render() {
   }
   else if (currentTab === 'expenses') main.innerHTML = renderExpenses();
   else if (currentTab === 'budget') main.innerHTML = renderBudget();
-  else if (currentTab === 'charts') { main.innerHTML = renderChartsTab(); drawIncomeCharts(); }
-  { const mt=document.getElementById('mtitle'); if(mt) mt.textContent='ledgeon / '+currentTab; }
+  if (currentTab === 'income' && incomeChartsView) drawIncomeCharts();
+  { const mt=document.getElementById('mtitle'); if(mt) mt.textContent=currentTab==='income'&&incomeChartsView?'Charts':currentTab.charAt(0).toUpperCase()+currentTab.slice(1); }
   document.querySelectorAll('.income-chart-scroll').forEach(cc => { cc.scrollLeft = cc.scrollWidth; });
   refreshPayPeriodAverage();
   window.scrollTo({ top: 0, behavior: 'instant' });
@@ -6884,7 +6954,7 @@ let overlayHistoryPushed = false;
 let handlingPopState = false;
 
 function isOverlayActive() {
-  return !!document.querySelector('.modal.open') || !!budgetLogView || !!sourceDetailView;
+  return !!document.querySelector('.modal.open') || !!budgetLogView || !!sourceDetailView || !!incomeChartsView;
 }
 
 function syncOverlayHistory() {
@@ -6909,6 +6979,9 @@ window.addEventListener('popstate', () => {
     render();
   } else if (sourceDetailView) {
     sourceDetailView = null;
+    render();
+  } else if (incomeChartsView) {
+    incomeChartsView = false;
     render();
   }
   handlingPopState = false;
@@ -7043,7 +7116,7 @@ document.addEventListener('click', e => {
   }
 
   const tab = e.target.closest('.top-pages button[data-tab]');
-  if (tab) { currentTab = tab.dataset.tab; sourceDetailView = null; expenseDetailView = null; budgetLogView = false; localStorage.setItem(TAB_KEY, currentTab); render(); return; }
+  if (tab) { currentTab = tab.dataset.tab; sourceDetailView = null; incomeChartsView = false; expenseDetailView = null; budgetLogView = false; localStorage.setItem(TAB_KEY, currentTab); render(); return; }
 
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
@@ -7188,12 +7261,14 @@ document.addEventListener('click', e => {
 
   if (act === 'select-check') { const el=eligibleChecks(); selectedCheckId = el[0] && String(el[0].id)===btn.dataset.id ? null : btn.dataset.id; currentTab='budget'; budgetLogView=false; sourceDetailView=null; expenseDetailView=null; try{localStorage.setItem(TAB_KEY,currentTab);}catch{} render(); return; }
   if (act === 'check-older' || act === 'check-newer') { const el=eligibleChecks(); let i=el.indexOf(getPaycheckPlan().check)+(act==='check-older'?1:-1); if(i>=0&&i<el.length){ selectedCheckId = i===0?null:el[i].id; render(); } return; }
-  if (act === 'cal-month') { const [y,m]=calMonth.split('-').map(Number); const d=new Date(y,m-1+Number(btn.dataset.step),1); calMonth=isoDate(d).slice(0,7); calDay=null; render(); return; }
+  if (act === 'cal-month') { const [y,m]=calMonth.split('-').map(Number); const d=new Date(y,m-1+Number(btn.dataset.step),1); calMonth=isoDate(d).slice(0,7); calDay=null; { const sy=window.scrollY; render(); window.scrollTo({top:sy,behavior:'instant'}); } return; }
   if (act === 'cal-today') { calMonth=isoDate(todayStart()).slice(0,7); calDay=null; render(); return; }
-  if (act === 'cal-day') { calDay=calDay===btn.dataset.date?null:btn.dataset.date; render(); return; }
+  if (act === 'cal-day') { calDay=calDay===btn.dataset.date?null:btn.dataset.date; { const sy=window.scrollY; render(); window.scrollTo({top:sy,behavior:'instant'}); } return; }
   if (act === 'goto') { currentTab = btn.dataset.tab; localStorage.setItem(TAB_KEY, currentTab); render(); }
   else if (act === 'view-source') { sourceDetailView = btn.dataset.source; render(); }
   else if (act === 'close-source-detail') { sourceDetailView = null; render(); }
+  else if (act === 'open-charts') { incomeChartsView = true; render(); }
+  else if (act === 'close-charts') { incomeChartsView = false; render(); }
   else if (act === 'view-budget-log') { budgetLogView = true; render(); }
   else if (act === 'close-budget-log') { budgetLogView = false; render(); }
   else if (act === 'income-chart-mode') {
