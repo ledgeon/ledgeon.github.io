@@ -3902,6 +3902,16 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outli
 <style id="ledgeon-paper">
 .src-hero{margin-top:6px}.src-sub{margin-top:4px}
 .ss-chart{margin:18px 24px 4px}
+.up{margin:0 20px}
+.up-row{display:flex;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid var(--border-light);font-size:14px}
+.up-row:last-child{border-bottom:0}
+.up-row[data-action]{cursor:pointer}
+.up-d{width:92px;flex-shrink:0;font-size:12.5px;color:var(--ink-4)}
+.up-d.late{color:var(--negative);font-weight:600}
+.up-n{flex:1;min-width:0;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-a{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.up-a.pay{color:var(--positive)}
+[data-theme="mono"] .up-d,[data-theme="mono"] .up-a{font-family:var(--mono)}
 .mc{margin:0 20px}
 .mc-nav{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
 .mc-nav button{all:unset;cursor:pointer;color:var(--ink-3);padding:0 6px;font-size:15px;line-height:1}
@@ -6769,49 +6779,15 @@ function calendarEvents(start, end) {
   }
   return ev.sort((a, b) => a.date - b.date || (a.type === 'pay' ? -1 : 1));
 }
+// Next two weeks of bills and paydays as plain rows.
 function renderMiniCalendar() {
-  const [y, m] = calMonth.split('-').map(Number);
-  const start = new Date(y, m - 1, 1), end = new Date(y, m, 1), today = todayStart(), todayIso = isoDate(today);
-  const sch = getIncomePaySchedule(), colors = catColorMap();
-  const ev = calendarEvents(start, end);
-  const byDay = {}; ev.forEach(e => (byDay[isoDate(e.date)] = byDay[isoDate(e.date)] || []).push(e));
-  const color = b => colors[b.category || 'other'] || 'var(--ink-4)';
-  const lead = start.getDay(), days = new Date(y, m, 0).getDate(), cells = [];
-  for (let i = 0; i < lead; i++) cells.push('<span class="mc-d out"></span>');
-  for (let n = 1; n <= days; n++) {
-    const iso = isoDate(new Date(y, m - 1, n)), list = byDay[iso] || [];
-    const pay = list.some(e => e.type === 'pay'), bills = list.filter(e => e.type === 'bill');
-    const late = bills.some(e => e.status === 'late');
-    const dots = bills.slice(0, 3).map(e => `<i class="cal-dot${e.status === 'paid' ? ' paid' : ''}" style="--c:${late && e.status === 'late' ? 'var(--negative)' : color(e.bill)}"></i>`).join('');
-    cells.push(`<button class="mc-d${iso === todayIso ? ' today' : ''}${iso === calDay ? ' sel' : ''}${iso < todayIso ? ' past' : ''}${pay ? ' payday' : ''}" data-action="cal-day" data-date="${iso}" aria-label="${escHTML(exactDate(iso))}${pay ? ', payday' : ''}${bills.length ? `, ${bills.length} bill${bills.length > 1 ? 's' : ''}` : ''}"><span class="mc-n">${n}</span><span class="mc-dots">${dots}</span></button>`);
-  }
-  while (cells.length % 7) cells.push('<span class="mc-d out"></span>');
-  // details for the tapped day (or today)
-  const isNow = calMonth === todayIso.slice(0, 7);
-  const selIso = calDay || (isNow ? todayIso : null);
-  const item = e => {
-    if (e.type === 'pay') {
-      const nextPay = calendarEvents(new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + 1), new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + sch.periodDays * 2)).find(x => x.type === 'pay');
-      const until = nextPay ? nextPay.date : new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + sch.periodDays);
-      const covers = roundCash(calendarEvents(e.date, until).filter(x => x.type === 'bill' && x.status !== 'paid').reduce((n, x) => n + x.amt, 0));
-      return `<div class="mc-it"><i class="cal-paymark"></i><span>${e.est ? 'Payday (est.)' : escHTML([...new Set(e.sources)].join(', '))}${covers > 0 ? `<small>${fmtMoney(covers, {round:true})} in bills this pay period</small>` : ''}</span><strong>${e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</strong></div>`;
-    }
-    return `<div class="mc-it${e.status === 'paid' ? ' is-paid' : ''}" data-action="edit" data-type="expenses" data-id="${e.bill.id}"><i class="cat-dot" style="background:${color(e.bill)}"></i><span>${escHTML(e.bill.name)}${e.status === 'paid' ? '<small>Paid</small>' : e.status === 'late' ? '<small class="cal-late">Late</small>' : ''}</span><strong>${fmtMoney(e.amt, {round:true})}</strong></div>`;
-  };
-  let detail = '';
-  if (selIso) {
-    const list = byDay[selIso] || [], d = parseISODate(selIso);
-    const label = selIso === todayIso ? 'Today' : d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
-    if (list.length) detail = `<div class="mc-h">${escHTML(label)}</div>${list.map(item).join('')}`;
-    else {
-      const nx = calendarEvents(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1), new Date(d.getFullYear(), d.getMonth() + 2, 1)).find(e => e.type === 'pay' || e.status !== 'paid');
-      detail = `<div class="mc-h">${escHTML(label)} · nothing due${nx ? ` · next ${escHTML(nx.date.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}))}` : ''}</div>${nx ? item(nx) : ''}`;
-    }
-  }
-  const nav = `<span class="mc-nav"><button data-action="cal-month" data-step="-1" aria-label="Previous month">‹</button><span>${escHTML(start.toLocaleDateString('en-US', {month:'short', year:'numeric'}))}</span><button data-action="cal-month" data-step="1" aria-label="Next month">›</button></span>`;
-  return `${sh('Calendar', {meta: nav})}
-  <div class="mc"><div class="mc-wk">${['S','M','T','W','T','F','S'].map(x => `<span>${x}</span>`).join('')}</div><div class="mc-grid">${cells.join('')}</div>
-  ${detail ? `<div class="mc-detail">${detail}</div>` : ''}</div>`;
+  const today = todayStart(), end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
+  const ev = calendarEvents(new Date(today.getFullYear(), today.getMonth() - 2, 1), end)
+    .filter(e => e.type === 'pay' ? e.date >= today : e.status === 'late' || (e.status === 'due' && e.date >= today));
+  if (!ev.length) return '';
+  const label = d => { const n = Math.round((d - today) / 864e5); return n < 0 ? 'Late' : n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'}); };
+  const rows = ev.map(e => `<div class="up-row${e.type === 'bill' ? '" data-action="edit" data-type="expenses" data-id="' + e.bill.id : ''}"><span class="up-d${e.type === 'bill' && e.status === 'late' ? ' late' : ''}">${escHTML(label(e.date))}</span><span class="up-n">${e.type === 'pay' ? (e.est ? 'Payday' : escHTML([...new Set(e.sources)].join(', '))) : escHTML(e.bill.name)}</span><span class="up-a${e.type === 'pay' ? ' pay' : ''}">${e.type === 'pay' && e.est ? '~' : ''}${fmtMoney(e.amt, {round:true})}</span></div>`).join('');
+  return `${sh('Upcoming')}<div class="up">${rows}</div>`;
 }
 
 function render() {
